@@ -48,6 +48,12 @@ const Navbar = () => {
                 >
                   Study Groups
                 </Link>
+                <Link
+                  to="/discussion"
+                  className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
+                >
+                  Discussion
+                </Link>
                 <div className="flex items-center space-x-3 border-l border-blue-500 pl-4">
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
@@ -159,6 +165,13 @@ const Navbar = () => {
                   className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Study Groups
+                </Link>
+                <Link
+                  to="/discussion"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Discussion
                 </Link>
                 <button
                   onClick={handleLogout}

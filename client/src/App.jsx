@@ -8,6 +8,9 @@ import Register from './pages/auth/Register';
 import Chat from './pages/chat/Chat';
 import Groups from './pages/groups/Groups';
 import GroupChat from './pages/groups/GroupChat';
+import Discussion from './pages/discussion/Discussion';
+import QuestionDetails from './pages/discussion/QuestionDetails';
+import AskQuestion from './pages/discussion/AskQuestion';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
@@ -45,6 +48,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <GroupChat />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/discussion" 
+            element={
+              <ProtectedRoute>
+                <Discussion />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/discussion/ask" 
+            element={
+              <ProtectedRoute>
+                <AskQuestion />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/discussion/:id" 
+            element={
+              <ProtectedRoute>
+                <QuestionDetails />
               </ProtectedRoute>
             } 
           />
