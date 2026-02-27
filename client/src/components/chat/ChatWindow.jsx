@@ -23,10 +23,10 @@ const ChatWindow = ({ chat, currentUser }) => {
 
   if (!chat) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50">
+      <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <svg
-            className="mx-auto h-16 w-16 text-gray-400"
+            className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -38,8 +38,8 @@ const ChatWindow = ({ chat, currentUser }) => {
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">Select a conversation</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Select a conversation</h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Choose a chat from the sidebar to start messaging
           </p>
         </div>
@@ -48,9 +48,9 @@ const ChatWindow = ({ chat, currentUser }) => {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
       {/* Chat Header */}
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
@@ -59,20 +59,20 @@ const ChatWindow = ({ chat, currentUser }) => {
               </span>
             </div>
             {chat.isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
             )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{chat.name}</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{chat.name}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {chat.isOnline ? 'Active now' : 'Offline'}
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full transition duration-150">
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150">
             <svg
-              className="h-6 w-6 text-gray-600"
+              className="h-6 w-6 text-gray-600 dark:text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -85,9 +85,9 @@ const ChatWindow = ({ chat, currentUser }) => {
               />
             </svg>
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition duration-150">
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150">
             <svg
-              className="h-6 w-6 text-gray-600"
+              className="h-6 w-6 text-gray-600 dark:text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -104,7 +104,7 @@ const ChatWindow = ({ chat, currentUser }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
+      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
         <div className="space-y-4">
           {messages.map((message) => (
             <MessageBubble
@@ -117,14 +117,14 @@ const ChatWindow = ({ chat, currentUser }) => {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white border-t px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-6 py-4">
         <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
           <button
             type="button"
-            className="p-2 hover:bg-gray-100 rounded-full transition duration-150"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150"
           >
             <svg
-              className="h-6 w-6 text-gray-600"
+              className="h-6 w-6 text-gray-600 dark:text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -142,14 +142,14 @@ const ChatWindow = ({ chat, currentUser }) => {
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
           <button
             type="button"
-            className="p-2 hover:bg-gray-100 rounded-full transition duration-150"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150"
           >
             <svg
-              className="h-6 w-6 text-gray-600"
+              className="h-6 w-6 text-gray-600 dark:text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

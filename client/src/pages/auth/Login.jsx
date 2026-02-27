@@ -83,13 +83,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome Back
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Sign in to Campus Link
           </p>
         </div>
@@ -97,7 +97,7 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Email Address
             </label>
             <input
@@ -107,8 +107,8 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               className={`w-full px-4 py-3 border ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
+                errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
               placeholder="Enter your email"
               disabled={isLoading}
             />
@@ -119,7 +119,7 @@ const Login = () => {
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Password
             </label>
             <input
@@ -129,8 +129,8 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               className={`w-full px-4 py-3 border ${
-                errors.password ? 'border-red-500' : 'border-gray-300'
-              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
+                errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
               placeholder="Enter your password"
               disabled={isLoading}
             />
@@ -141,7 +141,7 @@ const Login = () => {
 
           {/* Role Selection */}
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Login As
             </label>
             <select
@@ -149,7 +149,7 @@ const Login = () => {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white"
               disabled={isLoading}
             >
               <option value="user">User</option>

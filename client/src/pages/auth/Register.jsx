@@ -88,13 +88,13 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Join Campus Link
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Create your account to get started
           </p>
         </div>
@@ -117,7 +117,7 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Full Name
               </label>
               <input
@@ -127,8 +127,8 @@ const Register = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+                  errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                 placeholder="Enter your full name"
                 disabled={isLoading}
               />
@@ -139,7 +139,7 @@ const Register = () => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address
               </label>
               <input
@@ -149,8 +149,8 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+                  errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                 placeholder="Enter your email"
                 disabled={isLoading}
               />
@@ -161,7 +161,7 @@ const Register = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -171,8 +171,8 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+                  errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                 placeholder="Create a password"
                 disabled={isLoading}
               />
@@ -183,7 +183,7 @@ const Register = () => {
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm Password
               </label>
               <input
@@ -193,8 +193,8 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                 placeholder="Confirm your password"
                 disabled={isLoading}
               />
@@ -211,9 +211,9 @@ const Register = () => {
                 className="h-4 w-4 mt-1 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 required
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                 I agree to the{' '}
-                <a href="#" className="text-green-600 hover:text-green-700 font-medium">
+                <a href="#" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium">
                   Terms and Conditions
                 </a>
               </label>
@@ -245,9 +245,9 @@ const Register = () => {
         {/* Login Link */}
         {!showSuccess && (
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
-              <Link to="/login" className="text-green-600 hover:text-green-700 font-semibold">
+              <Link to="/login" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold">
                 Sign In
               </Link>
             </p>

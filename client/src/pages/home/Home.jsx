@@ -43,7 +43,7 @@ const Home = () => {
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -52,7 +52,7 @@ const Home = () => {
 
         {/* Stats Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Overview</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Overview</h2>
           <div className={`grid grid-cols-1 md:grid-cols-${isAdminOrOwner ? '3' : '2'} gap-6`}>
             <StatsCard
               title="Study Groups"

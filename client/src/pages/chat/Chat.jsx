@@ -83,17 +83,17 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Page Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-        <p className="text-sm text-gray-600">Chat with your classmates and study groups</p>
+      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Chat with your classmates and study groups</p>
       </div>
 
       {/* Chat Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Chat List */}
-        <div className="w-full md:w-96 bg-white border-r flex-shrink-0 overflow-hidden">
+        <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-shrink-0 overflow-hidden">
           <ChatList
             chats={mockChats}
             activeChat={activeChat}

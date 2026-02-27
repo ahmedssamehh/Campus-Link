@@ -1,7 +1,8 @@
 // Campus Link - Main Application Component
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/layout/Navbar';
+import { useAuth } from './context/AuthContext';
+import Sidebar from './components/layout/Sidebar';
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -11,13 +12,35 @@ import GroupChat from './pages/groups/GroupChat';
 import Discussion from './pages/discussion/Discussion';
 import QuestionDetails from './pages/discussion/QuestionDetails';
 import AskQuestion from './pages/discussion/AskQuestion';
+import Profile from './pages/profile/Profile';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
-function App() {
+function AppContent() {
+  const { isAuthenticated } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <Router>
-      <div className="App">
-        <Navbar />
+    <div className="App">
+      {isAuthenticated && (
+        <>
+          <Sidebar 
+            isOpen={sidebarOpen}
+            onMouseEnter={() => setSidebarOpen(true)}
+            onMouseLeave={() => setSidebarOpen(false)}
+          />
+          {/* Overlay when sidebar is open */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-40 transition-all duration-300" />
+          )}
+        </>
+      )}
+      <div 
+        className={`
+          ${isAuthenticated ? 'ml-20' : ''}
+          ${sidebarOpen ? 'blur-sm pointer-events-none' : ''}
+          transition-all duration-300
+        `}
+      >
         <Routes>
           <Route 
             path="/" 
@@ -75,10 +98,26 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>
       </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

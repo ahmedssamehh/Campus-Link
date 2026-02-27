@@ -4,11 +4,11 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Search Bar */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b dark:border-gray-700">
         <input
           type="text"
           placeholder="Search conversations..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         />
       </div>
 
@@ -18,8 +18,8 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
           <div
             key={chat.id}
             onClick={() => onSelectChat(chat)}
-            className={`flex items-center space-x-3 p-4 cursor-pointer hover:bg-gray-50 transition duration-150 ${
-              activeChat?.id === chat.id ? 'bg-blue-50 border-l-4 border-blue-600' : 'border-l-4 border-transparent'
+            className={`flex items-center space-x-3 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 ${
+              activeChat?.id === chat.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600' : 'border-l-4 border-transparent'
             }`}
           >
             {/* Avatar */}
@@ -37,13 +37,13 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
             {/* Chat Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-semibold text-gray-900 truncate">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                   {chat.name}
                 </h3>
-                <span className="text-xs text-gray-500">{chat.lastMessageTime}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{chat.lastMessageTime}</span>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{chat.lastMessage}</p>
                 {chat.unreadCount > 0 && (
                   <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
                     {chat.unreadCount}
