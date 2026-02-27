@@ -8,7 +8,8 @@ const Login = () => {
   
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    role: 'user' // Default role
   });
   
   const [errors, setErrors] = useState({});
@@ -67,7 +68,8 @@ const Login = () => {
       // Mock login - create user data
       const userData = {
         name: formData.email.split('@')[0], // Use email username as name
-        email: formData.email
+        email: formData.email,
+        role: formData.role // Include selected role
       };
       
       // Call login from AuthContext
@@ -135,6 +137,25 @@ const Login = () => {
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>
             )}
+          </div>
+
+          {/* Role Selection */}
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+              Login As
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              disabled={isLoading}
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
+            </select>
           </div>
 
           {/* Remember Me & Forgot Password */}

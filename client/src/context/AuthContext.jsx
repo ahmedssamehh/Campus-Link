@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
       id: Date.now(),
       name: userData.name || 'User',
       email: userData.email,
+      role: userData.role || 'user', // Default role is 'user', can be 'admin' or 'owner'
       loginTime: new Date().toISOString()
     };
     setUser(userObj);

@@ -34,7 +34,19 @@ const Navbar = () => {
                   to="/"
                   className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
                 >
-                  Dashboard
+                  Home
+                </Link>
+                <Link
+                  to="/chat"
+                  className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
+                >
+                  Chat
+                </Link>
+                <Link
+                  to="/groups"
+                  className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
+                >
+                  Study Groups
                 </Link>
                 <div className="flex items-center space-x-3 border-l border-blue-500 pl-4">
                   <div className="flex items-center space-x-2">
@@ -132,7 +144,21 @@ const Navbar = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
                 >
-                  Dashboard
+                  Home
+                </Link>
+                <Link
+                  to="/chat"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Chat
+                </Link>
+                <Link
+                  to="/groups"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Study Groups
                 </Link>
                 <button
                   onClick={handleLogout}
