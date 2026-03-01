@@ -1,8 +1,7 @@
 // Campus Link - Main Application Component
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import Sidebar from './components/layout/Sidebar';
+import UserLayout from './components/layout/UserLayout';
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -14,103 +13,52 @@ import QuestionDetails from './pages/discussion/QuestionDetails';
 import AskQuestion from './pages/discussion/AskQuestion';
 import Profile from './pages/profile/Profile';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import AdminRoute from './components/common/AdminRoute';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UsersManagement from './pages/admin/UsersManagement';
+import GroupsManagement from './pages/admin/GroupsManagement';
+import JoinRequests from './pages/admin/JoinRequests';
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
-    <div className="App">
-      {isAuthenticated && (
-        <>
-          <Sidebar 
-            isOpen={sidebarOpen}
-            onMouseEnter={() => setSidebarOpen(true)}
-            onMouseLeave={() => setSidebarOpen(false)}
-          />
-          {/* Overlay when sidebar is open */}
-          {sidebarOpen && (
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-40 transition-all duration-300" />
-          )}
-        </>
-      )}
-      <div 
-        className={`
-          ${isAuthenticated ? 'ml-20' : ''}
-          ${sidebarOpen ? 'blur-sm pointer-events-none' : ''}
-          transition-all duration-300
-        `}
+    <Routes>
+      {/* Public Routes - No Layout */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Protected Routes - Wrapped in UserLayout */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <UserLayout />
+          </ProtectedRoute>
+        }
       >
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/chat" 
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/groups" 
-            element={
-              <ProtectedRoute>
-                <Groups />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/groups/:id" 
-            element={
-              <ProtectedRoute>
-                <GroupChat />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/discussion" 
-            element={
-              <ProtectedRoute>
-                <Discussion />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/discussion/ask" 
-            element={
-              <ProtectedRoute>
-                <AskQuestion />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/discussion/:id" 
-            element={
-              <ProtectedRoute>
-                <QuestionDetails />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
-      </div>
-    </div>
+        <Route path="/" element={<Home />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/groups" element={<Groups />} />
+        <Route path="/groups/:id" element={<GroupChat />} />
+        <Route path="/discussion" element={<Discussion />} />
+        <Route path="/discussion/ask" element={<AskQuestion />} />
+        <Route path="/discussion/:id" element={<QuestionDetails />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
+
+      {/* Admin Routes - Wrapped in AdminRoute and AdminLayout */}
+      <Route
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<UsersManagement />} />
+        <Route path="/admin/groups" element={<GroupsManagement />} />
+        <Route path="/admin/requests" element={<JoinRequests />} />
+      </Route>
+    </Routes>
   );
 }
 

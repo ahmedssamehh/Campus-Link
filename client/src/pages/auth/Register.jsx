@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +16,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   // Handle input changes
   const handleChange = (e) => {
@@ -62,8 +65,7 @@ const Register = () => {
     return newErrors;
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = validateForm();
@@ -74,17 +76,36 @@ const Register = () => {
     }
     
     setIsLoading(true);
+    setApiError('');
     
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsLoading(false);
+    console.log('📝 Submitting registration form with data:', {
+      name: formData.name,
+      email: formData.email,
+      password: '***'
+    });
+    
+    // Call real register API with correct field mapping
+    const result = await register({
+      name: formData.name,        // Backend expects 'name'
+      email: formData.email,      // Backend expects 'email'
+      password: formData.password // Backend expects 'password'
+      // confirmPassword NOT sent to backend (frontend validation only)
+    });
+    
+    setIsLoading(false);
+    
+    if (result.success) {
+      console.log('✅ Registration successful!');
       setShowSuccess(true);
       
       // Redirect to login after showing success message
       setTimeout(() => {
         navigate('/login');
       }, 1500);
-    }, 500);
+    } else {
+      console.error('❌ Registration failed:', result.message);
+      setApiError(result.message || 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -101,20 +122,28 @@ const Register = () => {
 
         {showSuccess ? (
           <div className="bg-green-50 border border-green-200 p-4 rounded-md">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center flex-col">
               <svg className="w-12 h-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
+              <p className="text-center text-green-800 font-semibold">
+                Account created successfully!
+              </p>
+              <p className="text-center text-green-700 text-sm mt-2">
+                Redirecting to login...
+              </p>
             </div>
-            <p className="text-center text-green-800 font-semibold">
-              Account created successfully!
-            </p>
-            <p className="text-center text-green-700 text-sm mt-2">
-              Redirecting to login...
-            </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <>
+            {/* API Error Message */}
+            {apiError && (
+              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md mb-4">
+                {apiError}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -213,9 +242,9 @@ const Register = () => {
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                 I agree to the{' '}
-                <a href="#" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium">
+                <button type="button" onClick={(e) => e.preventDefault()} className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline cursor-pointer bg-transparent border-none p-0">
                   Terms and Conditions
-                </a>
+                </button>
               </label>
             </div>
 
@@ -240,6 +269,7 @@ const Register = () => {
               )}
             </button>
           </form>
+          </>
         )}
 
         {/* Login Link */}

@@ -8,12 +8,12 @@ const Login = () => {
   
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    role: 'user' // Default role
+    password: ''
   });
   
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   // Handle input changes
   const handleChange = (e) => {
@@ -51,7 +51,7 @@ const Login = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = validateForm();
@@ -62,24 +62,22 @@ const Login = () => {
     }
     
     setIsLoading(true);
+    setApiError('');
     
-    // Simulate API call delay
-    setTimeout(() => {
-      // Mock login - create user data
-      const userData = {
-        name: formData.email.split('@')[0], // Use email username as name
-        email: formData.email,
-        role: formData.role // Include selected role
-      };
-      
-      // Call login from AuthContext
-      login(userData);
-      
-      setIsLoading(false);
-      
+    // Call real login API
+    const result = await login({
+      email: formData.email,
+      password: formData.password
+    });
+    
+    setIsLoading(false);
+    
+    if (result.success) {
       // Redirect to dashboard
       navigate('/');
-    }, 500);
+    } else {
+      setApiError(result.message || 'Login failed. Please try again.');
+    }
   };
 
   return (
@@ -93,6 +91,13 @@ const Login = () => {
             Sign in to Campus Link
           </p>
         </div>
+
+        {/* API Error Message */}
+        {apiError && (
+          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md mb-4">
+            {apiError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email Field */}
@@ -139,25 +144,6 @@ const Login = () => {
             )}
           </div>
 
-          {/* Role Selection */}
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Login As
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white"
-              disabled={isLoading}
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-              <option value="owner">Owner</option>
-            </select>
-          </div>
-
           {/* Remember Me & Forgot Password */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -171,9 +157,9 @@ const Login = () => {
               </label>
             </div>
             <div className="text-sm">
-              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+              <button type="button" onClick={(e) => e.preventDefault()} className="text-blue-600 hover:text-blue-700 font-medium underline cursor-pointer bg-transparent border-none p-0">
                 Forgot password?
-              </a>
+              </button>
             </div>
           </div>
 
