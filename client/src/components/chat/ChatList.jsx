@@ -1,5 +1,21 @@
 import React from 'react';
 
+const roleMeta = {
+  owner: { label: 'Owner', cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  admin: { label: 'Admin', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  user:  { label: 'Member', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' },
+};
+
+const RoleBadge = ({ role }) => {
+  if (!role) return null;
+  const meta = roleMeta[role] || roleMeta.user;
+  return (
+    <span className={`inline-block text-xs font-medium px-1.5 py-0.5 rounded ${meta.cls}`}>
+      {meta.label}
+    </span>
+  );
+};
+
 const ChatList = ({ chats, activeChat, onSelectChat }) => {
   return (
     <div className="h-full flex flex-col">
@@ -36,12 +52,17 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
 
             {/* Chat Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-0.5">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                   {chat.name}
                 </h3>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{chat.lastMessageTime}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">{chat.lastMessageTime}</span>
               </div>
+              {chat.role && (
+                <div className="mb-1">
+                  <RoleBadge role={chat.role} />
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{chat.lastMessage}</p>
                 {chat.unreadCount > 0 && (

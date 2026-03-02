@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../api/axios';
+
+const roleMeta = {
+  owner: { label: 'Owner', cls: 'bg-purple-100 text-purple-700' },
+  admin: { label: 'Admin', cls: 'bg-blue-100 text-blue-700' },
+  user:  { label: 'Member', cls: 'bg-gray-100 text-gray-600' },
+};
+
+const RoleBadge = ({ role }) => {
+  const m = roleMeta[role] || roleMeta.user;
+  return (
+    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.cls}`}>{m.label}</span>
+  );
+};
 
 const colorClasses = {
   blue: 'from-blue-500 to-blue-600',
@@ -23,12 +36,10 @@ const Groups = () => {
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', subject: '', description: '' });
+  const [membersModal, setMembersModal] = useState(null);   // { name, members } or null
+  const [membersLoading, setMembersLoading] = useState(false);
 
-  useEffect(() => {
-    fetchGroups();
-  }, []);
-
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get('/groups');
@@ -46,7 +57,11 @@ const Groups = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -83,6 +98,21 @@ const Groups = () => {
 
   const handleViewGroup = (groupId) => {
     navigate(`/groups/${groupId}`);
+  };
+
+  const handleViewMembers = async (group) => {
+    setMembersLoading(true);
+    setMembersModal({ name: group.name, members: [] });
+    try {
+      const res = await axios.get(`/groups/${group._id || group.id}`);
+      if (res.data.success) {
+        setMembersModal({ name: res.data.group.name, members: res.data.group.members || [] });
+      }
+    } catch (err) {
+      setMembersModal({ name: group.name, members: group.members || [], error: true });
+    } finally {
+      setMembersLoading(false);
+    }
   };
 
   const filteredGroups = groups.filter(group => {
@@ -189,30 +219,56 @@ const Groups = () => {
                   </p>
 
                   {/* Members Info */}
-                  <div className="flex items-center text-gray-700 mb-4">
-                    <svg
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium">{group.members?.length || 0} members</span>
+                  <div className="mb-4">
+                    <div className="flex items-center text-gray-700 mb-2">
+                      <svg
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                      <span className="text-sm font-medium">{group.members?.length || 0} members</span>
+                    </div>
+                    {/* Member names list */}
+                    {group.members && group.members.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {group.members.slice(0, 4).map((member) => (
+                          <span
+                            key={member._id}
+                            className="inline-flex items-center bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full"
+                          >
+                            {member.name}
+                          </span>
+                        ))}
+                        {group.members.length > 4 && (
+                          <span className="inline-flex items-center bg-gray-200 text-gray-500 text-xs px-2 py-0.5 rounded-full">
+                            +{group.members.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleViewGroup(group._id || group.id)}
+                      onClick={() => handleViewMembers(group)}
                       className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition duration-200 font-medium"
                     >
-                      View
+                      Members
+                    </button>
+                    <button
+                      onClick={() => handleViewGroup(group._id || group.id)}
+                      className="flex-1 bg-indigo-50 text-indigo-700 py-2 px-4 rounded-lg hover:bg-indigo-100 transition duration-200 font-medium"
+                    >
+                      Open
                     </button>
                     <button
                       onClick={() => handleJoinGroup(group._id || group.id)}
@@ -254,6 +310,69 @@ const Groups = () => {
           </div>
         )}
       </div>
+
+      {/* View Members Modal */}
+      {membersModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{membersModal.name}</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {membersLoading ? 'Loading…' : `${membersModal.members.length} member${membersModal.members.length !== 1 ? 's' : ''}`}
+                </p>
+              </div>
+              <button
+                onClick={() => setMembersModal(null)}
+                className="p-2 hover:bg-gray-100 rounded-full transition"
+              >
+                <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="overflow-y-auto flex-1 px-6 py-4">
+              {membersLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : membersModal.members.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No members found</p>
+              ) : (
+                <ul className="space-y-3">
+                  {membersModal.members.map((member) => (
+                    <li key={member._id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-semibold text-sm">
+                          {member.name?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{member.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{member.email}</p>
+                      </div>
+                      <RoleBadge role={member.role} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t">
+              <button
+                onClick={() => setMembersModal(null)}
+                className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Group Modal */}
       {showCreateModal && (

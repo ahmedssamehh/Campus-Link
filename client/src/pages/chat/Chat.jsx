@@ -1,82 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import axios from '../../api/axios';
 import ChatList from '../../components/chat/ChatList';
 import ChatWindow from '../../components/chat/ChatWindow';
 
-// Mock data for chats
-const mockChats = [
-  {
-    id: 1,
-    name: 'Sarah Johnson',
-    lastMessage: 'Hey! Did you finish the assignment?',
-    lastMessageTime: '2:30 PM',
-    unreadCount: 2,
-    isOnline: true,
-    messages: [
-      { id: 1, text: 'Hi there!', sender: 'Sarah Johnson', time: '2:15 PM', isSent: false },
-      { id: 2, text: 'Hey Sarah! How are you?', sender: 'You', time: '2:16 PM', isSent: true },
-      { id: 3, text: 'I\'m good! Working on the CS project', sender: 'Sarah Johnson', time: '2:17 PM', isSent: false },
-      { id: 4, text: 'Hey! Did you finish the assignment?', sender: 'Sarah Johnson', time: '2:30 PM', isSent: false },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Computer Science Study Group',
-    lastMessage: 'Meeting tomorrow at 3 PM',
-    lastMessageTime: '1:45 PM',
-    unreadCount: 5,
-    isOnline: true,
-    messages: [
-      { id: 1, text: 'Who\'s available for study session?', sender: 'Mike Chen', time: '12:00 PM', isSent: false },
-      { id: 2, text: 'I can join!', sender: 'You', time: '12:05 PM', isSent: true },
-      { id: 3, text: 'Me too!', sender: 'Amy Lee', time: '12:10 PM', isSent: false },
-      { id: 4, text: 'Great! Meeting tomorrow at 3 PM', sender: 'Mike Chen', time: '1:45 PM', isSent: false },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Mike Chen',
-    lastMessage: 'Thanks for the notes!',
-    lastMessageTime: '12:20 PM',
-    unreadCount: 0,
-    isOnline: false,
-    messages: [
-      { id: 1, text: 'Can you send me the lecture notes?', sender: 'Mike Chen', time: '11:00 AM', isSent: false },
-      { id: 2, text: 'Sure! Sending them now', sender: 'You', time: '11:05 AM', isSent: true },
-      { id: 3, text: 'Thanks for the notes!', sender: 'Mike Chen', time: '12:20 PM', isSent: false },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Emma Davis',
-    lastMessage: 'See you in class!',
-    lastMessageTime: 'Yesterday',
-    unreadCount: 0,
-    isOnline: true,
-    messages: [
-      { id: 1, text: 'Are you going to the lab tomorrow?', sender: 'Emma Davis', time: '10:30 AM', isSent: false },
-      { id: 2, text: 'Yes! I\'ll be there', sender: 'You', time: '10:35 AM', isSent: true },
-      { id: 3, text: 'See you in class!', sender: 'Emma Davis', time: '10:40 AM', isSent: false },
-    ],
-  },
-  {
-    id: 5,
-    name: 'Mathematics Study Group',
-    lastMessage: 'New practice problems posted',
-    lastMessageTime: 'Yesterday',
-    unreadCount: 0,
-    isOnline: false,
-    messages: [
-      { id: 1, text: 'Anyone struggling with calculus?', sender: 'John Smith', time: '9:00 AM', isSent: false },
-      { id: 2, text: 'I need help with integrals', sender: 'You', time: '9:10 AM', isSent: true },
-      { id: 3, text: 'New practice problems posted', sender: 'John Smith', time: '2:00 PM', isSent: false },
-    ],
-  },
-];
-
 const Chat = () => {
   const { user } = useAuth();
+  const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchAvailableUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await axios.get('/chats/available-users');
+      if (response.data.success) {
+        // Map each available user to a chat entry shape
+        const chatEntries = response.data.users.map((u) => ({
+          id: u._id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          lastMessage: '',
+          lastMessageTime: '',
+          unreadCount: 0,
+          isOnline: false,
+          messages: [],
+        }));
+        setChats(chatEntries);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load chats');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAvailableUsers();
+  }, [fetchAvailableUsers]);
 
   const handleSelectChat = (chat) => {
     setActiveChat(chat);
@@ -93,12 +57,36 @@ const Chat = () => {
       {/* Chat Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Chat List */}
-        <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-shrink-0 overflow-hidden">
-          <ChatList
-            chats={mockChats}
-            activeChat={activeChat}
-            onSelectChat={handleSelectChat}
-          />
+        <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-shrink-0 overflow-hidden flex flex-col">
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          )}
+          {error && (
+            <div className="m-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          {!loading && !error && chats.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+              <svg className="h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">No contacts yet</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+                Join a study group to start chatting with classmates
+              </p>
+            </div>
+          )}
+          {!loading && chats.length > 0 && (
+            <ChatList
+              chats={chats}
+              activeChat={activeChat}
+              onSelectChat={handleSelectChat}
+            />
+          )}
         </div>
 
         {/* Right Section - Chat Window */}
@@ -111,3 +99,4 @@ const Chat = () => {
 };
 
 export default Chat;
+

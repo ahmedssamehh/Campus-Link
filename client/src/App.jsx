@@ -1,6 +1,6 @@
 // Campus Link - Main Application Component
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import UserLayout from './components/layout/UserLayout';
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
@@ -24,6 +24,7 @@ function AppContent() {
   return (
     <Routes>
       {/* Public Routes - No Layout */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
@@ -35,7 +36,7 @@ function AppContent() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/groups/:id" element={<GroupChat />} />

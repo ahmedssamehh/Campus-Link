@@ -22,7 +22,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/home" className="flex items-center">
             <span className="text-white text-2xl font-bold">Campus Link</span>
           </Link>
 
@@ -31,7 +31,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <Link
-                  to="/"
+                  to="/home"
                   className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
                 >
                   Home
@@ -146,7 +146,7 @@ const Navbar = () => {
                   </div>
                 </div>
                 <Link
-                  to="/"
+                  to="/home"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
                 >

@@ -122,7 +122,7 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
 
           {/* Back to User Area */}
           <Link
-            to="/"
+            to="/home"
             className="flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors duration-200 text-purple-200 hover:bg-white/10 border-t border-purple-600 dark:border-purple-800 mt-4 pt-4"
           >
             <svg className="h-6 w-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -22,10 +22,12 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const groupRoutes = require('./routes/group.routes');
+const chatRoutes = require('./routes/chat.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/chats', chatRoutes);
 
 // 404 handler
 app.use((req, res) => {

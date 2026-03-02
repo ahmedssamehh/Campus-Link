@@ -12,7 +12,7 @@ const AdminRoute = ({ children }) => {
 
   // Check if user is admin or owner
   if (user?.role !== 'admin' && user?.role !== 'owner') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return children;

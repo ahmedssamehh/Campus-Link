@@ -4,6 +4,7 @@ const router = express.Router();
 const {
     createGroup,
     getAllGroups,
+    getMyGroups,
     getGroupById,
     requestToJoinGroup,
     getJoinRequests,
@@ -17,6 +18,9 @@ router.use(protect);
 // CREATE & LIST GROUPS
 router.post('/', authorize('admin', 'owner'), createGroup);
 router.get('/', getAllGroups);
+
+// MY GROUPS (STATIC ROUTE BEFORE DYNAMIC /:id)
+router.get('/my', getMyGroups);
 
 // JOIN REQUEST MANAGEMENT (STATIC ROUTES FIRST ✅)
 router.get('/requests/all', authorize('admin', 'owner'), getJoinRequests);

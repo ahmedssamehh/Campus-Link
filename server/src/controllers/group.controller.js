@@ -42,9 +42,9 @@ exports.createGroup = async(req, res) => {
 exports.getAllGroups = async(req, res) => {
     try {
         const groups = await Group.find()
-            .populate('createdBy', 'name email')
-            .populate('admins', 'name email')
-            .populate('members', 'name email')
+            .populate('createdBy', 'name email role')
+            .populate('admins', 'name email role')
+            .populate('members', 'name email role')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -279,6 +279,32 @@ exports.rejectJoinRequest = async(req, res) => {
     }
 };
 
+// @desc    Get groups where the current user is a member
+// @route   GET /api/groups/my
+// @access  Private (authenticated users)
+exports.getMyGroups = async(req, res) => {
+    try {
+        const groups = await Group.find({ members: req.user._id })
+            .populate('createdBy', 'name email role')
+            .populate('admins', 'name email role')
+            .populate('members', 'name email role')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: groups.length,
+            groups
+        });
+    } catch (error) {
+        console.error('Get my groups error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching your groups',
+            error: error.message
+        });
+    }
+};
+
 // @desc    Get single group details
 // @route   GET /api/groups/:id
 // @access  Private (authenticated users)
@@ -287,9 +313,9 @@ exports.getGroupById = async(req, res) => {
         const { id } = req.params;
 
         const group = await Group.findById(id)
-            .populate('createdBy', 'name email')
-            .populate('admins', 'name email')
-            .populate('members', 'name email');
+            .populate('createdBy', 'name email role')
+            .populate('admins', 'name email role')
+            .populate('members', 'name email role');
 
         if (!group) {
             return res.status(404).json({
@@ -298,9 +324,23 @@ exports.getGroupById = async(req, res) => {
             });
         }
 
+        // Compute per-member group-specific role
+        const groupObj = group.toObject();
+        const creatorId = groupObj.createdBy ? ._id ? .toString();
+        const adminIds = new Set((groupObj.admins || []).map(a => a._id.toString()));
+
+        groupObj.members = (groupObj.members || []).map(member => {
+            const memberId = member._id.toString();
+            let groupRole;
+            if (memberId === creatorId) groupRole = 'owner';
+            else if (adminIds.has(memberId)) groupRole = 'admin';
+            else groupRole = 'user';
+            return {...member, role: groupRole };
+        });
+
         res.status(200).json({
             success: true,
-            group
+            group: groupObj
         });
     } catch (error) {
         console.error('Get group by ID error:', error);

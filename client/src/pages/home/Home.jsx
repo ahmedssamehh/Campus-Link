@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import axios from '../../api/axios';
 import WelcomeCard from '../../components/home/WelcomeCard';
 import StatsCard from '../../components/home/StatsCard';
 import Announcements from '../../components/home/Announcements';
@@ -7,40 +8,50 @@ import QuickActions from '../../components/home/QuickActions';
 
 const Home = () => {
   const { user } = useAuth();
-
-  // Mock data for stats
-  const userStats = {
-    studyGroups: 5,
-    unreadMessages: 12,
-    pendingRequests: 8, // Only for admin/owner
-  };
-
-  // Mock data for announcements
-  const mockAnnouncements = [
-    {
-      id: 1,
-      groupName: 'Computer Science Study Group',
-      text: 'Reminder: Midterm exam preparation session tomorrow at 3 PM in the library.',
-      time: '2 hours ago',
-      isImportant: true,
-    },
-    {
-      id: 2,
-      groupName: 'Mathematics Study Group',
-      text: 'New study materials uploaded for Chapter 5. Check the resources section.',
-      time: '5 hours ago',
-      isImportant: false,
-    },
-    {
-      id: 3,
-      groupName: 'Physics Lab Partners',
-      text: 'Lab report submission deadline extended to Friday. Good luck everyone!',
-      time: '1 day ago',
-      isImportant: false,
-    },
-  ];
-
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+
+  const [stats, setStats] = useState({
+    studyGroups: 0,
+    unreadMessages: 0,
+    pendingRequests: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      setStatsLoading(true);
+      const userId = user?._id || user?.id;
+
+      // Fetch groups to count user's memberships
+      const groupsRes = await axios.get('/groups');
+      const allGroups = groupsRes.data.success ? groupsRes.data.groups : [];
+      const joinedCount = allGroups.filter(g =>
+        g.members?.some(m => (m._id || m) === userId)
+      ).length;
+
+      let pendingCount = 0;
+      if (isAdminOrOwner) {
+        const reqRes = await axios.get('/groups/requests/all');
+        pendingCount = reqRes.data.success ? reqRes.data.count : 0;
+      }
+
+      setStats({
+        studyGroups: joinedCount,
+        unreadMessages: 0, // No messages API yet
+        pendingRequests: pendingCount,
+      });
+    } catch (err) {
+      console.error('Failed to fetch home stats:', err);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [user, isAdminOrOwner]);
+
+  useEffect(() => {
+    if (user) fetchStats();
+  }, [user, fetchStats]);
+
+  const mockAnnouncements = [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
@@ -56,7 +67,7 @@ const Home = () => {
           <div className={`grid grid-cols-1 md:grid-cols-${isAdminOrOwner ? '3' : '2'} gap-6`}>
             <StatsCard
               title="Study Groups"
-              value={userStats.studyGroups}
+              value={statsLoading ? '…' : stats.studyGroups}
               subtitle="Active memberships"
               color="blue"
               icon={
@@ -72,7 +83,7 @@ const Home = () => {
             />
             <StatsCard
               title="Unread Messages"
-              value={userStats.unreadMessages}
+              value={statsLoading ? '…' : stats.unreadMessages}
               subtitle="From all chats"
               color="green"
               icon={
@@ -89,7 +100,7 @@ const Home = () => {
             {isAdminOrOwner && (
               <StatsCard
                 title="Pending Requests"
-                value={userStats.pendingRequests}
+                value={statsLoading ? '…' : stats.pendingRequests}
                 subtitle="Awaiting approval"
                 color="orange"
                 icon={

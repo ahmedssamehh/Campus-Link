@@ -74,7 +74,7 @@ const Login = () => {
     
     if (result.success) {
       // Redirect to dashboard
-      navigate('/');
+      navigate('/home');
     } else {
       setApiError(result.message || 'Login failed. Please try again.');
     }
