@@ -214,9 +214,24 @@ const Groups = () => {
 
                 {/* Group Body */}
                 <div className="p-6">
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                     {group.description}
                   </p>
+
+                  {/* Creator */}
+                  {group.createdBy && (
+                    <div className="flex items-center gap-1.5 mb-4">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs font-bold leading-none">
+                          {group.createdBy.name?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        Created by{' '}
+                        <span className="font-semibold text-gray-700">{group.createdBy.name}</span>
+                      </span>
+                    </div>
+                  )}
 
                   {/* Members Info */}
                   <div className="mb-4">
@@ -236,24 +251,6 @@ const Groups = () => {
                       </svg>
                       <span className="text-sm font-medium">{group.members?.length || 0} members</span>
                     </div>
-                    {/* Member names list */}
-                    {group.members && group.members.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {group.members.slice(0, 4).map((member) => (
-                          <span
-                            key={member._id}
-                            className="inline-flex items-center bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full"
-                          >
-                            {member.name}
-                          </span>
-                        ))}
-                        {group.members.length > 4 && (
-                          <span className="inline-flex items-center bg-gray-200 text-gray-500 text-xs px-2 py-0.5 rounded-full">
-                            +{group.members.length - 4} more
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Action Buttons */}
@@ -264,22 +261,29 @@ const Groups = () => {
                     >
                       Members
                     </button>
-                    <button
-                      onClick={() => handleViewGroup(group._id || group.id)}
-                      className="flex-1 bg-indigo-50 text-indigo-700 py-2 px-4 rounded-lg hover:bg-indigo-100 transition duration-200 font-medium"
-                    >
-                      Open
-                    </button>
-                    <button
-                      onClick={() => handleJoinGroup(group._id || group.id)}
-                      className={`flex-1 py-2 px-4 rounded-lg transition duration-200 font-medium ${
-                        group.isJoined
-                          ? 'bg-green-100 text-green-700 cursor-default'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
-                    >
-                      {group.isJoined ? 'Joined' : 'Join'}
-                    </button>
+                    {group.isJoined ? (
+                      <button
+                        onClick={() => handleViewGroup(group._id || group.id)}
+                        className="flex-1 bg-indigo-50 text-indigo-700 py-2 px-4 rounded-lg hover:bg-indigo-100 transition duration-200 font-medium"
+                      >
+                        Open
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleJoinGroup(group._id || group.id)}
+                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
+                      >
+                        Join
+                      </button>
+                    )}
+                    {group.isJoined && (
+                      <button
+                        disabled
+                        className="flex-1 bg-green-100 text-green-700 py-2 px-4 rounded-lg font-medium cursor-default"
+                      >
+                        Joined
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

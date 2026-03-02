@@ -324,9 +324,24 @@ exports.getGroupById = async(req, res) => {
             });
         }
 
+        // Only members (and system admins/owners) may view group details
+        const isMember = group.members.some(
+            m => m._id.toString() === req.user._id.toString()
+        );
+        const isSystemAdmin = req.user.role === 'admin' || req.user.role === 'owner';
+
+        if (!isMember && !isSystemAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not a member of this group'
+            });
+        }
+
         // Compute per-member group-specific role
         const groupObj = group.toObject();
-        const creatorId = groupObj.createdBy ? ._id ? .toString();
+        const creatorId = groupObj.createdBy && groupObj.createdBy._id
+            ? groupObj.createdBy._id.toString()
+            : null;
         const adminIds = new Set((groupObj.admins || []).map(a => a._id.toString()));
 
         groupObj.members = (groupObj.members || []).map(member => {

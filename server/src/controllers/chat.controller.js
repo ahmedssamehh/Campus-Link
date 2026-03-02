@@ -26,7 +26,7 @@ exports.getAvailableUsers = async(req, res) => {
         // 2. Collect all members, compute their best group-specific role across shared groups
         const usersMap = new Map();
         for (const group of myGroups) {
-            const creatorId = group.createdBy ? .toString();
+            const creatorId = group.createdBy ? group.createdBy.toString() : null;
             const adminIds = new Set((group.admins || []).map(a => a.toString()));
 
             for (const member of group.members) {

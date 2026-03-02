@@ -37,6 +37,7 @@ const GroupChat = () => {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [forbidden, setForbidden] = useState(false);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showMembers, setShowMembers] = useState(false);
@@ -52,7 +53,11 @@ const GroupChat = () => {
         setError('Group not found');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load group');
+      if (err.response?.status === 403) {
+        setForbidden(true);
+      } else {
+        setError(err.response?.data?.message || 'Failed to load group');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,6 +91,31 @@ const GroupChat = () => {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (forbidden) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center max-w-sm px-6">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="h-8 w-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-6V7m0 0a4 4 0 10-8 0v4h2V7a2 2 0 014 0v4h2V7z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            You are not a member of this group. Join the group first to access its content.
+          </p>
+          <button
+            onClick={() => navigate('/groups')}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+          >
+            Browse Groups
+          </button>
+        </div>
       </div>
     );
   }
@@ -126,6 +156,9 @@ const GroupChat = () => {
               <h1 className="text-2xl font-bold">{group.name}</h1>
               <p className="text-sm text-white text-opacity-90">
                 {memberCount} member{memberCount !== 1 ? 's' : ''} • {group.subject}
+                {group.createdBy && group.createdBy.name && (
+                  <span className="opacity-80"> • Created by {group.createdBy.name}</span>
+                )}
               </p>
             </div>
           </div>
