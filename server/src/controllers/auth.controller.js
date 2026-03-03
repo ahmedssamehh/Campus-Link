@@ -1,6 +1,7 @@
 // src/controllers/auth.controller.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -40,6 +41,9 @@ exports.register = async(req, res) => {
             password,
             role: 'user'
         });
+
+        // Save activity record
+        Activity.create({ type: 'user', name: user.name, action: 'joined the platform', date: user.createdAt }).catch(() => {});
 
         res.status(201).json({
             success: true,

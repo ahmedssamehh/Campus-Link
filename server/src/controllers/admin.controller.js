@@ -1,5 +1,8 @@
 // src/controllers/admin.controller.js
 const User = require('../models/User');
+const Group = require('../models/Group');
+const JoinRequest = require('../models/JoinRequest');
+const Activity = require('../models/Activity');
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -158,5 +161,91 @@ exports.demoteToUser = async(req, res) => {
             message: 'Error demoting user',
             error: error.message
         });
+    }
+};
+
+// @desc    Get dashboard stats
+// @route   GET /api/admin/stats
+// @access  Private (admin, owner)
+exports.getDashboardStats = async(req, res) => {
+    try {
+        const [totalUsers, totalGroups, pendingRequests, adminCount] = await Promise.all([
+            User.countDocuments(),
+            Group.countDocuments(),
+            JoinRequest.countDocuments({ status: 'pending' }),
+            User.countDocuments({ role: { $in: ['admin', 'owner'] } }),
+        ]);
+
+        // Seed Activity collection from existing users/groups if empty
+        const activityCount = await Activity.countDocuments();
+        if (activityCount === 0) {
+            const [seedUsers, seedGroups] = await Promise.all([
+                User.find().select('name createdAt').sort({ createdAt: -1 }).limit(50),
+                Group.find().populate('createdBy', 'name').select('name createdBy createdAt').sort({ createdAt: -1 }).limit(50),
+            ]);
+            const docs = [
+                ...seedUsers.map((u) => ({ type: 'user', name: u.name, action: 'joined the platform', date: u.createdAt })),
+                ...seedGroups.map((g) => ({ type: 'group', name: g.createdBy && g.createdBy.name ? g.createdBy.name : 'Unknown', action: 'created group "' + g.name + '"', date: g.createdAt })),
+            ];
+            if (docs.length > 0) await Activity.insertMany(docs);
+        }
+
+        const activity = await Activity.find().sort({ date: -1 }).limit(6);
+
+        res.status(200).json({
+            success: true,
+            stats: { totalUsers, totalGroups, pendingRequests, adminCount },
+            activity,
+        });
+    } catch (error) {
+        console.error('Get dashboard stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching dashboard stats',
+            error: error.message,
+        });
+    }
+};
+
+// @desc    Get all activities
+// @route   GET /api/admin/activity
+// @access  Private (admin, owner)
+exports.getAllActivities = async(req, res) => {
+    try {
+        const activities = await Activity.find().sort({ date: -1 });
+        res.status(200).json({ success: true, activities });
+    } catch (error) {
+        console.error('Get all activities error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching activities', error: error.message });
+    }
+};
+
+// @desc    Delete selected activities
+// @route   DELETE /api/admin/activity
+// @access  Private (admin, owner)
+exports.deleteActivities = async(req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No activity IDs provided' });
+        }
+        const result = await Activity.deleteMany({ _id: { $in: ids } });
+        res.status(200).json({ success: true, message: result.deletedCount + ' activities deleted' });
+    } catch (error) {
+        console.error('Delete activities error:', error);
+        res.status(500).json({ success: false, message: 'Error deleting activities', error: error.message });
+    }
+};
+
+// @desc    Delete all activities
+// @route   DELETE /api/admin/activity/all
+// @access  Private (admin, owner)
+exports.deleteAllActivities = async(req, res) => {
+    try {
+        await Activity.deleteMany({});
+        res.status(200).json({ success: true, message: 'All activities deleted' });
+    } catch (error) {
+        console.error('Delete all activities error:', error);
+        res.status(500).json({ success: false, message: 'Error deleting all activities', error: error.message });
     }
 };

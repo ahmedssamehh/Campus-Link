@@ -1,22 +1,45 @@
-import React from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import axios from '../../api/axios';
+
+const timeAgo = (dateStr) => {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock statistics
-  const stats = {
-    totalUsers: 156,
-    totalGroups: 24,
-    pendingRequests: 8,
-    activeUsers: 89,
-  };
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await axios.get('/admin/stats');
+      if (res.data.success) {
+        setStats(res.data.stats);
+        setActivity(res.data.activity || []);
+      }
+    } catch (err) {
+      setError((err.response && err.response.data && err.response.data.message) || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
 
   const statCards = [
     {
       title: 'Total Users',
-      value: stats.totalUsers,
+      value: stats ? stats.totalUsers : null,
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -32,7 +55,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Study Groups',
-      value: stats.totalGroups,
+      value: stats ? stats.totalGroups : null,
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -48,7 +71,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Pending Requests',
-      value: stats.pendingRequests,
+      value: stats ? stats.pendingRequests : null,
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -63,8 +86,8 @@ const AdminDashboard = () => {
       link: '/admin/requests',
     },
     {
-      title: 'Active Users',
-      value: stats.activeUsers,
+      title: 'Admin / Owner Count',
+      value: stats ? stats.adminCount : null,
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -80,38 +103,6 @@ const AdminDashboard = () => {
     },
   ];
 
-  // Mock recent activities
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'user_joined',
-      user: 'Sarah Johnson',
-      action: 'joined the platform',
-      time: '5 minutes ago',
-    },
-    {
-      id: 2,
-      type: 'group_created',
-      user: 'Mike Chen',
-      action: 'created "Advanced Algorithms" group',
-      time: '1 hour ago',
-    },
-    {
-      id: 3,
-      type: 'request_pending',
-      user: 'Emma Davis',
-      action: 'requested to join "Data Science Study Group"',
-      time: '2 hours ago',
-    },
-    {
-      id: 4,
-      type: 'user_promoted',
-      user: 'Admin',
-      action: 'promoted John Smith to Admin',
-      time: '3 hours ago',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,9 +112,22 @@ const AdminDashboard = () => {
             Admin Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Welcome back, {user?.name}! Here's what's happening with Campus Link.
+            Welcome back, {user && user.name}! Here's what's happening with Campus Link.
           </p>
         </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center justify-between">
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            <button
+              onClick={fetchStats}
+              className="text-sm text-red-600 dark:text-red-400 underline ml-4"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -141,9 +145,13 @@ const AdminDashboard = () => {
               <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">
                 {stat.title}
               </h3>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {stat.value}
-              </p>
+              {loading ? (
+                <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ) : (
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {stat.value !== null ? stat.value : '—'}
+                </p>
+              )}
             </Link>
           ))}
         </div>
@@ -154,42 +162,65 @@ const AdminDashboard = () => {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Recent Activity
             </h2>
-            <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">
-              View All
-            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={fetchStats}
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium"
+              >
+                Refresh
+              </button>
+              <Link
+                to="/admin/activity"
+                className="text-sm text-purple-600 dark:text-purple-400 font-semibold hover:underline"
+              >
+                See All →
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-4">
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-              >
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-semibold text-sm">
-                    {activity.user.charAt(0)}
-                  </span>
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-start space-x-4 p-4">
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/4" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    <span className="font-semibold">{activity.user}</span>{' '}
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {activity.action}
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {activity.time}
-                  </p>
-                </div>
+              ))
+            ) : activity.length === 0 ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-4">No recent activity.</p>
+            ) : (
+              activity.map((item, i) => (
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    activity.type === 'request_pending'
-                      ? 'bg-orange-500'
-                      : 'bg-green-500'
-                  }`}
-                />
-              </div>
-            ))}
+                  key={i}
+                  className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">
+                      {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      <span className="font-semibold">{item.name}</span>{' '}
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {item.action}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {timeAgo(item.date)}
+                    </p>
+                  </div>
+                  <div
+                    className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
+                      item.type === 'group' ? 'bg-green-500' : 'bg-blue-500'
+                    }`}
+                  />
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -218,7 +249,7 @@ const AdminDashboard = () => {
             className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Create Group</h3>
+              <h3 className="text-lg font-semibold">Manage Groups</h3>
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"

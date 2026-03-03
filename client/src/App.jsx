@@ -19,6 +19,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UsersManagement from './pages/admin/UsersManagement';
 import GroupsManagement from './pages/admin/GroupsManagement';
 import JoinRequests from './pages/admin/JoinRequests';
+import ActivityPage from './pages/admin/ActivityPage';
 
 function AppContent() {
   return (
@@ -58,6 +59,7 @@ function AppContent() {
         <Route path="/admin/users" element={<UsersManagement />} />
         <Route path="/admin/groups" element={<GroupsManagement />} />
         <Route path="/admin/requests" element={<JoinRequests />} />
+        <Route path="/admin/activity" element={<ActivityPage />} />
       </Route>
     </Routes>
   );

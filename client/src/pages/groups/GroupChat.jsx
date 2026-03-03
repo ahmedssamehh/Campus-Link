@@ -156,9 +156,6 @@ const GroupChat = () => {
               <h1 className="text-2xl font-bold">{group.name}</h1>
               <p className="text-sm text-white text-opacity-90">
                 {memberCount} member{memberCount !== 1 ? 's' : ''} • {group.subject}
-                {group.createdBy && group.createdBy.name && (
-                  <span className="opacity-80"> • Created by {group.createdBy.name}</span>
-                )}
               </p>
             </div>
           </div>

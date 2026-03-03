@@ -2,6 +2,7 @@
 const Group = require('../models/Group');
 const JoinRequest = require('../models/JoinRequest');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // @desc    Create a new study group
 // @route   POST /api/groups
@@ -22,6 +23,9 @@ exports.createGroup = async(req, res) => {
         });
 
         console.log("✅ GROUP SAVED WITH ID:", group._id);
+
+        // Save activity record
+        Activity.create({ type: 'group', name: req.user.name || 'Unknown', action: 'created group "' + group.name + '"', date: group.createdAt }).catch(() => {});
 
         return res.status(201).json({
             success: true,
@@ -339,9 +343,9 @@ exports.getGroupById = async(req, res) => {
 
         // Compute per-member group-specific role
         const groupObj = group.toObject();
-        const creatorId = groupObj.createdBy && groupObj.createdBy._id
-            ? groupObj.createdBy._id.toString()
-            : null;
+        const creatorId = groupObj.createdBy && groupObj.createdBy._id ?
+            groupObj.createdBy._id.toString() :
+            null;
         const adminIds = new Set((groupObj.admins || []).map(a => a._id.toString()));
 
         groupObj.members = (groupObj.members || []).map(member => {
