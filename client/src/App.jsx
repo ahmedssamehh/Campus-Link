@@ -1,6 +1,8 @@
 // Campus Link - Main Application Component
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationContainer from './components/common/NotificationContainer';
 import UserLayout from './components/layout/UserLayout';
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
@@ -12,6 +14,7 @@ import Discussion from './pages/discussion/Discussion';
 import QuestionDetails from './pages/discussion/QuestionDetails';
 import AskQuestion from './pages/discussion/AskQuestion';
 import Profile from './pages/profile/Profile';
+import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -38,6 +41,7 @@ function AppContent() {
         }
       >
         <Route path="/home" element={<Home />} />
+        <Route path="/announcements" element={<AnnouncementsPage />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/groups/:id" element={<GroupChat />} />
@@ -68,7 +72,10 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <NotificationProvider>
+        <NotificationContainer />
+        <AppContent />
+      </NotificationProvider>
     </Router>
   );
 }

@@ -3,6 +3,7 @@ const Group = require('../models/Group');
 const JoinRequest = require('../models/JoinRequest');
 const User = require('../models/User');
 const Activity = require('../models/Activity');
+const Announcement = require('../models/Announcement');
 
 // @desc    Create a new study group
 // @route   POST /api/groups
@@ -94,15 +95,20 @@ exports.requestToJoinGroup = async(req, res) => {
         // Check if there's already a pending request
         const existingRequest = await JoinRequest.findOne({
             user: req.user._id,
-            group: groupId,
-            status: 'pending'
+            group: groupId
         });
 
         if (existingRequest) {
-            return res.status(400).json({
-                success: false,
-                message: 'You already have a pending request for this group'
-            });
+            // If already pending, prevent duplicate
+            if (existingRequest.status === 'pending') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You already have a pending request for this group'
+                });
+            }
+
+            // If rejected or approved, delete old request to allow new one
+            await JoinRequest.findByIdAndDelete(existingRequest._id);
         }
 
         // Create join request
@@ -140,12 +146,14 @@ exports.requestToJoinGroup = async(req, res) => {
     }
 };
 
-// @desc    Get all pending join requests
+// @desc    Get all join requests
 // @route   GET /api/groups/requests
 // @access  Private (admin, owner)
 exports.getJoinRequests = async(req, res) => {
     try {
-        const requests = await JoinRequest.find({ status: 'pending' })
+        // Return all requests (pending, approved, rejected)
+        // Approved/rejected requests will auto-delete after 15 days via TTL index
+        const requests = await JoinRequest.find()
             .populate('user', 'name email')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 });
@@ -222,6 +230,19 @@ exports.approveJoinRequest = async(req, res) => {
         joinRequest.status = 'approved';
         await joinRequest.save();
 
+        // Create announcement to notify user of approval
+        try {
+            await Announcement.create({
+                group: group._id,
+                createdBy: req.user._id,
+                title: 'Join Request Approved',
+                content: `Welcome! Your request to join "${joinRequest.group.name}" has been approved. You can now access all group content and participate in discussions.`
+            });
+        } catch (announcementError) {
+            console.error('Error creating approval announcement:', announcementError);
+            // Don't fail the request if announcement fails
+        }
+
         res.status(200).json({
             success: true,
             message: `User ${joinRequest.user.name} has been added to ${joinRequest.group.name}`,
@@ -267,6 +288,19 @@ exports.rejectJoinRequest = async(req, res) => {
         // Update request status to rejected
         joinRequest.status = 'rejected';
         await joinRequest.save();
+
+        // Create announcement to notify user of rejection
+        try {
+            await Announcement.create({
+                group: joinRequest.group._id,
+                createdBy: req.user._id,
+                title: 'Join Request Not Approved',
+                content: `Your request to join "${joinRequest.group.name}" was not approved at this time. You may submit a new request if you wish.`
+            });
+        } catch (announcementError) {
+            console.error('Error creating rejection announcement:', announcementError);
+            // Don't fail the request if announcement fails
+        }
 
         res.status(200).json({
             success: true,
@@ -366,6 +400,120 @@ exports.getGroupById = async(req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching group',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Delete a group
+// @route   DELETE /api/groups/:id
+// @access  Private (admin, owner)
+exports.deleteGroup = async(req, res) => {
+    try {
+        const group = await Group.findById(req.params.id);
+        if (!group) {
+            return res.status(404).json({ success: false, message: 'Group not found' });
+        }
+        await Group.findByIdAndDelete(req.params.id);
+        await JoinRequest.deleteMany({ group: req.params.id });
+        res.status(200).json({ success: true, message: 'Group deleted successfully' });
+    } catch (error) {
+        console.error('Delete group error:', error);
+        res.status(500).json({ success: false, message: 'Error deleting group', error: error.message });
+    }
+};
+
+// @desc    Remove a member from a group
+// @route   DELETE /api/groups/:groupId/members/:memberId
+// @access  Private (admin, owner)
+exports.removeMember = async(req, res) => {
+    try {
+        const { groupId, memberId } = req.params;
+
+        // Find the group
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ success: false, message: 'Group not found' });
+        }
+
+        // Check if the member exists in the group
+        if (!group.members.includes(memberId)) {
+            return res.status(400).json({ success: false, message: 'User is not a member of this group' });
+        }
+
+        // Prevent removing the group creator
+        if (group.createdBy.toString() === memberId) {
+            return res.status(400).json({ success: false, message: 'Cannot remove the group creator' });
+        }
+
+        // Remove member from members array
+        group.members = group.members.filter(m => m.toString() !== memberId);
+
+        // Also remove from admins if present
+        if (group.admins.includes(memberId)) {
+            group.admins = group.admins.filter(a => a.toString() !== memberId);
+        }
+
+        await group.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Member removed successfully',
+            group
+        });
+    } catch (error) {
+        console.error('Remove member error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error removing member',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Leave a group (user leaves themselves)
+// @route   DELETE /api/groups/:groupId/leave
+// @access  Private
+exports.leaveGroup = async(req, res) => {
+    try {
+        const { groupId } = req.params;
+        const userId = req.user._id;
+
+        // Find the group
+        const group = await Group.findById(groupId);
+        if (!group) {
+            return res.status(404).json({ success: false, message: 'Group not found' });
+        }
+
+        // Check if the user is a member
+        if (!group.members.includes(userId)) {
+            return res.status(400).json({ success: false, message: 'You are not a member of this group' });
+        }
+
+        // Prevent the group creator from leaving
+        if (group.createdBy.toString() === userId.toString()) {
+            return res.status(400).json({ success: false, message: 'Group creator cannot leave the group. Delete the group instead.' });
+        }
+
+        // Remove user from members array
+        group.members = group.members.filter(m => m.toString() !== userId.toString());
+
+        // Also remove from admins if present
+        if (group.admins.includes(userId)) {
+            group.admins = group.admins.filter(a => a.toString() !== userId.toString());
+        }
+
+        await group.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'You have left the group successfully'
+        });
+    } catch (error) {
+        console.error('Leave group error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error leaving group',
             error: error.message
         });
     }

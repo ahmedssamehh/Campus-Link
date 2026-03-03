@@ -17,6 +17,8 @@ const GroupsManagement = () => {
   });
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -97,7 +99,24 @@ const GroupsManagement = () => {
     setShowCreateForm(false);
   };
 
+  const handleDeleteGroup = async () => {
+    if (!confirmDeleteId) return;
+    try {
+      setDeleting(true);
+      await axios.delete(`/groups/${confirmDeleteId}`);
+      setGroups(prev => prev.filter(g => g._id !== confirmDeleteId));
+      setSuccessMessage('Group deleted successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError(err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Failed to delete group');
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
+    }
+  };
+
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -287,13 +306,22 @@ const GroupsManagement = () => {
 
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <span>Created by {group.createdBy?.name || user?.name || 'Admin'}</span>
+                        <span>Created by {group.createdBy && group.createdBy.name ? group.createdBy.name : user && user.name ? user.name : 'Admin'}</span>
                         <span>
                           {group.createdAt
                             ? new Date(group.createdAt).toLocaleDateString()
                             : 'N/A'}
                         </span>
                       </div>
+                      <button
+                        onClick={() => setConfirmDeleteId(group._id)}
+                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 text-sm font-medium transition-colors"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Group
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -303,6 +331,42 @@ const GroupsManagement = () => {
         )}
       </div>
     </div>
+
+    {/* Confirm Delete Modal */}
+    {confirmDeleteId && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+              <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Delete Group?</h3>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            This will permanently delete the group and all its join requests. This action cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmDeleteId(null)}
+              disabled={deleting}
+              className="flex-1 py-2 px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteGroup}
+              disabled={deleting}
+              className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

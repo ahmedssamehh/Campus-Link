@@ -164,6 +164,70 @@ exports.demoteToUser = async(req, res) => {
     }
 };
 
+// @desc    Delete a user from the platform
+// @route   DELETE /api/admin/users/:userId
+// @access  Private (admin, owner)
+exports.deleteUser = async(req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Find the user
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Cannot delete owner
+        if (user.role === 'owner') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete owner account'
+            });
+        }
+
+        // Cannot delete yourself
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete your own account'
+            });
+        }
+
+        // Delete all groups created by this user
+        const groupsCreated = await Group.find({ createdBy: userId });
+        const groupIds = groupsCreated.map(g => g._id);
+        await Group.deleteMany({ createdBy: userId });
+
+        // Delete all join requests for groups created by this user
+        await JoinRequest.deleteMany({ group: { $in: groupIds } });
+
+        // Remove user from all group members and admins arrays
+        await Group.updateMany({ $or: [{ members: userId }, { admins: userId }] }, { $pull: { members: userId, admins: userId } });
+
+        // Delete all join requests from this user
+        await JoinRequest.deleteMany({ user: userId });
+
+        // Delete the user
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({
+            success: true,
+            message: `User ${user.name} has been deleted from the platform`
+        });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting user',
+            error: error.message
+        });
+    }
+};
+
 // @desc    Get dashboard stats
 // @route   GET /api/admin/stats
 // @access  Private (admin, owner)

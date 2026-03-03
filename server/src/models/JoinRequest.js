@@ -24,4 +24,8 @@ const joinRequestSchema = new mongoose.Schema({
 // Prevent duplicate requests
 joinRequestSchema.index({ user: 1, group: 1 }, { unique: true });
 
+// Auto-delete approved/rejected requests after 15 days (1,296,000 seconds)
+// TTL index on updatedAt - records will be deleted 15 days after status change
+joinRequestSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 1296000 });
+
 module.exports = mongoose.model('JoinRequest', joinRequestSchema);

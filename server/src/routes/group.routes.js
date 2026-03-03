@@ -9,7 +9,10 @@ const {
     requestToJoinGroup,
     getJoinRequests,
     approveJoinRequest,
-    rejectJoinRequest
+    rejectJoinRequest,
+    deleteGroup,
+    removeMember,
+    leaveGroup
 } = require('../controllers/group.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
@@ -29,6 +32,9 @@ router.patch('/requests/:id/reject', authorize('admin', 'owner'), rejectJoinRequ
 
 // GROUP-SPECIFIC ROUTES (DYNAMIC LAST ✅)
 router.get('/:id', getGroupById);
+router.delete('/:id', authorize('admin', 'owner'), deleteGroup);
 router.post('/:id/join', authorize('user', 'admin', 'owner'), requestToJoinGroup);
+router.delete('/:groupId/leave', leaveGroup);
+router.delete('/:groupId/members/:memberId', authorize('admin', 'owner'), removeMember);
 
 module.exports = router;

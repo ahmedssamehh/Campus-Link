@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 
 const roleMeta = {
@@ -30,14 +31,17 @@ const colorClasses = {
 const Groups = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showSuccess, showError, showInfo, showConfirm } = useNotification();
   const [groups, setGroups] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'joined', 'available'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', subject: '', description: '' });
-  const [membersModal, setMembersModal] = useState(null);   // { name, members } or null
+  const [membersModal, setMembersModal] = useState(null);   // { groupId, name, members } or null
   const [membersLoading, setMembersLoading] = useState(false);
+  const [removingMember, setRemovingMember] = useState(null);
+  const [pendingGroups, setPendingGroups] = useState([]); // Array of group IDs with pending join requests
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -68,31 +72,32 @@ const Groups = () => {
     try {
       const response = await axios.post('/groups', newGroup);
       if (response.data.success) {
-        alert('Group created successfully!');
+        showSuccess('Group created successfully!');
         setShowCreateModal(false);
         setNewGroup({ name: '', subject: '', description: '' });
         fetchGroups();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create group');
+      showError(err.response?.data?.message || 'Failed to create group');
     }
   };
 
   const handleJoinGroup = async (groupId) => {
     const group = groups.find(g => (g._id || g.id) === groupId);
     if (group.isJoined) {
-      alert('You are already a member of this group');
+      showInfo('You are already a member of this group');
       return;
     }
 
     try {
       const response = await axios.post(`/groups/${groupId}/join`);
       if (response.data.success) {
-        alert('Join request submitted successfully!');
-        // Don't update UI immediately - wait for admin approval
+        showSuccess('Join request submitted successfully!');
+        // Add to pending groups
+        setPendingGroups(prev => [...prev, groupId]);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to submit join request');
+      showError(err.response?.data?.message || 'Failed to submit join request');
     }
   };
 
@@ -102,16 +107,54 @@ const Groups = () => {
 
   const handleViewMembers = async (group) => {
     setMembersLoading(true);
-    setMembersModal({ name: group.name, members: [] });
+    setMembersModal({ groupId: group._id || group.id, name: group.name, members: [] });
     try {
       const res = await axios.get(`/groups/${group._id || group.id}`);
       if (res.data.success) {
-        setMembersModal({ name: res.data.group.name, members: res.data.group.members || [] });
+        setMembersModal({ 
+          groupId: group._id || group.id, 
+          name: res.data.group.name, 
+          members: res.data.group.members || [] 
+        });
       }
     } catch (err) {
-      setMembersModal({ name: group.name, members: group.members || [], error: true });
+      setMembersModal({ 
+        groupId: group._id || group.id, 
+        name: group.name, 
+        members: group.members || [], 
+        error: true 
+      });
     } finally {
       setMembersLoading(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (!membersModal || !membersModal.groupId) return;
+    
+    const confirmed = await showConfirm('Are you sure you want to remove this member from the group?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRemovingMember(memberId);
+      await axios.delete(`/groups/${membersModal.groupId}/members/${memberId}`);
+      
+      // Update the members list in the modal
+      setMembersModal(prev => ({
+        ...prev,
+        members: prev.members.filter(m => m._id !== memberId)
+      }));
+      
+      // Refresh groups list to update member counts
+      fetchGroups();
+      
+      showSuccess('Member removed successfully');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to remove member');
+    } finally {
+      setRemovingMember(null);
     }
   };
 
@@ -271,20 +314,23 @@ const Groups = () => {
                       >
                         Open
                       </button>
+                    ) : pendingGroups.includes(group._id || group.id) ? (
+                      <button
+                        disabled
+                        className="flex-1 bg-amber-100 text-amber-700 py-2 px-4 rounded-lg font-medium cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Pending
+                      </button>
                     ) : (
                       <button
                         onClick={() => handleJoinGroup(group._id || group.id)}
                         className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
                       >
                         Join
-                      </button>
-                    )}
-                    {group.isJoined && (
-                      <button
-                        disabled
-                        className="flex-1 bg-green-100 text-green-700 py-2 px-4 rounded-lg font-medium cursor-default"
-                      >
-                        Joined
                       </button>
                     )}
                   </div>
@@ -350,20 +396,41 @@ const Groups = () => {
                 <p className="text-center text-gray-500 py-8">No members found</p>
               ) : (
                 <ul className="space-y-3">
-                  {membersModal.members.map((member) => (
-                    <li key={member._id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-semibold text-sm">
-                          {member.name?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{member.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{member.email}</p>
-                      </div>
-                      <RoleBadge role={member.role} />
-                    </li>
-                  ))}
+                  {membersModal.members.map((member) => {
+                    const isOwner = member.role === 'owner';
+                    const canRemove = (user?.role === 'admin' || user?.role === 'owner') && !isOwner;
+                    
+                    return (
+                      <li key={member._id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-semibold text-sm">
+                            {member.name?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{member.name}</p>
+                          <p className="text-xs text-gray-400 truncate">{member.email}</p>
+                        </div>
+                        <RoleBadge role={member.role} />
+                        {canRemove && (
+                          <button
+                            onClick={() => handleRemoveMember(member._id)}
+                            disabled={removingMember === member._id}
+                            className="ml-2 p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                            title="Remove member"
+                          >
+                            {removingMember === member._id ? (
+                              <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

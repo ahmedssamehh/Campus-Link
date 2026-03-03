@@ -14,8 +14,11 @@ const Home = () => {
     studyGroups: 0,
     unreadMessages: 0,
     pendingRequests: 0,
+    unreadAnnouncements: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -35,10 +38,20 @@ const Home = () => {
         pendingCount = reqRes.data.success ? reqRes.data.count : 0;
       }
 
+      // Fetch unread announcements count
+      let unreadAnnouncementsCount = 0;
+      try {
+        const announcementsRes = await axios.get('/announcements/unread-count');
+        unreadAnnouncementsCount = announcementsRes.data.success ? announcementsRes.data.unreadCount : 0;
+      } catch (err) {
+        console.error('Failed to fetch unread announcements:', err);
+      }
+
       setStats({
         studyGroups: joinedCount,
         unreadMessages: 0, // No messages API yet
         pendingRequests: pendingCount,
+        unreadAnnouncements: unreadAnnouncementsCount,
       });
     } catch (err) {
       console.error('Failed to fetch home stats:', err);
@@ -51,7 +64,23 @@ const Home = () => {
     if (user) fetchStats();
   }, [user, fetchStats]);
 
-  const mockAnnouncements = [];
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      setAnnouncementsLoading(true);
+      const response = await axios.get('/announcements/latest');
+      if (response.data.success) {
+        setAnnouncements(response.data.announcements);
+      }
+    } catch (err) {
+      console.error('Failed to fetch announcements:', err);
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) fetchAnnouncements();
+  }, [user, fetchAnnouncements]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
@@ -118,6 +147,29 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Unread Announcements Badge */}
+        {stats.unreadAnnouncements > 0 && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg shadow-md p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-lg">
+                    {stats.unreadAnnouncements} New Announcement{stats.unreadAnnouncements !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-orange-100 text-sm">
+                    You have unread announcements from your groups
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Admin/Owner Role Badge */}
         {isAdminOrOwner && (
           <div className="mb-8">
@@ -148,7 +200,11 @@ const Home = () => {
 
         {/* Announcements Section */}
         <div className="mb-8">
-          <Announcements announcements={mockAnnouncements} />
+          <Announcements 
+            announcements={announcements} 
+            loading={announcementsLoading}
+            unreadCount={stats.unreadAnnouncements}
+          />
         </div>
 
         {/* Quick Actions Section */}

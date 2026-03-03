@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 
 const JoinRequests = () => {
+  const { showSuccess, showError } = useNotification();
   const [requests, setRequests] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -29,11 +31,11 @@ const JoinRequests = () => {
     try {
       const response = await axios.patch(`/groups/requests/${requestId}/approve`);
       if (response.data.success) {
-        alert('Request approved successfully!');
+        showSuccess('Request approved successfully!');
         fetchJoinRequests(); // Refresh the list
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to approve request');
+      showError(err.response?.data?.message || 'Failed to approve request');
     }
   };
 
@@ -41,11 +43,11 @@ const JoinRequests = () => {
     try {
       const response = await axios.patch(`/groups/requests/${requestId}/reject`);
       if (response.data.success) {
-        alert('Request rejected successfully!');
+        showSuccess('Request rejected successfully!');
         fetchJoinRequests(); // Refresh the list
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject request');
+      showError(err.response?.data?.message || 'Failed to reject request');
     }
   };
 
@@ -121,6 +123,18 @@ const JoinRequests = () => {
         {/* Main Content */}
         {!loading && !error && (
           <>
+            {/* Auto-deletion Notice */}
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <svg className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  <strong>Auto-cleanup enabled:</strong> Approved and rejected requests are automatically deleted after 15 days to keep the system clean.
+                </p>
+              </div>
+            </div>
+
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">

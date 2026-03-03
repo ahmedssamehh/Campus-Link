@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const isOwner = currentUser?.role === 'owner';
 
   const [users, setUsers] = useState([]);
@@ -11,6 +13,8 @@ const UsersManagement = () => {
   const [filterRole, setFilterRole] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch users from backend
   useEffect(() => {
@@ -42,10 +46,10 @@ const UsersManagement = () => {
             ? { ...user, role: 'admin' } 
             : user
         ));
-        alert('User promoted to admin successfully');
+        showSuccess('User promoted to admin successfully');
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to promote user');
+      showError(err.response?.data?.message || 'Failed to promote user');
     }
   };
 
@@ -60,10 +64,10 @@ const UsersManagement = () => {
             ? { ...user, role: 'user' } 
             : user
         ));
-        alert('Admin demoted to user successfully');
+        showSuccess('Admin demoted to user successfully');
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to demote user');
+      showError(err.response?.data?.message || 'Failed to demote user');
     }
   };
 
@@ -81,6 +85,36 @@ const UsersManagement = () => {
       }
     }
     
+    return true;
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async () => {
+    if (!confirmDeleteId) return;
+    
+    try {
+      setDeleting(true);
+      await axios.delete(`/admin/users/${confirmDeleteId}`);
+      setUsers(users.filter(u => (u.id || u._id) !== confirmDeleteId));
+      setConfirmDeleteId(null);
+      showSuccess('User deleted successfully');
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to delete user');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Check if user can be deleted
+  const canDeleteUser = (targetUser) => {
+    // Cannot delete owner
+    if (targetUser.role === 'owner') {
+      return false;
+    }
+    // Cannot delete yourself
+    if (targetUser.email === currentUser?.email) {
+      return false;
+    }
     return true;
   };
 
@@ -253,6 +287,18 @@ const UsersManagement = () => {
                                   Demote to User
                                 </button>
                               )}
+                              {canDeleteUser(user) && (
+                                <button
+                                  onClick={() => setConfirmDeleteId(userId)}
+                                  className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 text-xs font-medium flex items-center gap-1"
+                                  title="Delete user"
+                                >
+                                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                  Delete
+                                </button>
+                              )}
                             </div>
                           ) : (
                             <span className="text-gray-400 dark:text-gray-500 text-xs">
@@ -291,6 +337,56 @@ const UsersManagement = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Delete User?</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              This will permanently delete the user account and:
+            </p>
+            <ul className="text-sm text-gray-600 dark:text-gray-400 mb-6 space-y-1 list-disc list-inside">
+              <li>Remove them from all groups</li>
+              <li>Delete all groups they created</li>
+              <li>Cancel all their join requests</li>
+            </ul>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                disabled={deleting}
+                className="flex-1 py-2 px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleting}
+                className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete User'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

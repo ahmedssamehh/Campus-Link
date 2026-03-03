@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 import MessageBubble from '../../components/chat/MessageBubble';
 
@@ -33,6 +34,7 @@ const GroupChat = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showSuccess, showError, showConfirm } = useNotification();
 
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,8 @@ const GroupChat = () => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showMembers, setShowMembers] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const fetchGroup = useCallback(async () => {
     try {
@@ -66,6 +70,26 @@ const GroupChat = () => {
   useEffect(() => {
     fetchGroup();
   }, [fetchGroup]);
+
+  const handleLeaveGroup = async () => {
+    const confirmed = await showConfirm('Are you sure you want to leave this group?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLeaving(true);
+      const response = await axios.delete(`/groups/${id}/leave`);
+      if (response.data.success) {
+        showSuccess('You have left the group successfully');
+        navigate('/groups');
+      }
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to leave group');
+    } finally {
+      setLeaving(false);
+    }
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -159,23 +183,63 @@ const GroupChat = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 relative">
             <button
-              onClick={() => setShowMembers(!showMembers)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition duration-150 ${
-                showMembers
-                  ? 'bg-white text-blue-700'
-                  : 'hover:bg-white hover:bg-opacity-20 text-white'
-              }`}
-              title="Toggle Members"
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white bg-opacity-20 hover:bg-opacity-30 text-white transition duration-150"
+              title="Group Actions"
             >
-              <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
-              <span>Members ({memberCount})</span>
+              <span>Actions</span>
             </button>
+
+            {/* Dropdown Menu */}
+            {showActionsMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowActionsMenu(false)}
+                ></div>
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-20">
+                  <button
+                    onClick={() => {
+                      setShowMembers(!showMembers);
+                      setShowActionsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150"
+                  >
+                    <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">{showMembers ? 'Hide' : 'Show'} Members ({memberCount})</span>
+                  </button>
+                  <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                  <button
+                    onClick={() => {
+                      setShowActionsMenu(false);
+                      handleLeaveGroup();
+                    }}
+                    disabled={leaving}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {leaving ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                    )}
+                    <span className="text-sm font-medium">Leave Group</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

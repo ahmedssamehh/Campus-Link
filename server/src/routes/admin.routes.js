@@ -1,7 +1,7 @@
 // src/routes/admin.routes.js
 const express = require('express');
 const router = express.Router();
-const { getAllUsers, promoteToAdmin, demoteToUser, getDashboardStats, getAllActivities, deleteActivities, deleteAllActivities } = require('../controllers/admin.controller');
+const { getAllUsers, promoteToAdmin, demoteToUser, deleteUser, getDashboardStats, getAllActivities, deleteActivities, deleteAllActivities } = require('../controllers/admin.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 // All routes are protected and require authentication
@@ -24,5 +24,8 @@ router.patch('/promote/:userId', authorize('admin', 'owner'), promoteToAdmin);
 
 // PATCH /api/admin/demote/:userId - Demote admin to user (owner only)
 router.patch('/demote/:userId', authorize('owner'), demoteToUser);
+
+// DELETE /api/admin/users/:userId - Delete user from platform (admin and owner)
+router.delete('/users/:userId', authorize('admin', 'owner'), deleteUser);
 
 module.exports = router;
