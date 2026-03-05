@@ -24,12 +24,14 @@ const adminRoutes = require('./routes/admin.routes');
 const groupRoutes = require('./routes/group.routes');
 const chatRoutes = require('./routes/chat.routes');
 const announcementRoutes = require('./routes/announcement.routes');
+const messageRoutes = require('./routes/message.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/messages', messageRoutes);
 
 // 404 handler
 app.use((req, res) => {

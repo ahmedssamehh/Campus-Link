@@ -1,6 +1,19 @@
 import React from 'react';
 
 const MessageBubble = ({ message, isSent }) => {
+  // Support both { sender: "Name" } and { sender: { name: "Name" } }
+  const senderName = typeof message.sender === 'object'
+    ? message.sender?.name || 'Unknown'
+    : message.sender || 'Unknown';
+
+  // Support both { text: "..." } and { content: "..." }
+  const messageText = message.text || message.content || '';
+
+  // Support both { time: "..." } and { createdAt: "..." }
+  const messageTime = message.time || (message.createdAt
+    ? new Date(message.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    : '');
+
   return (
     <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -8,7 +21,7 @@ const MessageBubble = ({ message, isSent }) => {
         {!isSent && (
           <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-semibold">
-              {message.sender.charAt(0).toUpperCase()}
+              {senderName.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
@@ -16,7 +29,7 @@ const MessageBubble = ({ message, isSent }) => {
         {/* Message Content */}
         <div>
           {!isSent && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1">{message.sender}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1">{senderName}</p>
           )}
           <div
             className={`px-4 py-2 rounded-lg ${
@@ -25,10 +38,10 @@ const MessageBubble = ({ message, isSent }) => {
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'
             }`}
           >
-            <p className="text-sm">{message.text}</p>
+            <p className="text-sm">{messageText}</p>
           </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 px-1">
-            {message.time}
+            {messageTime}
           </p>
         </div>
       </div>

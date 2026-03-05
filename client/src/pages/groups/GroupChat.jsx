@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import MessageBubble from '../../components/chat/MessageBubble';
 
@@ -35,16 +36,32 @@ const GroupChat = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showSuccess, showError, showConfirm } = useNotification();
+  const { joinGroup, sendMessage, onNewMessage, connected, emitTyping, emitStopTyping, onUserTyping, onUserStopTyping, setActiveView } = useSocket();
 
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [forbidden, setForbidden] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [showMembers, setShowMembers] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const currentUserId = (user?._id || user?.id)?.toString();
+
+  // Auto-scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const fetchGroup = useCallback(async () => {
     try {
@@ -67,15 +84,88 @@ const GroupChat = () => {
     }
   }, [id]);
 
+  // Fetch message history from API
+  const fetchMessages = useCallback(async () => {
+    try {
+      setMessagesLoading(true);
+      const response = await axios.get(`/messages/group/${id}`);
+      if (response.data.success) {
+        setMessages(response.data.messages);
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchGroup();
   }, [fetchGroup]);
 
+  // Join socket room & fetch history once group is loaded
+  useEffect(() => {
+    if (!group || !connected) return;
+
+    // Mark this group as actively viewed (clears unread count)
+    setActiveView(id);
+
+    // Join the socket room
+    joinGroup(id).then(() => {
+      console.log('Joined group socket room:', id);
+    }).catch((err) => {
+      console.error('Failed to join group room:', err.message);
+    });
+
+    // Fetch message history
+    fetchMessages();
+
+    // Clear active view on unmount
+    return () => setActiveView(null);
+  }, [group, connected, id, joinGroup, fetchMessages, setActiveView]);
+
+  // Listen for new realtime messages
+  useEffect(() => {
+    const unsubscribe = onNewMessage((msg) => {
+      // Only add messages for this group
+      if (msg.group === id) {
+        setMessages((prev) => {
+          // Deduplicate by _id
+          if (prev.some(m => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [id, onNewMessage]);
+
+  // Listen for typing indicators
+  useEffect(() => {
+    const unsubTyping = onUserTyping(({ userName, group: typingGroup }) => {
+      if (typingGroup === id) {
+        setTypingUsers((prev) => {
+          if (prev.includes(userName)) return prev;
+          return [...prev, userName];
+        });
+      }
+    });
+
+    const unsubStopTyping = onUserStopTyping(({ userId: typingUserId, group: typingGroup }) => {
+      if (typingGroup === id) {
+        setTypingUsers((prev) => prev.filter((name) => name !== typingUserId));
+      }
+    });
+
+    return () => {
+      unsubTyping();
+      unsubStopTyping();
+    };
+  }, [id, onUserTyping, onUserStopTyping]);
+
   const handleLeaveGroup = async () => {
     const confirmed = await showConfirm('Are you sure you want to leave this group?');
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setLeaving(true);
@@ -91,18 +181,43 @@ const GroupChat = () => {
     }
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (messageInput.trim() === '') return;
-    const newMessage = {
-      id: messages.length + 1,
-      text: messageInput,
-      sender: user?.name || 'You',
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      isSent: true,
-    };
-    setMessages(prev => [...prev, newMessage]);
-    setMessageInput('');
+    if (messageInput.trim() === '' || sending) return;
+
+    try {
+      setSending(true);
+      await sendMessage({
+        group: id,
+        content: messageInput.trim(),
+        type: 'text'
+      });
+      setMessageInput('');
+      // Stop typing indicator
+      emitStopTyping({ group: id });
+    } catch (err) {
+      showError(err.message || 'Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Handle typing indicator
+  const handleInputChange = (e) => {
+    setMessageInput(e.target.value);
+
+    // Emit typing
+    emitTyping({ group: id });
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      emitStopTyping({ group: id });
+    }, 2000);
   };
 
   // Pick a stable color from the group _id
@@ -180,6 +295,7 @@ const GroupChat = () => {
               <h1 className="text-2xl font-bold">{group.name}</h1>
               <p className="text-sm text-white text-opacity-90">
                 {memberCount} member{memberCount !== 1 ? 's' : ''} • {group.subject}
+                {connected && <span className="ml-2 inline-block w-2 h-2 bg-green-400 rounded-full"></span>}
               </p>
             </div>
           </div>
@@ -249,10 +365,12 @@ const GroupChat = () => {
         {/* Messages Area */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
-            <div className="flex items-center justify-center mb-6">
-              <div className="bg-gray-300 text-gray-700 text-xs px-4 py-1 rounded-full">Today</div>
-            </div>
-            {messages.length === 0 ? (
+            {messagesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-500">Loading messages...</span>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <svg className="h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -264,13 +382,25 @@ const GroupChat = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isSent={message.sender === (user?.name || 'You')}
-                  />
-                ))}
+                {messages.map((message) => {
+                  const senderId = typeof message.sender === 'object'
+                    ? message.sender?._id?.toString()
+                    : message.sender;
+                  return (
+                    <MessageBubble
+                      key={message._id || message.id}
+                      message={message}
+                      isSent={senderId === currentUserId}
+                    />
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+            {/* Typing indicator */}
+            {typingUsers.length > 0 && (
+              <div className="mt-2 text-sm text-gray-500 italic">
+                {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
               </div>
             )}
           </div>
@@ -281,17 +411,23 @@ const GroupChat = () => {
               <input
                 type="text"
                 value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={handleInputChange}
+                placeholder={connected ? "Type a message..." : "Connecting..."}
+                disabled={!connected}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
-                className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150"
+                disabled={!connected || sending || messageInput.trim() === ''}
+                className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
+                {sending ? (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
               </button>
             </form>
           </div>

@@ -16,7 +16,7 @@ const RoleBadge = ({ role }) => {
   );
 };
 
-const ChatList = ({ chats, activeChat, onSelectChat }) => {
+const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Search Bar */}
@@ -30,7 +30,15 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {chats.map((chat) => (
+        {chats.map((chat) => {
+          const unread = unreadMessages?.[chat.id];
+          const unreadCount = unread?.count || 0;
+          const previewMsg = unread?.lastMessage || chat.lastMessage;
+          const previewTime = unread?.timestamp
+            ? new Date(unread.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            : chat.lastMessageTime;
+
+          return (
           <div
             key={chat.id}
             onClick={() => onSelectChat(chat)}
@@ -53,10 +61,12 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
             {/* Chat Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-0.5">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                <h3 className={`text-sm font-semibold truncate ${unreadCount > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                   {chat.name}
                 </h3>
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">{chat.lastMessageTime}</span>
+                <span className={`text-xs flex-shrink-0 ml-2 ${unreadCount > 0 ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+                  {previewTime}
+                </span>
               </div>
               {chat.role && (
                 <div className="mb-1">
@@ -64,16 +74,19 @@ const ChatList = ({ chats, activeChat, onSelectChat }) => {
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{chat.lastMessage}</p>
-                {chat.unreadCount > 0 && (
-                  <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                    {chat.unreadCount}
+                <p className={`text-sm truncate ${unreadCount > 0 ? 'text-gray-900 dark:text-gray-200 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
+                  {unreadCount > 0 && unread?.senderName ? `${unread.senderName}: ${previewMsg}` : previewMsg}
+                </p>
+                {unreadCount > 0 && (
+                  <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[24px] text-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

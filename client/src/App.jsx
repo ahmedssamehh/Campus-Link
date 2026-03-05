@@ -2,7 +2,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
+import { SocketProvider } from './context/SocketContext';
 import NotificationContainer from './components/common/NotificationContainer';
+import MessageToast from './components/common/MessageToast';
 import UserLayout from './components/layout/UserLayout';
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
@@ -73,8 +75,11 @@ function App() {
   return (
     <Router>
       <NotificationProvider>
-        <NotificationContainer />
-        <AppContent />
+        <SocketProvider>
+          <NotificationContainer />
+          <MessageToast />
+          <AppContent />
+        </SocketProvider>
       </NotificationProvider>
     </Router>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 
 const roleMeta = {
@@ -32,6 +33,7 @@ const Groups = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showSuccess, showError, showInfo, showConfirm } = useNotification();
+  const { unreadMessages } = useSocket();
   const [groups, setGroups] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'joined', 'available'
   const [loading, setLoading] = useState(true);
@@ -253,6 +255,15 @@ const Groups = () => {
                       {group.subject}
                     </span>
                   </div>
+                  {/* Unread message badge */}
+                  {unreadMessages[group._id || group.id] && (
+                    <div className="flex flex-col items-center">
+                      <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full min-w-[24px] text-center animate-pulse">
+                        {unreadMessages[group._id || group.id].count > 99 ? '99+' : unreadMessages[group._id || group.id].count}
+                      </span>
+                      <span className="text-white text-[10px] mt-1 opacity-80">new</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Group Body */}

@@ -1,24 +1,152 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSocket } from '../../context/SocketContext';
+import axios from '../../api/axios';
 import MessageBubble from './MessageBubble';
 
-const ChatWindow = ({ chat, currentUser }) => {
+const ChatWindow = ({ chat, currentUserId }) => {
+  const { joinPrivate, sendMessage, onNewMessage, connected, emitTyping, emitStopTyping, onUserTyping, onUserStopTyping } = useSocket();
   const [messageInput, setMessageInput] = useState('');
-  const [messages, setMessages] = useState(chat?.messages || []);
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (messageInput.trim() === '') return;
+  // Auto-scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
-    const newMessage = {
-      id: messages.length + 1,
-      text: messageInput,
-      sender: currentUser,
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      isSent: true,
-    };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
-    setMessages([...messages, newMessage]);
+  // Fetch message history from API
+  const fetchMessages = useCallback(async (userId) => {
+    try {
+      setMessagesLoading(true);
+      const response = await axios.get(`/messages/private/${userId}`);
+      if (response.data.success) {
+        setMessages(response.data.messages);
+      }
+    } catch (err) {
+      console.error('Failed to fetch private messages:', err);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  // Join private room & fetch history when chat is selected
+  useEffect(() => {
+    if (!chat || !connected) return;
+
+    // Reset state for new chat
+    setMessages([]);
+    setTypingUsers([]);
     setMessageInput('');
+
+    // Join the private socket room
+    joinPrivate(chat.id).then(() => {
+      console.log('Joined private room with:', chat.name);
+    }).catch((err) => {
+      console.error('Failed to join private room:', err.message);
+    });
+
+    // Fetch message history
+    fetchMessages(chat.id);
+  }, [chat?.id, connected, joinPrivate, fetchMessages]);
+
+  // Listen for new realtime messages
+  useEffect(() => {
+    if (!chat) return;
+
+    const unsubscribe = onNewMessage((msg) => {
+      // Only add messages for this private conversation (no group field)
+      if (msg.group) return;
+
+      const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
+      const receiverId = msg.receiver;
+
+      // Check if this message belongs to this conversation
+      const isRelevant =
+        (senderId === currentUserId && receiverId === chat.id) ||
+        (senderId === chat.id && receiverId === currentUserId);
+
+      if (isRelevant) {
+        setMessages((prev) => {
+          // Deduplicate by _id
+          if (prev.some((m) => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [chat?.id, currentUserId, onNewMessage]);
+
+  // Listen for typing indicators
+  useEffect(() => {
+    if (!chat) return;
+
+    const unsubTyping = onUserTyping(({ userName, receiver }) => {
+      if (receiver) {
+        setTypingUsers((prev) => {
+          if (prev.includes(userName)) return prev;
+          return [...prev, userName];
+        });
+      }
+    });
+
+    const unsubStopTyping = onUserStopTyping(({ receiver }) => {
+      if (receiver) {
+        setTypingUsers([]);
+      }
+    });
+
+    return () => {
+      unsubTyping();
+      unsubStopTyping();
+    };
+  }, [chat?.id, onUserTyping, onUserStopTyping]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (messageInput.trim() === '' || sending || !connected) return;
+
+    try {
+      setSending(true);
+      await sendMessage({
+        receiver: chat.id,
+        content: messageInput.trim(),
+        type: 'text',
+      });
+      setMessageInput('');
+      // Stop typing indicator
+      emitStopTyping({ receiver: chat.id });
+    } catch (err) {
+      console.error('Failed to send message:', err.message);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Handle typing indicator
+  const handleInputChange = (e) => {
+    setMessageInput(e.target.value);
+
+    // Emit typing
+    emitTyping({ receiver: chat.id });
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      emitStopTyping({ receiver: chat.id });
+    }, 2000);
   };
 
   if (!chat) {
@@ -70,6 +198,8 @@ const ChatWindow = ({ chat, currentUser }) => {
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {/* Connection indicator */}
+          <div className={`w-2 h-2 rounded-full mr-2 ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150">
             <svg
               className="h-6 w-6 text-gray-600 dark:text-gray-400"
@@ -105,15 +235,41 @@ const ChatWindow = ({ chat, currentUser }) => {
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isSent={message.sender === currentUser}
-            />
-          ))}
-        </div>
+        {messagesLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-400 dark:text-gray-500 text-sm">
+                  No messages yet. Say hello! 👋
+                </p>
+              </div>
+            )}
+            {messages.map((message) => {
+              const senderId = typeof message.sender === 'object'
+                ? message.sender._id?.toString()
+                : message.sender?.toString();
+              return (
+                <MessageBubble
+                  key={message._id || message.id}
+                  message={message}
+                  isSent={senderId === currentUserId}
+                />
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+
+        {/* Typing indicator */}
+        {typingUsers.length > 0 && (
+          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">
+            {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+          </div>
+        )}
       </div>
 
       {/* Message Input */}
@@ -140,9 +296,10 @@ const ChatWindow = ({ chat, currentUser }) => {
           <input
             type="text"
             value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+            onChange={handleInputChange}
+            placeholder={connected ? 'Type a message...' : 'Connecting...'}
+            disabled={!connected}
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 disabled:opacity-50"
           />
           <button
             type="button"
@@ -164,21 +321,26 @@ const ChatWindow = ({ chat, currentUser }) => {
           </button>
           <button
             type="submit"
-            className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150"
+            disabled={!messageInput.trim() || sending || !connected}
+            className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
+            {sending ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            ) : (
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
+            )}
           </button>
         </form>
       </div>

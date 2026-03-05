@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { totalUnreadChat, totalUnreadGroups } = useSocket();
 
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
@@ -33,6 +35,7 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
     {
       name: 'Chat',
       path: '/chat',
+      badge: totalUnreadChat,
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -47,6 +50,7 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
     {
       name: 'Study Groups',
       path: '/groups',
+      badge: totalUnreadGroups,
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -143,9 +147,23 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
-                <div className="flex-shrink-0">{item.icon}</div>
+                <div className="flex-shrink-0 relative">
+                  {item.icon}
+                  {/* Unread badge (dot) when sidebar is collapsed */}
+                  {!isOpen && item.badge > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </div>
                 {isOpen && (
-                  <span className="font-medium whitespace-nowrap">{item.name}</span>
+                  <span className="font-medium whitespace-nowrap flex-1">{item.name}</span>
+                )}
+                {/* Unread badge (full) when sidebar is expanded */}
+                {isOpen && item.badge > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center animate-pulse">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
                 )}
               </Link>
             );
