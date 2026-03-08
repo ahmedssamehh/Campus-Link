@@ -75,6 +75,17 @@ function initSocketServer(httpServer) {
         }
         onlineUsers.get(userId).add(socket.id);
 
+        // ── Auto-join personal room (for direct message delivery) ──
+        socket.join(userId);
+
+        // ── Auto-join all groups the user belongs to ─────────
+        Group.find({ members: userId }).select('_id').then((groups) => {
+            groups.forEach((g) => socket.join(g._id.toString()));
+            console.log(`📦 Auto-joined ${groups.length} group room(s) for ${socket.user.name}`);
+        }).catch((err) => {
+            console.error('Auto-join groups error:', err.message);
+        });
+
         // Broadcast online status
         io.emit('userOnline', { userId, name: socket.user.name });
 

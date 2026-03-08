@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'http://localhost:5050';
+const SOCKET_URL = 'http://localhost:5000';
 
 export const SocketProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
