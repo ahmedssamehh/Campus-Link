@@ -1,38 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext(null);
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('light');
-
-  // Load theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('campusLinkTheme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
-    }
+    document.documentElement.classList.add('dark');
   }, []);
 
-  // Toggle theme
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('campusLinkTheme', newTheme);
-    
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
   const value = {
-    theme,
-    toggleTheme,
-    isDark: theme === 'dark',
+    theme: 'dark',
+    isDark: true,
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

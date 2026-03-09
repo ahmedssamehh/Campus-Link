@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import ThemeToggle from '../ui/ThemeToggle';
 
 const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
@@ -141,16 +140,6 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
 
         {/* Bottom Section - User & Settings */}
         <div className="border-t border-purple-600 dark:border-purple-800 p-3 space-y-2">
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-center px-3 py-2">
-            <ThemeToggle />
-            {isOpen && (
-              <span className="ml-3 text-sm text-purple-100 whitespace-nowrap">
-                Toggle Theme
-              </span>
-            )}
-          </div>
-
           {/* User Info */}
           <div className="px-3 py-2 rounded-lg bg-purple-800/50 dark:bg-purple-950/50">
             <div className="flex items-center space-x-3">

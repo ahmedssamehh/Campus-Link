@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
-import ThemeToggle from '../ui/ThemeToggle';
 
 const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
@@ -178,16 +177,6 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
             {isOpen && (
               <span className={`ml-2 text-xs ${connected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {connected ? 'Connected' : 'Disconnected'}
-              </span>
-            )}
-          </div>
-
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-center px-3 py-2">
-            <ThemeToggle />
-            {isOpen && (
-              <span className="ml-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                Toggle Theme
               </span>
             )}
           </div>

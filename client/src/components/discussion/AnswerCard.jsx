@@ -15,9 +15,9 @@ const AnswerCard = ({ answer, isAccepted }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md p-6 ${isAccepted ? 'border-2 border-green-500' : ''}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${isAccepted ? 'border-2 border-green-500' : ''}`}>
       {isAccepted && (
-        <div className="mb-3 flex items-center text-green-600">
+        <div className="mb-3 flex items-center text-green-600 dark:text-green-400">
           <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -37,7 +37,7 @@ const AnswerCard = ({ answer, isAccepted }) => {
             className={`p-2 rounded-full transition duration-200 ${
               hasUpvoted
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -48,12 +48,12 @@ const AnswerCard = ({ answer, isAccepted }) => {
               />
             </svg>
           </button>
-          <span className="font-bold text-lg text-gray-900">{upvotes}</span>
+          <span className="font-bold text-lg text-gray-900 dark:text-white">{upvotes}</span>
         </div>
 
         {/* Answer Content */}
         <div className="flex-1">
-          <p className="text-gray-800 mb-4 whitespace-pre-line">{answer.content}</p>
+          <p className="text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-line">{answer.content}</p>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -63,8 +63,8 @@ const AnswerCard = ({ answer, isAccepted }) => {
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{answer.author}</p>
-                <p className="text-xs text-gray-500">Answered {answer.time}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{answer.author}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Answered {answer.time}</p>
               </div>
             </div>
           </div>

@@ -68,8 +68,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Title Field */}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-          Question Title *
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         </label>
         <input
           type="text"
@@ -80,7 +79,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
           placeholder="What's your question? Be specific."
           className={`w-full px-4 py-3 border ${
             errors.title ? 'border-red-500' : 'border-gray-300'
-          } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
+          } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600`}
           disabled={isLoading}
         />
         {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
@@ -88,7 +87,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
 
       {/* Content Field */}
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Details *
         </label>
         <textarea
@@ -100,19 +99,18 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
           rows={8}
           className={`w-full px-4 py-3 border ${
             errors.content ? 'border-red-500' : 'border-gray-300'
-          } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none`}
+          } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600`}
           disabled={isLoading}
         />
         {errors.content && <p className="mt-1 text-sm text-red-600">{errors.content}</p>}
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {formData.content.length} characters (minimum 20)
         </p>
       </div>
 
       {/* Tags Field */}
       <div>
-        <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-          Tags (Optional)
+        <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         </label>
         <input
           type="text"
@@ -121,10 +119,10 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
           value={formData.tags}
           onChange={handleChange}
           placeholder="e.g., programming, math, physics (comma-separated)"
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white dark:bg-gray-700 dark:text-white"
           disabled={isLoading}
         />
-        <p className="mt-1 text-xs text-gray-500">Separate tags with commas</p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Separate tags with commas</p>
       </div>
 
       {/* Submit Button */}
@@ -132,7 +130,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="px-6 py-3 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition duration-200"
+          className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
           disabled={isLoading}
         >
           Cancel
