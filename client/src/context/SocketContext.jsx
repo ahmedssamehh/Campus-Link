@@ -8,11 +8,19 @@ const SocketContext = createContext(null);
 
 const SOCKET_URL = 'http://localhost:5000';
 
+// Generate unique client message ID for dedup
+let messageCounter = 0;
+function generateClientMessageId(userId) {
+    messageCounter += 1;
+    return `${userId}-${Date.now()}-${messageCounter}`;
+}
+
 export const SocketProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
     const socketRef = useRef(null);
     const [connected, setConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState(new Set());
+    const [lastSeenMap, setLastSeenMap] = useState({}); // userId → ISO date string
 
     // ─── Unread message tracking ─────────────────────────────
     // { groups: { groupId: count }, private: { userId: count } }
@@ -107,13 +115,16 @@ export const SocketProvider = ({ children }) => {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,
-            reconnectionAttempts: 10,
+            reconnectionDelayMax: 30000,
+            reconnectionAttempts: Infinity,
             timeout: 20000
         });
 
         socket.on('connect', () => {
             console.log('🔌 Socket connected:', socket.id);
             setConnected(true);
+            // Re-fetch unread counts on reconnect
+            fetchUnreadCounts();
         });
 
         socket.on('disconnect', (reason) => {
@@ -131,12 +142,15 @@ export const SocketProvider = ({ children }) => {
             setOnlineUsers((prev) => new Set([...prev, userId]));
         });
 
-        socket.on('userOffline', ({ userId }) => {
+        socket.on('userOffline', ({ userId, lastSeen }) => {
             setOnlineUsers((prev) => {
                 const next = new Set(prev);
                 next.delete(userId);
                 return next;
             });
+            if (lastSeen) {
+                setLastSeenMap((prev) => ({ ...prev, [userId]: lastSeen }));
+            }
         });
 
         // ─── Realtime unread increment on new message ───────
@@ -199,9 +213,9 @@ export const SocketProvider = ({ children }) => {
             if (!socketRef.current?.connected) {
                 return reject(new Error('Socket not connected'));
             }
-            const currentUserId = user?._id || user?.id;
+            const uid = user?._id || user?.id;
             socketRef.current.emit('joinPrivate', {
-                user1: currentUserId,
+                user1: uid,
                 user2: otherUserId
             }, (response) => {
                 if (response.error) reject(new Error(response.error));
@@ -210,15 +224,16 @@ export const SocketProvider = ({ children }) => {
         });
     }, [user]);
 
-    // ─── Send a message ──────────────────────────────────────
+    // ─── Send a message (with clientMessageId for dedup) ─────
     const sendMessage = useCallback((data) => {
         return new Promise((resolve, reject) => {
             if (!socketRef.current?.connected) {
                 return reject(new Error('Socket not connected'));
             }
-            socketRef.current.emit('sendMessage', data, (response) => {
+            const clientMessageId = generateClientMessageId(currentUserIdRef.current);
+            socketRef.current.emit('sendMessage', { ...data, clientMessageId }, (response) => {
                 if (response.error) reject(new Error(response.error));
-                else resolve(response);
+                else resolve({ ...response, clientMessageId });
             });
         });
     }, []);
@@ -228,6 +243,101 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newMessage', handler);
         return () => socketRef.current?.off('newMessage', handler);
+    }, [connected]);
+
+    // ─── Message delivery status ─────────────────────────────
+    const onMessagesDelivered = useCallback((handler) => {
+        if (!socketRef.current) return () => {};
+        socketRef.current.on('messagesDelivered', handler);
+        return () => socketRef.current?.off('messagesDelivered', handler);
+    }, [connected]);
+
+    // ─── Read receipts ──────────────────────────────────────
+    const emitMessagesSeen = useCallback((data) => {
+        return new Promise((resolve, reject) => {
+            if (!socketRef.current?.connected) {
+                return reject(new Error('Socket not connected'));
+            }
+            socketRef.current.emit('messagesSeen', data, (response) => {
+                if (response.error) reject(new Error(response.error));
+                else resolve(response);
+            });
+        });
+    }, []);
+
+    const onMessagesRead = useCallback((handler) => {
+        if (!socketRef.current) return () => {};
+        socketRef.current.on('messagesRead', handler);
+        return () => socketRef.current?.off('messagesRead', handler);
+    }, [connected]);
+
+    // ─── Reactions ───────────────────────────────────────────
+    const emitAddReaction = useCallback((data) => {
+        return new Promise((resolve, reject) => {
+            if (!socketRef.current?.connected) {
+                return reject(new Error('Socket not connected'));
+            }
+            socketRef.current.emit('addReaction', data, (response) => {
+                if (response.error) reject(new Error(response.error));
+                else resolve(response);
+            });
+        });
+    }, []);
+
+    const emitRemoveReaction = useCallback((data) => {
+        return new Promise((resolve, reject) => {
+            if (!socketRef.current?.connected) {
+                return reject(new Error('Socket not connected'));
+            }
+            socketRef.current.emit('removeReaction', data, (response) => {
+                if (response.error) reject(new Error(response.error));
+                else resolve(response);
+            });
+        });
+    }, []);
+
+    const onReactionUpdated = useCallback((handler) => {
+        if (!socketRef.current) return () => {};
+        socketRef.current.on('reactionUpdated', handler);
+        return () => socketRef.current?.off('reactionUpdated', handler);
+    }, [connected]);
+
+    // ─── Edit message ────────────────────────────────────────
+    const emitEditMessage = useCallback((data) => {
+        return new Promise((resolve, reject) => {
+            if (!socketRef.current?.connected) {
+                return reject(new Error('Socket not connected'));
+            }
+            socketRef.current.emit('editMessage', data, (response) => {
+                if (response.error) reject(new Error(response.error));
+                else resolve(response);
+            });
+        });
+    }, []);
+
+    const onMessageEdited = useCallback((handler) => {
+        if (!socketRef.current) return () => {};
+        socketRef.current.on('messageEdited', handler);
+        return () => socketRef.current?.off('messageEdited', handler);
+    }, [connected]);
+
+    // ─── Delete message ──────────────────────────────────────
+    const emitDeleteMessage = useCallback((data) => {
+        return new Promise((resolve, reject) => {
+            if (!socketRef.current?.connected) {
+                return reject(new Error('Socket not connected'));
+            }
+            socketRef.current.emit('deleteMessage', data, (response) => {
+                if (response.error) reject(new Error(response.error));
+                else resolve(response);
+            });
+        });
+    }, []);
+
+    const onMessageDeleted = useCallback((handler) => {
+        if (!socketRef.current) return () => {};
+        socketRef.current.on('messageDeleted', handler);
+        return () => socketRef.current?.off('messageDeleted', handler);
     }, [connected]);
 
     // ─── Typing indicators ──────────────────────────────────
@@ -255,6 +365,7 @@ export const SocketProvider = ({ children }) => {
         socket: socketRef.current,
         connected,
         onlineUsers,
+        lastSeenMap,
         unreadMessages,
         totalUnread,
         totalUnreadChat,
@@ -266,6 +377,20 @@ export const SocketProvider = ({ children }) => {
         joinPrivate,
         sendMessage,
         onNewMessage,
+        // Delivery & read receipts
+        onMessagesDelivered,
+        emitMessagesSeen,
+        onMessagesRead,
+        // Reactions
+        emitAddReaction,
+        emitRemoveReaction,
+        onReactionUpdated,
+        // Edit & delete
+        emitEditMessage,
+        onMessageEdited,
+        emitDeleteMessage,
+        onMessageDeleted,
+        // Typing
         emitTyping,
         emitStopTyping,
         onUserTyping,

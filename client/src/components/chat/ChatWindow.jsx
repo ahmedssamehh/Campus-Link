@@ -4,36 +4,70 @@ import axios from '../../api/axios';
 import MessageBubble from './MessageBubble';
 
 const ChatWindow = ({ chat, currentUserId }) => {
-  const { joinPrivate, sendMessage, onNewMessage, connected, emitTyping, emitStopTyping, onUserTyping, onUserStopTyping } = useSocket();
+  const {
+    joinPrivate, sendMessage, onNewMessage, connected,
+    emitTyping, emitStopTyping, onUserTyping, onUserStopTyping,
+    onMessagesDelivered, emitMessagesSeen, onMessagesRead,
+    emitAddReaction, emitRemoveReaction, onReactionUpdated,
+    emitEditMessage, onMessageEdited,
+    emitDeleteMessage, onMessageDeleted
+  } = useSocket();
+
   const [messageInput, setMessageInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [editInput, setEditInput] = useState('');
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const isInitialLoad = useRef(true);
 
-  // Auto-scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Auto-scroll to bottom only for new messages at bottom
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (isInitialLoad.current && messages.length > 0) {
+      scrollToBottom('auto');
+      isInitialLoad.current = false;
+    } else if (!loadingMore && messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages, scrollToBottom, loadingMore]);
 
   // Fetch message history from API
-  const fetchMessages = useCallback(async (userId) => {
+  const fetchMessages = useCallback(async (userId, before = null) => {
     try {
-      setMessagesLoading(true);
-      const response = await axios.get(`/messages/private/${userId}`);
+      if (!before) {
+        setMessagesLoading(true);
+        isInitialLoad.current = true;
+      } else {
+        setLoadingMore(true);
+      }
+      const params = before ? `?before=${before}&limit=50` : '?limit=50';
+      const response = await axios.get(`/messages/private/${userId}${params}`);
       if (response.data.success) {
-        setMessages(response.data.messages);
+        if (before) {
+          // Prepend older messages
+          setMessages((prev) => [...response.data.messages, ...prev]);
+        } else {
+          setMessages(response.data.messages);
+        }
+        setHasMore(response.data.hasMore || false);
       }
     } catch (err) {
       console.error('Failed to fetch private messages:', err);
     } finally {
       setMessagesLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
@@ -45,6 +79,8 @@ const ChatWindow = ({ chat, currentUserId }) => {
     setMessages([]);
     setTypingUsers([]);
     setMessageInput('');
+    setEditingMessage(null);
+    setHasMore(false);
 
     // Join the private socket room
     joinPrivate(chat.id).then(() => {
@@ -57,33 +93,115 @@ const ChatWindow = ({ chat, currentUserId }) => {
     fetchMessages(chat.id);
   }, [chat?.id, connected, joinPrivate, fetchMessages]);
 
+  // Infinite scroll - load older messages
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !hasMore || loadingMore || !chat) return;
+
+    if (container.scrollTop < 100) {
+      const oldestMessage = messages[0];
+      if (oldestMessage?.createdAt) {
+        fetchMessages(chat.id, oldestMessage.createdAt);
+      }
+    }
+  }, [hasMore, loadingMore, messages, chat, fetchMessages]);
+
   // Listen for new realtime messages
   useEffect(() => {
     if (!chat) return;
 
     const unsubscribe = onNewMessage((msg) => {
-      // Only add messages for this private conversation (no group field)
       if (msg.group) return;
 
       const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
       const receiverId = msg.receiver;
 
-      // Check if this message belongs to this conversation
       const isRelevant =
         (senderId === currentUserId && receiverId === chat.id) ||
         (senderId === chat.id && receiverId === currentUserId);
 
       if (isRelevant) {
         setMessages((prev) => {
-          // Deduplicate by _id
           if (prev.some((m) => m._id === msg._id)) return prev;
+          // Also dedup by clientMessageId
+          if (msg.clientMessageId && prev.some((m) => m.clientMessageId === msg.clientMessageId)) return prev;
           return [...prev, msg];
         });
+
+        // Auto-mark as seen if from other user
+        if (senderId !== currentUserId && msg._id) {
+          emitMessagesSeen({ messageIds: [msg._id], privateChatUserId: chat.id }).catch(() => {});
+        }
       }
     });
 
     return unsubscribe;
-  }, [chat?.id, currentUserId, onNewMessage]);
+  }, [chat?.id, currentUserId, onNewMessage, emitMessagesSeen]);
+
+  // Listen for delivery receipts
+  useEffect(() => {
+    if (!chat) return;
+    const unsub = onMessagesDelivered(({ messageIds, deliveredTo, deliveredAt }) => {
+      setMessages((prev) => prev.map((m) => {
+        if (messageIds.includes(m._id?.toString())) {
+          const newDelivered = [...(m.deliveredTo || [])];
+          if (!newDelivered.includes(deliveredTo)) newDelivered.push(deliveredTo);
+          return { ...m, deliveredTo: newDelivered };
+        }
+        return m;
+      }));
+    });
+    return unsub;
+  }, [chat?.id, onMessagesDelivered]);
+
+  // Listen for read receipts
+  useEffect(() => {
+    if (!chat) return;
+    const unsub = onMessagesRead(({ userId: readerId, messageIds }) => {
+      setMessages((prev) => prev.map((m) => {
+        if (messageIds.includes(m._id?.toString())) {
+          const newReadBy = [...(m.readBy || [])];
+          if (!newReadBy.includes(readerId)) newReadBy.push(readerId);
+          return { ...m, readBy: newReadBy };
+        }
+        return m;
+      }));
+    });
+    return unsub;
+  }, [chat?.id, onMessagesRead]);
+
+  // Listen for reactions
+  useEffect(() => {
+    if (!chat) return;
+    const unsub = onReactionUpdated(({ messageId, reactions }) => {
+      setMessages((prev) => prev.map((m) =>
+        m._id === messageId ? { ...m, reactions } : m
+      ));
+    });
+    return unsub;
+  }, [chat?.id, onReactionUpdated]);
+
+  // Listen for message edits
+  useEffect(() => {
+    if (!chat) return;
+    const unsub = onMessageEdited(({ messageId, content, edited, editedAt }) => {
+      setMessages((prev) => prev.map((m) =>
+        m._id === messageId ? { ...m, content, edited, editedAt } : m
+      ));
+    });
+    return unsub;
+  }, [chat?.id, onMessageEdited]);
+
+  // Listen for message deletions
+  useEffect(() => {
+    if (!chat) return;
+    const unsub = onMessageDeleted(({ messageId, deletedAt }) => {
+      setMessages((prev) => prev.map((m) =>
+        m._id === messageId ? { ...m, deleted: true, content: 'This message was deleted', attachments: [], reactions: [] } : m
+      ));
+    });
+    return unsub;
+  }, [chat?.id, onMessageDeleted]);
 
   // Listen for typing indicators
   useEffect(() => {
@@ -122,7 +240,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
         type: 'text',
       });
       setMessageInput('');
-      // Stop typing indicator
       emitStopTyping({ receiver: chat.id });
     } catch (err) {
       console.error('Failed to send message:', err.message);
@@ -131,19 +248,96 @@ const ChatWindow = ({ chat, currentUserId }) => {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+
+      const res = await axios.post('/messages/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data.success) {
+        await sendMessage({
+          receiver: chat.id,
+          content: files.length === 1 ? files[0].name : `${files.length} files`,
+          type: 'file',
+          attachments: res.data.attachments
+        });
+      }
+    } catch (err) {
+      console.error('File upload failed:', err.message);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle edit
+  const handleStartEdit = (message) => {
+    setEditingMessage(message._id);
+    setEditInput(message.content || message.text || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setEditInput('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editInput.trim() || !editingMessage) return;
+    try {
+      await emitEditMessage({ messageId: editingMessage, content: editInput.trim() });
+      setEditingMessage(null);
+      setEditInput('');
+    } catch (err) {
+      console.error('Failed to edit message:', err.message);
+    }
+  };
+
+  // Handle delete
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      await emitDeleteMessage({ messageId });
+    } catch (err) {
+      console.error('Failed to delete message:', err.message);
+    }
+  };
+
+  // Handle reaction
+  const handleReaction = async (messageId, emoji) => {
+    try {
+      await emitAddReaction({ messageId, emoji });
+    } catch (err) {
+      console.error('Failed to add reaction:', err.message);
+    }
+  };
+
+  const handleRemoveReaction = async (messageId) => {
+    try {
+      await emitRemoveReaction({ messageId });
+    } catch (err) {
+      console.error('Failed to remove reaction:', err.message);
+    }
+  };
+
   // Handle typing indicator
   const handleInputChange = (e) => {
     setMessageInput(e.target.value);
 
-    // Emit typing
     emitTyping({ receiver: chat.id });
 
-    // Clear previous timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Stop typing after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       emitStopTyping({ receiver: chat.id });
     }, 2000);
@@ -198,7 +392,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {/* Connection indicator */}
           <div className={`w-2 h-2 rounded-full mr-2 ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150">
             <svg
@@ -234,7 +427,31 @@ const ChatWindow = ({ chat, currentUserId }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6"
+      >
+        {/* Load more indicator */}
+        {loadingMore && (
+          <div className="flex justify-center py-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+        {hasMore && !loadingMore && (
+          <div className="text-center py-2">
+            <button
+              onClick={() => {
+                const oldest = messages[0];
+                if (oldest?.createdAt) fetchMessages(chat.id, oldest.createdAt);
+              }}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Load older messages
+            </button>
+          </div>
+        )}
+
         {messagesLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -257,6 +474,17 @@ const ChatWindow = ({ chat, currentUserId }) => {
                   key={message._id || message.id}
                   message={message}
                   isSent={senderId === currentUserId}
+                  currentUserId={currentUserId}
+                  isEditing={editingMessage === message._id}
+                  editInput={editInput}
+                  onEditInputChange={(val) => setEditInput(val)}
+                  onStartEdit={() => handleStartEdit(message)}
+                  onCancelEdit={handleCancelEdit}
+                  onSaveEdit={handleSaveEdit}
+                  onDelete={() => handleDeleteMessage(message._id)}
+                  onReaction={(emoji) => handleReaction(message._id, emoji)}
+                  onRemoveReaction={() => handleRemoveReaction(message._id)}
+                  chatType="private"
                 />
               );
             })}
@@ -264,59 +492,76 @@ const ChatWindow = ({ chat, currentUserId }) => {
           </div>
         )}
 
-
+        {/* Typing indicator */}
+        {typingUsers.length > 0 && (
+          <div className="flex items-center space-x-2 px-2 py-1">
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Edit bar */}
+      {editingMessage && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-t dark:border-gray-700 px-6 py-2 flex items-center justify-between">
+          <span className="text-sm text-yellow-700 dark:text-yellow-300">Editing message</span>
+          <button onClick={handleCancelEdit} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Cancel</button>
+        </div>
+      )}
 
       {/* Message Input */}
       <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-6 py-4">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
+        <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleSaveEdit(); } : handleSendMessage} className="flex items-center space-x-3">
+          {/* File upload button */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            multiple
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+          />
           <button
             type="button"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || !connected}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150 disabled:opacity-50"
           >
-            <svg
-              className="h-6 w-6 text-gray-600 dark:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-              />
-            </svg>
+            {uploading ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+            ) : (
+              <svg
+                className="h-6 w-6 text-gray-600 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                />
+              </svg>
+            )}
           </button>
           <input
             type="text"
-            value={messageInput}
-            onChange={handleInputChange}
-            placeholder={connected ? 'Type a message...' : 'Connecting...'}
+            value={editingMessage ? editInput : messageInput}
+            onChange={editingMessage ? (e) => setEditInput(e.target.value) : handleInputChange}
+            placeholder={!connected ? 'Connecting...' : editingMessage ? 'Edit message...' : 'Type a message...'}
             disabled={!connected}
             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 disabled:opacity-50"
           />
           <button
-            type="button"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150"
-          >
-            <svg
-              className="h-6 w-6 text-gray-600 dark:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </button>
-          <button
             type="submit"
-            disabled={!messageInput.trim() || sending || !connected}
+            disabled={editingMessage ? !editInput.trim() : (!messageInput.trim() || sending || !connected)}
             className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? (

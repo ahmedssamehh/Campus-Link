@@ -4,9 +4,10 @@ const Redis = require('ioredis');
 const CHANNEL = 'chat_messages';
 
 let publisher = null;
+let reconnecting = false;
 
 /**
- * Initialize Redis publisher.
+ * Initialize Redis publisher with resilient auto-reconnect.
  * Falls back gracefully when Redis is unavailable (single-server mode).
  */
 function getPublisher() {
@@ -17,13 +18,18 @@ function getPublisher() {
     publisher = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         retryStrategy(times) {
-            if (times > 5) {
-                console.warn('⚠️  Redis publisher: max retries reached, operating without Redis');
-                return null; // stop retrying
-            }
-            return Math.min(times * 200, 2000);
+            // Exponential backoff with cap at 30 seconds, never stop retrying
+            const delay = Math.min(times * 500, 30000);
+            console.log(`⏳ Redis publisher retry #${times} in ${delay}ms`);
+            return delay;
         },
-        lazyConnect: true
+        lazyConnect: true,
+        enableReadyCheck: true,
+        reconnectOnError(err) {
+            // Reconnect on connection reset errors
+            const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
+            return targetErrors.some(e => err.message.includes(e));
+        }
     });
 
     publisher.on('error', (err) => {
@@ -32,6 +38,22 @@ function getPublisher() {
 
     publisher.on('connect', () => {
         console.log('✅ Redis publisher connected');
+        reconnecting = false;
+    });
+
+    publisher.on('close', () => {
+        console.warn('⚠️  Redis publisher connection closed');
+    });
+
+    publisher.on('reconnecting', () => {
+        if (!reconnecting) {
+            console.log('🔄 Redis publisher reconnecting...');
+            reconnecting = true;
+        }
+    });
+
+    publisher.on('ready', () => {
+        console.log('✅ Redis publisher ready');
     });
 
     return publisher;
@@ -59,4 +81,12 @@ async function publishMessage(payload) {
     }
 }
 
-module.exports = { getPublisher, publishMessage, CHANNEL };
+/**
+ * Check if Redis publisher is connected and ready.
+ * @returns {boolean}
+ */
+function isPublisherReady() {
+    return publisher && publisher.status === 'ready';
+}
+
+module.exports = { getPublisher, publishMessage, isPublisherReady, CHANNEL };

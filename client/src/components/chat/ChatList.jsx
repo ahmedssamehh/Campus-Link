@@ -16,7 +16,20 @@ const RoleBadge = ({ role }) => {
   );
 };
 
-const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages }) => {
+const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages, lastSeenMap }) => {
+  const formatLastSeen = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+    return d.toLocaleDateString();
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Search Bar */}
@@ -51,7 +64,7 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages }) => {
                 </span>
               </div>
               {chat.isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
               )}
             </div>
 
@@ -69,6 +82,11 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages }) => {
                 <div className="mb-1">
                   <RoleBadge role={chat.role} />
                 </div>
+              )}
+              {!chat.isOnline && lastSeenMap && lastSeenMap[chat.id] && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">
+                  Last seen {formatLastSeen(lastSeenMap[chat.id])}
+                </p>
               )}
               <div className="flex items-center justify-between">
                 <p className={`text-sm truncate ${unreadCount > 0 ? 'text-gray-900 dark:text-gray-200 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>

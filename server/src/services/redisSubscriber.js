@@ -4,9 +4,11 @@ const { CHANNEL } = require('./redisPublisher');
 
 let subscriber = null;
 let messageHandler = null;
+let reconnecting = false;
 
 /**
  * Initialize Redis subscriber and set up message listener.
+ * Auto-reconnects with exponential backoff.
  * @param {Function} handler - callback(payload) invoked for each message
  */
 function initSubscriber(handler) {
@@ -18,13 +20,16 @@ function initSubscriber(handler) {
     subscriber = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         retryStrategy(times) {
-            if (times > 5) {
-                console.warn('⚠️  Redis subscriber: max retries reached');
-                return null;
-            }
-            return Math.min(times * 200, 2000);
+            const delay = Math.min(times * 500, 30000);
+            console.log(`⏳ Redis subscriber retry #${times} in ${delay}ms`);
+            return delay;
         },
-        lazyConnect: true
+        lazyConnect: true,
+        enableReadyCheck: true,
+        reconnectOnError(err) {
+            const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
+            return targetErrors.some(e => err.message.includes(e));
+        }
     });
 
     subscriber.on('error', (err) => {
@@ -33,6 +38,28 @@ function initSubscriber(handler) {
 
     subscriber.on('connect', () => {
         console.log('✅ Redis subscriber connected');
+        reconnecting = false;
+    });
+
+    subscriber.on('close', () => {
+        console.warn('⚠️  Redis subscriber connection closed');
+    });
+
+    subscriber.on('reconnecting', () => {
+        if (!reconnecting) {
+            console.log('🔄 Redis subscriber reconnecting...');
+            reconnecting = true;
+        }
+    });
+
+    // Re-subscribe on ready (handles reconnect case)
+    subscriber.on('ready', () => {
+        console.log('✅ Redis subscriber ready, subscribing to channel...');
+        subscriber.subscribe(CHANNEL).then(() => {
+            console.log(`✅ Redis subscribed to channel: ${CHANNEL}`);
+        }).catch((err) => {
+            console.error('❌ Failed to subscribe after ready:', err.message);
+        });
     });
 
     subscriber.on('message', (channel, message) => {
@@ -46,7 +73,7 @@ function initSubscriber(handler) {
         }
     });
 
-    // Connect and subscribe
+    // Connect
     subscriber.connect()
         .then(() => subscriber.subscribe(CHANNEL))
         .then(() => console.log(`✅ Redis subscribed to channel: ${CHANNEL}`))
@@ -58,8 +85,16 @@ function initSubscriber(handler) {
     return subscriber;
 }
 
+/**
+ * Check if Redis subscriber is connected and ready.
+ * @returns {boolean}
+ */
+function isSubscriberReady() {
+    return subscriber && subscriber.status === 'ready';
+}
+
 function getSubscriber() {
     return subscriber;
 }
 
-module.exports = { initSubscriber, getSubscriber };
+module.exports = { initSubscriber, getSubscriber, isSubscriberReady };
