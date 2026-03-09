@@ -256,10 +256,10 @@ const Groups = () => {
                     </span>
                   </div>
                   {/* Unread message badge */}
-                  {unreadMessages[group._id || group.id] && (
+                  {unreadMessages.groups[group._id || group.id] > 0 && (
                     <div className="flex flex-col items-center">
                       <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full min-w-[24px] text-center animate-pulse">
-                        {unreadMessages[group._id || group.id].count > 99 ? '99+' : unreadMessages[group._id || group.id].count}
+                        {unreadMessages.groups[group._id || group.id] > 99 ? '99+' : unreadMessages.groups[group._id || group.id]}
                       </span>
                       <span className="text-white text-[10px] mt-1 opacity-80">new</span>
                     </div>

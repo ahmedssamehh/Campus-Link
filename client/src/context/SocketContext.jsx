@@ -2,10 +2,11 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import axios from '../api/axios';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'http://localhost:5050';
+const SOCKET_URL = 'http://localhost:5000';
 
 export const SocketProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
@@ -14,52 +15,82 @@ export const SocketProvider = ({ children }) => {
     const [onlineUsers, setOnlineUsers] = useState(new Set());
 
     // ─── Unread message tracking ─────────────────────────────
-    // Map<sourceId, { count: number, lastMessage: string, senderName: string, type: 'group'|'private' }>
-    const [unreadMessages, setUnreadMessages] = useState({});
-    // Tracks which chat/group the user is currently viewing (so we don't count those as unread)
+    // { groups: { groupId: count }, private: { userId: count } }
+    const [unreadMessages, setUnreadMessages] = useState({ groups: {}, private: {} });
+    // Tracks which chat/group the user is currently viewing
     const activeViewRef = useRef(null);
 
     const currentUserId = (user?._id || user?.id)?.toString();
+    const currentUserIdRef = useRef(currentUserId);
+    currentUserIdRef.current = currentUserId;
 
-    // Set active view (called by chat pages when they open a conversation)
-    const setActiveView = useCallback((sourceId) => {
-        activeViewRef.current = sourceId;
-        // Clear unread for this source
-        if (sourceId) {
-            setUnreadMessages((prev) => {
-                if (!prev[sourceId]) return prev;
-                const next = { ...prev };
-                delete next[sourceId];
-                return next;
-            });
+    // ─── Fetch unread counts from API ───────────────────────
+    const fetchUnreadCounts = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const res = await axios.get('/messages/unread');
+            if (res.data.success) {
+                setUnreadMessages({
+                    groups: res.data.groups || {},
+                    private: res.data.private || {}
+                });
+            }
+        } catch (err) {
+            console.error('Failed to fetch unread counts:', err.message);
         }
+    }, [isAuthenticated]);
+
+    // Fetch on mount and when auth changes
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchUnreadCounts();
+        } else {
+            setUnreadMessages({ groups: {}, private: {} });
+        }
+    }, [isAuthenticated, fetchUnreadCounts]);
+
+    // Set active view + mark as read via API
+    const setActiveView = useCallback((sourceId, type) => {
+        activeViewRef.current = sourceId;
+        if (!sourceId) return;
+
+        // Clear locally immediately for instant UI response
+        setUnreadMessages((prev) => {
+            const bucket = type === 'group' ? 'groups' : 'private';
+            if (!prev[bucket][sourceId]) return prev;
+            const next = { ...prev, [bucket]: { ...prev[bucket] } };
+            delete next[bucket][sourceId];
+            return next;
+        });
+
+        // Mark as read on server
+        const endpoint = type === 'group'
+            ? `/messages/read/group/${sourceId}`
+            : `/messages/read/private/${sourceId}`;
+        axios.patch(endpoint).catch((err) => {
+            console.error('Failed to mark as read:', err.message);
+        });
     }, []);
 
     // Clear unread for a specific source
-    const clearUnread = useCallback((sourceId) => {
+    const clearUnread = useCallback((sourceId, type) => {
         setUnreadMessages((prev) => {
-            if (!prev[sourceId]) return prev;
-            const next = { ...prev };
-            delete next[sourceId];
+            const bucket = type === 'group' ? 'groups' : 'private';
+            if (!prev[bucket][sourceId]) return prev;
+            const next = { ...prev, [bucket]: { ...prev[bucket] } };
+            delete next[bucket][sourceId];
             return next;
         });
     }, []);
 
-    // Get total unread count
-    const totalUnreadChat = Object.values(unreadMessages)
-        .filter((u) => u.type === 'private')
-        .reduce((sum, u) => sum + u.count, 0);
-
-    const totalUnreadGroups = Object.values(unreadMessages)
-        .filter((u) => u.type === 'group')
-        .reduce((sum, u) => sum + u.count, 0);
-
+    // Computed totals
+    const totalUnreadChat = Object.values(unreadMessages.private).reduce((sum, c) => sum + c, 0);
+    const totalUnreadGroups = Object.values(unreadMessages.groups).reduce((sum, c) => sum + c, 0);
     const totalUnread = totalUnreadChat + totalUnreadGroups;
 
     // ─── Connect / Disconnect ────────────────────────────────
     useEffect(() => {
         if (!isAuthenticated) {
-            // Disconnect if user logs out
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
@@ -71,7 +102,6 @@ export const SocketProvider = ({ children }) => {
         const token = localStorage.getItem('campusLinkToken');
         if (!token) return;
 
-        // Create socket connection
         const socket = io(SOCKET_URL, {
             auth: { token },
             transports: ['websocket', 'polling'],
@@ -109,26 +139,22 @@ export const SocketProvider = ({ children }) => {
             });
         });
 
-        // ─── Track unread messages globally ─────────────────
+        // ─── Realtime unread increment on new message ───────
         socket.on('newMessage', (msg) => {
             const senderId = typeof msg.sender === 'object' ? msg.sender._id : msg.sender;
-            const senderName = typeof msg.sender === 'object' ? msg.sender.name : msg.senderName || 'Someone';
-            const msgContent = msg.content || msg.text || '';
 
             // Don't count own messages
-            if (senderId === currentUserId) return;
+            if (senderId === currentUserIdRef.current) return;
 
             let sourceId;
-            let msgType;
+            let bucket;
 
             if (msg.group) {
-                // Group message
-                sourceId = msg.group;
-                msgType = 'group';
+                sourceId = typeof msg.group === 'object' ? msg.group._id || msg.group : msg.group;
+                bucket = 'groups';
             } else if (msg.receiver) {
-                // Private message — source is the sender (the other user)
                 sourceId = senderId;
-                msgType = 'private';
+                bucket = 'private';
             } else {
                 return;
             }
@@ -136,19 +162,13 @@ export const SocketProvider = ({ children }) => {
             // Don't count if user is currently viewing this conversation
             if (activeViewRef.current === sourceId) return;
 
-            setUnreadMessages((prev) => {
-                const existing = prev[sourceId] || { count: 0, type: msgType };
-                return {
-                    ...prev,
-                    [sourceId]: {
-                        count: existing.count + 1,
-                        lastMessage: msgContent.substring(0, 50),
-                        senderName,
-                        type: msgType,
-                        timestamp: new Date().toISOString(),
-                    },
-                };
-            });
+            setUnreadMessages((prev) => ({
+                ...prev,
+                [bucket]: {
+                    ...prev[bucket],
+                    [sourceId]: (prev[bucket][sourceId] || 0) + 1
+                }
+            }));
         });
 
         socketRef.current = socket;
@@ -208,7 +228,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newMessage', handler);
         return () => socketRef.current?.off('newMessage', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Typing indicators ──────────────────────────────────
     const emitTyping = useCallback((data) => {
@@ -241,6 +261,7 @@ export const SocketProvider = ({ children }) => {
         totalUnreadGroups,
         setActiveView,
         clearUnread,
+        fetchUnreadCounts,
         joinGroup,
         joinPrivate,
         sendMessage,

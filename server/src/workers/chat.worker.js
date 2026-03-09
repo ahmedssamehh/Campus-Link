@@ -38,7 +38,8 @@ async function processMessage(payload, io) {
             group: group || undefined,
             receiver: receiver || undefined,
             content,
-            type
+            type,
+            readBy: [sender]
         });
 
         // Populate sender info for the broadcast
@@ -62,12 +63,12 @@ async function processMessage(payload, io) {
 
         // ── Broadcast to the correct room ────────────────────
         if (group) {
-            // Group message → emit to group room
+            // Group message → emit to group room (users auto-join on connect)
             io.to(group.toString()).emit('newMessage', messageData);
         } else if (receiver) {
-            // Private message → emit to private room
+            // Private message → emit to both users' personal rooms + private room
             const roomId = getPrivateRoomId(sender, receiver);
-            io.to(roomId).emit('newMessage', messageData);
+            io.to(sender.toString()).to(receiver.toString()).to(roomId).emit('newMessage', messageData);
         }
 
         console.log(`💬 Message saved & broadcast: ${senderName} → ${group ? 'group:' + group : 'user:' + receiver}`);

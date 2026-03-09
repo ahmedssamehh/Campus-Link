@@ -264,12 +264,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
           </div>
         )}
 
-        {/* Typing indicator */}
-        {typingUsers.length > 0 && (
-          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">
-            {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-          </div>
-        )}
+
       </div>
 
       {/* Message Input */}

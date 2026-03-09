@@ -108,7 +108,7 @@ const GroupChat = () => {
     if (!group || !connected) return;
 
     // Mark this group as actively viewed (clears unread count)
-    setActiveView(id);
+    setActiveView(id, 'group');
 
     // Join the socket room
     joinGroup(id).then(() => {
@@ -121,7 +121,7 @@ const GroupChat = () => {
     fetchMessages();
 
     // Clear active view on unmount
-    return () => setActiveView(null);
+    return () => setActiveView(null, 'group');
   }, [group, connected, id, joinGroup, fetchMessages, setActiveView]);
 
   // Listen for new realtime messages
@@ -397,12 +397,7 @@ const GroupChat = () => {
                 <div ref={messagesEndRef} />
               </div>
             )}
-            {/* Typing indicator */}
-            {typingUsers.length > 0 && (
-              <div className="mt-2 text-sm text-gray-500 italic">
-                {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-              </div>
-            )}
+
           </div>
 
           {/* Message Input */}

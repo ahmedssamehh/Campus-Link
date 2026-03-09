@@ -27,7 +27,11 @@ const messageSchema = new mongoose.Schema({
         type: String,
         enum: ['text', 'file', 'system'],
         default: 'text'
-    }
+    },
+    readBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 }, {
     timestamps: true
 });
@@ -36,6 +40,7 @@ const messageSchema = new mongoose.Schema({
 messageSchema.index({ group: 1, createdAt: -1 });
 messageSchema.index({ sender: 1, receiver: 1, createdAt: -1 });
 messageSchema.index({ receiver: 1, sender: 1, createdAt: -1 });
+messageSchema.index({ readBy: 1 });
 
 // Validation: exactly one of group or receiver must be set
 messageSchema.pre('validate', function(next) {

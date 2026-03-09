@@ -8,7 +8,7 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { totalUnreadChat, totalUnreadGroups } = useSocket();
+  const { totalUnreadChat, totalUnreadGroups, connected } = useSocket();
 
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
@@ -172,6 +172,16 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
 
         {/* Bottom Section - User & Settings */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-3 space-y-2">
+          {/* Connection Status */}
+          <div className="flex items-center px-3 py-1">
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${connected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
+            {isOpen && (
+              <span className={`ml-2 text-xs ${connected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {connected ? 'Connected' : 'Disconnected'}
+              </span>
+            )}
+          </div>
+
           {/* Theme Toggle */}
           <div className="flex items-center justify-center px-3 py-2">
             <ThemeToggle />

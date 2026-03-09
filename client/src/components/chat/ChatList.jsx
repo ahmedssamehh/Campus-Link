@@ -31,12 +31,9 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages }) => {
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {chats.map((chat) => {
-          const unread = unreadMessages?.[chat.id];
-          const unreadCount = unread?.count || 0;
-          const previewMsg = unread?.lastMessage || chat.lastMessage;
-          const previewTime = unread?.timestamp
-            ? new Date(unread.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-            : chat.lastMessageTime;
+          const unreadCount = unreadMessages?.[chat.id] || 0;
+          const previewMsg = chat.lastMessage;
+          const previewTime = chat.lastMessageTime;
 
           return (
           <div
@@ -75,7 +72,7 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages }) => {
               )}
               <div className="flex items-center justify-between">
                 <p className={`text-sm truncate ${unreadCount > 0 ? 'text-gray-900 dark:text-gray-200 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
-                  {unreadCount > 0 && unread?.senderName ? `${unread.senderName}: ${previewMsg}` : previewMsg}
+                  {previewMsg}
                 </p>
                 {unreadCount > 0 && (
                   <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[24px] text-center">

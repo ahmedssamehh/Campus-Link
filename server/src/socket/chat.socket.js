@@ -75,6 +75,17 @@ function initSocketServer(httpServer) {
         }
         onlineUsers.get(userId).add(socket.id);
 
+        // ── Auto-join personal room (for direct message delivery) ──
+        socket.join(userId);
+
+        // ── Auto-join all groups the user belongs to ─────────
+        Group.find({ members: userId }).select('_id').then((groups) => {
+            groups.forEach((g) => socket.join(g._id.toString()));
+            console.log(`📦 Auto-joined ${groups.length} group room(s) for ${socket.user.name}`);
+        }).catch((err) => {
+            console.error('Auto-join groups error:', err.message);
+        });
+
         // Broadcast online status
         io.emit('userOnline', { userId, name: socket.user.name });
 
@@ -84,24 +95,26 @@ function initSocketServer(httpServer) {
                 // Verify membership
                 const group = await Group.findById(groupId).select('members name');
                 if (!group) {
-                    return callback ? .({ error: 'Group not found' });
+                    if (callback) callback({ error: 'Group not found' });
+                    return;
                 }
 
                 const isMember = group.members.some(
                     (m) => m.toString() === userId
                 );
                 if (!isMember) {
-                    return callback ? .({ error: 'You are not a member of this group' });
+                    if (callback) callback({ error: 'You are not a member of this group' });
+                    return;
                 }
 
                 // Join the socket room
                 socket.join(groupId);
                 console.log(`📦 ${socket.user.name} joined group room: ${groupId}`);
 
-                callback ? .({ success: true, groupName: group.name });
+                if (callback) callback({ success: true, groupName: group.name });
             } catch (err) {
                 console.error('joinGroup error:', err.message);
-                callback ? .({ error: 'Failed to join group room' });
+                if (callback) callback({ error: 'Failed to join group room' });
             }
         });
 
@@ -110,17 +123,18 @@ function initSocketServer(httpServer) {
             try {
                 // Make sure requesting user is one of the two
                 if (userId !== user1.toString() && userId !== user2.toString()) {
-                    return callback ? .({ error: 'Unauthorized' });
+                    if (callback) callback({ error: 'Unauthorized' });
+                    return;
                 }
 
                 const roomId = getPrivateRoomId(user1, user2);
                 socket.join(roomId);
                 console.log(`🔒 ${socket.user.name} joined private room: ${roomId}`);
 
-                callback ? .({ success: true, roomId });
+                if (callback) callback({ success: true, roomId });
             } catch (err) {
                 console.error('joinPrivate error:', err.message);
-                callback ? .({ error: 'Failed to join private room' });
+                if (callback) callback({ error: 'Failed to join private room' });
             }
         });
 
@@ -131,13 +145,16 @@ function initSocketServer(httpServer) {
 
                 // Validate
                 if (!content || content.trim() === '') {
-                    return callback ? .({ error: 'Message content is required' });
+                    if (callback) callback({ error: 'Message content is required' });
+                    return;
                 }
                 if (!group && !receiver) {
-                    return callback ? .({ error: 'Must specify group or receiver' });
+                    if (callback) callback({ error: 'Must specify group or receiver' });
+                    return;
                 }
                 if (group && receiver) {
-                    return callback ? .({ error: 'Cannot specify both group and receiver' });
+                    if (callback) callback({ error: 'Cannot specify both group and receiver' });
+                    return;
                 }
 
                 // Sanitize content (basic XSS prevention)
@@ -166,10 +183,10 @@ function initSocketServer(httpServer) {
                     await processMessage(payload, io);
                 }
 
-                callback ? .({ success: true });
+                if (callback) callback({ success: true });
             } catch (err) {
                 console.error('sendMessage error:', err.message);
-                callback ? .({ error: 'Failed to send message' });
+                if (callback) callback({ error: 'Failed to send message' });
             }
         });
 

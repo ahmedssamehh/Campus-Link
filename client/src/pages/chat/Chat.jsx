@@ -89,12 +89,12 @@ const Chat = () => {
 
   const handleSelectChat = (chat) => {
     setActiveChat(chat);
-    setActiveView(chat.id);  // Mark this conversation as being viewed → clears unread
+    setActiveView(chat.id, 'private');  // Mark this conversation as being viewed → clears unread
   };
 
   // Clear active view when leaving the chat page
   useEffect(() => {
-    return () => setActiveView(null);
+    return () => setActiveView(null, 'private');
   }, [setActiveView]);
 
   return (
@@ -147,7 +147,7 @@ const Chat = () => {
               chats={chats}
               activeChat={activeChat}
               onSelectChat={handleSelectChat}
-              unreadMessages={unreadMessages}
+              unreadMessages={unreadMessages.private}
             />
           )}
         </div>
