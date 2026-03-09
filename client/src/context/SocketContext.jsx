@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:5050';
 
 export const SocketProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
@@ -20,9 +20,6 @@ export const SocketProvider = ({ children }) => {
     const activeViewRef = useRef(null);
 
     const currentUserId = (user?._id || user?.id)?.toString();
-    // Use a ref so that the socket event handler always reads the latest value
-    const currentUserIdRef = useRef(currentUserId);
-    currentUserIdRef.current = currentUserId;
 
     // Set active view (called by chat pages when they open a conversation)
     const setActiveView = useCallback((sourceId) => {
@@ -118,8 +115,8 @@ export const SocketProvider = ({ children }) => {
             const senderName = typeof msg.sender === 'object' ? msg.sender.name : msg.senderName || 'Someone';
             const msgContent = msg.content || msg.text || '';
 
-            // Don't count own messages (use ref to avoid stale closure)
-            if (senderId === currentUserIdRef.current) return;
+            // Don't count own messages
+            if (senderId === currentUserId) return;
 
             let sourceId;
             let msgType;
@@ -211,7 +208,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newMessage', handler);
         return () => socketRef.current?.off('newMessage', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Typing indicators ──────────────────────────────────
     const emitTyping = useCallback((data) => {

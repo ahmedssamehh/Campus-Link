@@ -75,17 +75,6 @@ function initSocketServer(httpServer) {
         }
         onlineUsers.get(userId).add(socket.id);
 
-        // ── Auto-join personal room (for direct message delivery) ──
-        socket.join(userId);
-
-        // ── Auto-join all groups the user belongs to ─────────
-        Group.find({ members: userId }).select('_id').then((groups) => {
-            groups.forEach((g) => socket.join(g._id.toString()));
-            console.log(`📦 Auto-joined ${groups.length} group room(s) for ${socket.user.name}`);
-        }).catch((err) => {
-            console.error('Auto-join groups error:', err.message);
-        });
-
         // Broadcast online status
         io.emit('userOnline', { userId, name: socket.user.name });
 
@@ -95,24 +84,24 @@ function initSocketServer(httpServer) {
                 // Verify membership
                 const group = await Group.findById(groupId).select('members name');
                 if (!group) {
-                    return callback?.({ error: 'Group not found' });
+                    return callback ? .({ error: 'Group not found' });
                 }
 
                 const isMember = group.members.some(
                     (m) => m.toString() === userId
                 );
                 if (!isMember) {
-                    return callback?.({ error: 'You are not a member of this group' });
+                    return callback ? .({ error: 'You are not a member of this group' });
                 }
 
                 // Join the socket room
                 socket.join(groupId);
                 console.log(`📦 ${socket.user.name} joined group room: ${groupId}`);
 
-                callback?.({ success: true, groupName: group.name });
+                callback ? .({ success: true, groupName: group.name });
             } catch (err) {
                 console.error('joinGroup error:', err.message);
-                callback?.({ error: 'Failed to join group room' });
+                callback ? .({ error: 'Failed to join group room' });
             }
         });
 
@@ -121,17 +110,17 @@ function initSocketServer(httpServer) {
             try {
                 // Make sure requesting user is one of the two
                 if (userId !== user1.toString() && userId !== user2.toString()) {
-                    return callback?.({ error: 'Unauthorized' });
+                    return callback ? .({ error: 'Unauthorized' });
                 }
 
                 const roomId = getPrivateRoomId(user1, user2);
                 socket.join(roomId);
                 console.log(`🔒 ${socket.user.name} joined private room: ${roomId}`);
 
-                callback?.({ success: true, roomId });
+                callback ? .({ success: true, roomId });
             } catch (err) {
                 console.error('joinPrivate error:', err.message);
-                callback?.({ error: 'Failed to join private room' });
+                callback ? .({ error: 'Failed to join private room' });
             }
         });
 
@@ -142,13 +131,13 @@ function initSocketServer(httpServer) {
 
                 // Validate
                 if (!content || content.trim() === '') {
-                    return callback?.({ error: 'Message content is required' });
+                    return callback ? .({ error: 'Message content is required' });
                 }
                 if (!group && !receiver) {
-                    return callback?.({ error: 'Must specify group or receiver' });
+                    return callback ? .({ error: 'Must specify group or receiver' });
                 }
                 if (group && receiver) {
-                    return callback?.({ error: 'Cannot specify both group and receiver' });
+                    return callback ? .({ error: 'Cannot specify both group and receiver' });
                 }
 
                 // Sanitize content (basic XSS prevention)
@@ -177,10 +166,10 @@ function initSocketServer(httpServer) {
                     await processMessage(payload, io);
                 }
 
-                callback?.({ success: true });
+                callback ? .({ success: true });
             } catch (err) {
                 console.error('sendMessage error:', err.message);
-                callback?.({ error: 'Failed to send message' });
+                callback ? .({ error: 'Failed to send message' });
             }
         });
 
