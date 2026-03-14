@@ -68,7 +68,7 @@ async function processMessage(payload, io) {
         });
 
         // Populate sender info for the broadcast
-        await message.populate('sender', 'name email');
+        await message.populate('sender', 'name email profilePhoto');
 
         // Build the message object to emit
         const messageData = {

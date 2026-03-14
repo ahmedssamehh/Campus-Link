@@ -47,10 +47,11 @@ const AnnouncementsPage = () => {
         setGroups(allGroups);
 
         // Determine which groups current user can post to (admin/owner of that group)
-        const userId = user?._id || user?.id;
+        const userId = (user?._id || user?.id || '').toString();
         const myAdminGroups = allGroups.filter(g => {
-          const isCreator = (g.createdBy?._id || g.createdBy) === userId;
-          const isGAdmin = g.admins?.some(a => (a._id || a) === userId);
+          const creatorId = (g.createdBy?._id || g.createdBy || '').toString();
+          const isCreator = creatorId === userId;
+          const isGAdmin = (g.admins || []).some(a => (a._id || a || '').toString() === userId);
           return isCreator || isGAdmin;
         });
         setAdminGroups(myAdminGroups);

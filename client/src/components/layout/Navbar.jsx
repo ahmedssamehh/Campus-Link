@@ -114,11 +114,19 @@ const Navbar = () => {
                 </Link>
                 <div className="flex items-center space-x-3 border-l border-blue-500 pl-4">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-sm">
-                        {user?.name?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    {user?.profilePhoto ? (
+                      <img
+                        src={user.profilePhoto}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover border border-white/30"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-semibold text-sm">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <span className="text-white font-medium text-sm">
                       {user?.name}
                     </span>
@@ -192,11 +200,19 @@ const Navbar = () => {
               <>
                 <div className="px-3 py-2 mb-2 bg-blue-600 rounded-md">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-sm">
-                        {user?.name?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    {user?.profilePhoto ? (
+                      <img
+                        src={user.profilePhoto}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover border border-white/30"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-semibold text-sm">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <p className="text-white font-medium text-sm">{user?.name}</p>
                       <p className="text-blue-200 text-xs">{user?.email}</p>

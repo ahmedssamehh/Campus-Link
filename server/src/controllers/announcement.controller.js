@@ -47,8 +47,23 @@ exports.createAnnouncement = async(req, res) => {
         });
 
         // Populate creator info
-        await announcement.populate('createdBy', 'name email');
-        await announcement.populate('group', 'name');
+        await announcement.populate('createdBy', 'name email role profilePhoto');
+        await announcement.populate('group', 'name subject');
+
+        // Realtime broadcast to group members
+        const io = req.app.get('io');
+        if (io) {
+            const payload = {
+                _id: announcement._id,
+                group: announcement.group,
+                createdBy: announcement.createdBy,
+                title: announcement.title,
+                content: announcement.content,
+                createdAt: announcement.createdAt,
+                updatedAt: announcement.updatedAt
+            };
+            io.to(`group:${groupId}`).emit('newAnnouncement', payload);
+        }
 
         res.status(201).json({
             success: true,
@@ -84,7 +99,7 @@ exports.getMyAnnouncements = async(req, res) => {
                 group: { $in: groupIds },
                 ...buildVisibilityFilter(req.user._id)
             })
-            .populate('createdBy', 'name email role')
+            .populate('createdBy', 'name email role profilePhoto')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 });
 
@@ -128,7 +143,7 @@ exports.getLatestAnnouncements = async(req, res) => {
                 group: { $in: groupIds },
                 ...buildVisibilityFilter(req.user._id)
             })
-            .populate('createdBy', 'name email role')
+            .populate('createdBy', 'name email role profilePhoto')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 })
             .limit(5);
@@ -290,7 +305,7 @@ exports.deleteAnnouncement = async(req, res) => {
 exports.getAllAnnouncements = async(req, res) => {
     try {
         const announcements = await Announcement.find()
-            .populate('createdBy', 'name email role')
+            .populate('createdBy', 'name email role profilePhoto')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 });
 
@@ -353,7 +368,7 @@ exports.createGroupAnnouncement = async(req, res) => {
             content: content.trim()
         });
 
-        await announcement.populate('createdBy', 'name email role');
+        await announcement.populate('createdBy', 'name email role profilePhoto');
         await announcement.populate('group', 'name subject');
 
         // Realtime broadcast to connected members in this group room.
@@ -370,8 +385,6 @@ exports.createGroupAnnouncement = async(req, res) => {
             };
 
             io.to(`group:${group._id.toString()}`).emit('newAnnouncement', payload);
-            // Backward compatibility with existing room usage in chat socket.
-            io.to(group._id.toString()).emit('newAnnouncement', payload);
         }
 
         return res.status(201).json({

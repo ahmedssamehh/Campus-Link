@@ -9,6 +9,7 @@ import UserLayout from './components/layout/UserLayout';
 import Home from './pages/home/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Chat from './pages/chat/Chat';
 import Groups from './pages/groups/Groups';
 import GroupChat from './pages/groups/GroupChat';
@@ -33,6 +34,7 @@ function AppContent() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected Routes - Wrapped in UserLayout */}
       <Route

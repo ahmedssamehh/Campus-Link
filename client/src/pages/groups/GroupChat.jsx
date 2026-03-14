@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -682,11 +682,15 @@ const GroupChat = () => {
                   const isCurrentUser = memberId === currentUserId;
                   return (
                     <div key={member._id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-semibold text-sm">
-                          {member.name?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                      {member.profilePhoto ? (
+                        <img src={member.profilePhoto} alt={member.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-semibold text-sm">
+                            {member.name?.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                           {member.name}{isCurrentUser ? ' (You)' : ''}

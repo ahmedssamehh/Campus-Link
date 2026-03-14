@@ -45,7 +45,7 @@ const applyVote = (doc, userId, type) => {
 exports.getAllQuestions = async(req, res) => {
     try {
         const questions = await Question.find()
-            .populate('author', 'name role')
+            .populate('author', 'name role profilePhoto')
             .sort({ createdAt: -1 });
 
         const answerCountRows = await Answer.aggregate([{
@@ -85,7 +85,7 @@ exports.getAllQuestions = async(req, res) => {
 exports.getQuestionById = async(req, res) => {
     try {
         const question = await Question.findById(req.params.id)
-            .populate('author', 'name role')
+            .populate('author', 'name role profilePhoto')
             .populate('group', 'name subject');
 
         if (!question) {
@@ -96,7 +96,7 @@ exports.getQuestionById = async(req, res) => {
         }
 
         const answers = await Answer.find({ question: question._id })
-            .populate('author', 'name role')
+            .populate('author', 'name role profilePhoto')
             .sort({ createdAt: 1 });
 
         const currentUserId = req.user?._id;
@@ -142,7 +142,7 @@ exports.createQuestion = async(req, res) => {
             tags: normalizedTags
         });
 
-        await question.populate('author', 'name role');
+        await question.populate('author', 'name role profilePhoto');
 
         return res.status(201).json({
             success: true,
@@ -185,7 +185,7 @@ exports.createAnswer = async(req, res) => {
             question: questionId
         });
 
-        await answer.populate('author', 'name role');
+        await answer.populate('author', 'name role profilePhoto');
 
         return res.status(201).json({
             success: true,
@@ -207,7 +207,7 @@ exports.voteQuestion = async(req, res) => {
         const { id } = req.params;
         const { type } = req;
 
-        const question = await Question.findById(id).populate('author', 'name role');
+        const question = await Question.findById(id).populate('author', 'name role profilePhoto');
         if (!question) {
             return res.status(404).json({
                 success: false,
@@ -246,7 +246,7 @@ exports.voteAnswer = async(req, res) => {
         const { id } = req.params;
         const { type } = req;
 
-        const answer = await Answer.findById(id).populate('author', 'name role');
+        const answer = await Answer.findById(id).populate('author', 'name role profilePhoto');
         if (!answer) {
             return res.status(404).json({
                 success: false,
@@ -285,7 +285,7 @@ exports.setQuestionSolved = async(req, res) => {
         const { id } = req.params;
         const { isSolved = true } = req.body;
 
-        const question = await Question.findById(id).populate('author', 'name role');
+        const question = await Question.findById(id).populate('author', 'name role profilePhoto');
         if (!question) {
             return res.status(404).json({
                 success: false,

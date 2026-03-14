@@ -30,6 +30,7 @@ export const SocketProvider = ({ children }) => {
 
     // ─── Unread announcement tracking ────────────────────────
     const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+    const seenAnnouncementIds = useRef(new Set());
 
     const currentUserId = (user?._id || user?.id)?.toString();
     const currentUserIdRef = useRef(currentUserId);
@@ -171,7 +172,10 @@ export const SocketProvider = ({ children }) => {
         });
 
         // ─── Realtime unread announcement increment ─────────
-        socket.on('newAnnouncement', () => {
+        socket.on('newAnnouncement', (data) => {
+            const annId = data && data._id;
+            if (annId && seenAnnouncementIds.current.has(annId)) return;
+            if (annId) seenAnnouncementIds.current.add(annId);
             setUnreadAnnouncements((prev) => prev + 1);
         });
 

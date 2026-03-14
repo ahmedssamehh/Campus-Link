@@ -16,6 +16,10 @@ const MessageBubble = ({
     ? message.sender?.name || 'Unknown'
     : message.sender || 'Unknown';
 
+  const senderPhoto = typeof message.sender === 'object'
+    ? message.sender?.profilePhoto || ''
+    : '';
+
   const messageText = message.text || message.content || '';
 
   const messageTime = message.time || (message.createdAt
@@ -129,9 +133,13 @@ const MessageBubble = ({
       <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
         <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
           {!isSent && (
-            <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-semibold">{senderName.charAt(0).toUpperCase()}</span>
-            </div>
+            senderPhoto ? (
+              <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-semibold">{senderName.charAt(0).toUpperCase()}</span>
+              </div>
+            )
           )}
           <div>
             {!isSent && <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1">{senderName}</p>}
@@ -178,11 +186,15 @@ const MessageBubble = ({
       <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
         {/* Avatar */}
         {!isSent && (
-          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-semibold">
-              {senderName.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          senderPhoto ? (
+            <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-semibold">
+                {senderName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )
         )}
 
         {/* Message Content */}

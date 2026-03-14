@@ -47,9 +47,9 @@ exports.createGroup = async(req, res) => {
 exports.getAllGroups = async(req, res) => {
     try {
         const groups = await Group.find()
-            .populate('createdBy', 'name email role')
-            .populate('admins', 'name email role')
-            .populate('members', 'name email role')
+            .populate('createdBy', 'name email role profilePhoto')
+            .populate('admins', 'name email role profilePhoto')
+            .populate('members', 'name email role profilePhoto')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -119,7 +119,7 @@ exports.requestToJoinGroup = async(req, res) => {
         });
 
         // Populate user and group info
-        await joinRequest.populate('user', 'name email');
+        await joinRequest.populate('user', 'name email profilePhoto');
         await joinRequest.populate('group', 'name subject');
 
         res.status(201).json({
@@ -154,7 +154,7 @@ exports.getJoinRequests = async(req, res) => {
         // Return all requests (pending, approved, rejected)
         // Approved/rejected requests will auto-delete after 15 days via TTL index
         const requests = await JoinRequest.find()
-            .populate('user', 'name email')
+            .populate('user', 'name email profilePhoto')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 });
 
@@ -182,7 +182,7 @@ exports.approveJoinRequest = async(req, res) => {
 
         // Find the join request
         const joinRequest = await JoinRequest.findById(requestId)
-            .populate('user', 'name email')
+            .populate('user', 'name email profilePhoto')
             .populate('group', 'name subject');
 
         if (!joinRequest) {
@@ -286,7 +286,7 @@ exports.rejectJoinRequest = async(req, res) => {
 
         // Find the join request
         const joinRequest = await JoinRequest.findById(requestId)
-            .populate('user', 'name email')
+            .populate('user', 'name email profilePhoto')
             .populate('group', 'name subject');
 
         if (!joinRequest) {
@@ -361,9 +361,9 @@ exports.rejectJoinRequest = async(req, res) => {
 exports.getMyGroups = async(req, res) => {
     try {
         const groups = await Group.find({ members: req.user._id })
-            .populate('createdBy', 'name email role')
-            .populate('admins', 'name email role')
-            .populate('members', 'name email role')
+            .populate('createdBy', 'name email role profilePhoto')
+            .populate('admins', 'name email role profilePhoto')
+            .populate('members', 'name email role profilePhoto')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -389,9 +389,9 @@ exports.getGroupById = async(req, res) => {
         const { id } = req.params;
 
         const group = await Group.findById(id)
-            .populate('createdBy', 'name email role')
-            .populate('admins', 'name email role')
-            .populate('members', 'name email role');
+            .populate('createdBy', 'name email role profilePhoto')
+            .populate('admins', 'name email role profilePhoto')
+            .populate('members', 'name email role profilePhoto');
 
         if (!group) {
             return res.status(404).json({

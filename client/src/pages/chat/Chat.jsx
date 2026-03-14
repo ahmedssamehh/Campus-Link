@@ -26,6 +26,7 @@ const Chat = () => {
           name: u.name,
           email: u.email,
           role: u.role,
+          profilePhoto: u.profilePhoto || '',
           lastMessage: '',
           lastMessageTime: '',
           unreadCount: 0,

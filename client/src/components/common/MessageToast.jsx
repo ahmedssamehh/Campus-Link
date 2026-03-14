@@ -57,6 +57,10 @@ const MessageToast = () => {
         return;
       }
 
+      const senderPhoto = typeof msg.sender === 'object'
+        ? msg.sender?.profilePhoto || ''
+        : '';
+
       const toast = {
         id: toastId,
         title,
@@ -65,6 +69,7 @@ const MessageToast = () => {
         sourceId,
         senderName,
         senderInitial: senderName.charAt(0).toUpperCase(),
+        senderPhoto,
         isGroup: !!msg.group,
         timestamp: new Date(),
       };
@@ -103,22 +108,26 @@ const MessageToast = () => {
         >
           <div className="flex items-start space-x-3">
             {/* Avatar */}
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-              toast.isGroup
-                ? 'bg-gradient-to-br from-green-500 to-teal-500'
-                : 'bg-gradient-to-br from-blue-500 to-purple-500'
-            }`}>
-              {toast.isGroup ? (
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              ) : (
-                <span className="text-white font-semibold text-sm">
-                  {toast.senderInitial}
-                </span>
-              )}
-            </div>
+            {!toast.isGroup && toast.senderPhoto ? (
+              <img src={toast.senderPhoto} alt={toast.senderName} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                toast.isGroup
+                  ? 'bg-gradient-to-br from-green-500 to-teal-500'
+                  : 'bg-gradient-to-br from-blue-500 to-purple-500'
+              }`}>
+                {toast.isGroup ? (
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ) : (
+                  <span className="text-white font-semibold text-sm">
+                    {toast.senderInitial}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Content */}
             <div className="flex-1 min-w-0">

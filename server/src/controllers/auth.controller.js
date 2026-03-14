@@ -1,9 +1,12 @@
 // src/controllers/auth.controller.js
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
 const Activity = require('../models/Activity');
 const Group = require('../models/Group');
 const JoinRequest = require('../models/JoinRequest');
@@ -41,7 +44,7 @@ const profileUpload = multer({
 
 exports.profileUploadMiddleware = profileUpload.single('profilePhoto');
 
-const getAuthUserId = (req) => req.user?._id || req.user?.id || null;
+const getAuthUserId = (req) => (req.user && (req.user._id || req.user.id)) || null;
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -110,57 +113,66 @@ exports.register = async(req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = async(req, res) => {
-    try {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
-        // Validate input
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please provide email and password'
-            });
-        }
-
-        // Find user and include password
-        const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid credentials'
-            });
-        }
-
-        // Check password
-        const isPasswordValid = await user.comparePassword(password);
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid credentials'
-            });
-        }
-
-        // Generate token
-        const token = generateToken(user._id);
-
-        res.status(200).json({
-            success: true,
-            message: 'Login successful',
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                profilePhoto: user.profilePhoto || ''
-            }
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({
+    if (!email || !password) {
+        return res.status(400).json({
             success: false,
-            message: 'Error logging in',
-            error: error.message
+            message: 'Please provide email and password'
         });
+    }
+
+    const MAX_RETRIES = 3;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
+
+            const isPasswordValid = await user.comparePassword(password);
+            if (!isPasswordValid) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
+
+            const token = generateToken(user._id);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    profilePhoto: user.profilePhoto || ''
+                }
+            });
+        } catch (error) {
+            const isTransient = error.name === 'MongoServerSelectionError' ||
+                error.name === 'MongoNetworkError' ||
+                error.message.includes('ECONNRESET') ||
+                error.message.includes('topology was destroyed');
+
+            if (isTransient && attempt < MAX_RETRIES) {
+                console.warn(`⚠️  Login DB error (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
+                await new Promise(r => setTimeout(r, 1000 * attempt));
+                continue;
+            }
+
+            console.error('Login error:', error.message);
+            return res.status(500).json({
+                success: false,
+                message: 'Server is temporarily unavailable. Please try again.'
+            });
+        }
     }
 };
 
@@ -325,6 +337,142 @@ exports.changePassword = async(req, res) => {
             success: false,
             message: 'Error changing password',
             error: error.message
+        });
+    }
+};
+
+// @desc    Request a password-reset code (sent via email)
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async(req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide an email address'
+            });
+        }
+
+        const GENERIC_MSG = 'If an account with that email exists, a reset code has been sent.';
+
+        const user = await User.findOne({ email: email.toLowerCase() })
+            .select('+resetCode +resetCodeExpires +resetCodeAttempts');
+
+        if (!user) {
+            return res.status(200).json({ success: true, message: GENERIC_MSG });
+        }
+
+        const plainCode = crypto.randomInt(100000, 999999).toString();
+
+        const salt = await bcrypt.genSalt(10);
+        user.resetCode = await bcrypt.hash(plainCode, salt);
+        user.resetCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        user.resetCodeAttempts = 0;
+        await user.save({ validateModifiedOnly: true });
+
+        const html = `
+            <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:8px;">
+                <h2 style="color:#2563eb;">Campus Link</h2>
+                <p>You requested a password reset. Use the code below within <strong>10 minutes</strong>:</p>
+                <div style="text-align:center;margin:24px 0;">
+                    <span style="font-size:32px;letter-spacing:8px;font-weight:bold;color:#1e40af;">${plainCode}</span>
+                </div>
+                <p style="color:#6b7280;font-size:13px;">If you didn't request this, you can safely ignore this email.</p>
+            </div>`;
+
+        await sendEmail(user.email, 'Campus Link – Password Reset Code', html);
+
+        return res.status(200).json({ success: true, message: GENERIC_MSG });
+    } catch (error) {
+        console.error('Forgot-password error:', error.message, error.code || '');
+        return res.status(500).json({
+            success: false,
+            message: 'Unable to send reset email. Please try again later.'
+        });
+    }
+};
+
+// @desc    Reset password using the 6-digit code
+// @route   POST /api/auth/reset-password
+// @access  Public
+exports.resetPassword = async(req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email, code, and new password are required'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password must be at least 6 characters'
+            });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() })
+            .select('+password +resetCode +resetCodeExpires +resetCodeAttempts');
+
+        if (!user || !user.resetCode || !user.resetCodeExpires) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code'
+            });
+        }
+
+        if (user.resetCodeExpires < new Date()) {
+            user.resetCode = undefined;
+            user.resetCodeExpires = undefined;
+            user.resetCodeAttempts = 0;
+            await user.save({ validateModifiedOnly: true });
+            return res.status(400).json({
+                success: false,
+                message: 'Reset code has expired. Please request a new one.'
+            });
+        }
+
+        if (user.resetCodeAttempts >= 5) {
+            user.resetCode = undefined;
+            user.resetCodeExpires = undefined;
+            user.resetCodeAttempts = 0;
+            await user.save({ validateModifiedOnly: true });
+            return res.status(400).json({
+                success: false,
+                message: 'Too many failed attempts. Please request a new code.'
+            });
+        }
+
+        const isMatch = await bcrypt.compare(code, user.resetCode);
+
+        if (!isMatch) {
+            user.resetCodeAttempts += 1;
+            await user.save({ validateModifiedOnly: true });
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid reset code'
+            });
+        }
+
+        user.password = newPassword;
+        user.resetCode = undefined;
+        user.resetCodeExpires = undefined;
+        user.resetCodeAttempts = 0;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password has been reset successfully'
+        });
+    } catch (error) {
+        console.error('Reset-password error:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error resetting password. Please try again.'
         });
     }
 };

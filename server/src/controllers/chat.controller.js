@@ -10,7 +10,7 @@ exports.getAvailableUsers = async(req, res) => {
 
         // 1. Find all groups where the current user is a member
         const myGroups = await Group.find({ members: req.user._id })
-            .populate('members', 'name email')
+            .populate('members', 'name email profilePhoto')
             .select('members createdBy admins');
 
         if (myGroups.length === 0) {
@@ -43,6 +43,7 @@ exports.getAvailableUsers = async(req, res) => {
                         _id: member._id,
                         name: member.name,
                         email: member.email,
+                        profilePhoto: member.profilePhoto || '',
                         role: groupRole,
                     });
                 } else {

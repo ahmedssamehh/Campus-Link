@@ -51,11 +51,15 @@ const QuestionCard = ({ question }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-xs">
-                {authorName.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            {question.author?.profilePhoto ? (
+              <img src={question.author.profilePhoto} alt={authorName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-xs">
+                  {authorName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">{authorName}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">{getRelativeTime(question.createdAt)}</p>

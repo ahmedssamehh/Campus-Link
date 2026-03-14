@@ -245,7 +245,7 @@ exports.getDashboardStats = async(req, res) => {
         if (activityCount === 0) {
             const [seedUsers, seedGroups] = await Promise.all([
                 User.find().select('name createdAt').sort({ createdAt: -1 }).limit(50),
-                Group.find().populate('createdBy', 'name').select('name createdBy createdAt').sort({ createdAt: -1 }).limit(50),
+                Group.find().populate('createdBy', 'name profilePhoto').select('name createdBy createdAt').sort({ createdAt: -1 }).limit(50),
             ]);
             const docs = [
                 ...seedUsers.map((u) => ({ type: 'user', name: u.name, action: 'joined the platform', date: u.createdAt })),

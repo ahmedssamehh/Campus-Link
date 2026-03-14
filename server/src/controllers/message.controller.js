@@ -109,7 +109,7 @@ exports.getGroupMessages = async(req, res) => {
         }
 
         const messages = await Message.find(query)
-            .populate('sender', 'name email')
+            .populate('sender', 'name email profilePhoto')
             .sort({ createdAt: -1 })
             .limit(parsedLimit);
 
@@ -164,7 +164,7 @@ exports.getPrivateMessages = async(req, res) => {
         }
 
         const messages = await Message.find(query)
-            .populate('sender', 'name email')
+            .populate('sender', 'name email profilePhoto')
             .sort({ createdAt: -1 })
             .limit(parsedLimit);
 

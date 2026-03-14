@@ -162,9 +162,9 @@ const Login = () => {
               </label>
             </div>
             <div className="text-sm">
-              <button type="button" onClick={(e) => e.preventDefault()} className="text-blue-600 hover:text-blue-700 font-medium underline cursor-pointer bg-transparent border-none p-0">
+              <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-medium underline">
                 Forgot password?
-              </button>
+              </Link>
             </div>
           </div>
 

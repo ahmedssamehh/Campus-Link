@@ -221,11 +221,15 @@ const QuestionDetails = () => {
 
           <div className="flex items-center space-x-4 mb-6">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">
-                  {(question.author?.name || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {question.author?.profilePhoto ? (
+                <img src={question.author.profilePhoto} alt={question.author?.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">
+                    {(question.author?.name || 'U').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{question.author?.name || 'Unknown User'}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Asked {getRelativeTime(question.createdAt)}</p>

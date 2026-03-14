@@ -257,11 +257,19 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
           {/* User Info */}
           <div className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-semibold text-sm">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {user?.profilePhoto ? (
+                <img
+                  src={user.profilePhoto}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-semibold text-sm">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               {isOpen && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">

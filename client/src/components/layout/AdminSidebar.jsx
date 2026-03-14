@@ -145,11 +145,19 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
           {/* User Info */}
           <div className="px-3 py-2 rounded-lg bg-purple-800/50 dark:bg-purple-950/50">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-white font-semibold text-sm">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {user?.profilePhoto ? (
+                <img
+                  src={user.profilePhoto}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-lg border border-purple-400"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <span className="text-white font-semibold text-sm">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               {isOpen && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-white truncate">

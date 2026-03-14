@@ -375,11 +375,19 @@ const ChatWindow = ({ chat, currentUserId }) => {
       <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-              <span className="text-white font-semibold">
-                {chat.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            {chat.profilePhoto ? (
+              <img
+                src={chat.profilePhoto}
+                alt={chat.name}
+                className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                <span className="text-white font-semibold">
+                  {chat.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
             {chat.isOnline && (
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
             )}
