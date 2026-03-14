@@ -25,6 +25,10 @@ const announcementSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
+    visibleTo: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     expiresAt: {
         type: Date,
         required: true,
@@ -39,6 +43,7 @@ const announcementSchema = new mongoose.Schema({
 
 // Index for faster queries
 announcementSchema.index({ group: 1, createdAt: -1 });
+announcementSchema.index({ group: 1, visibleTo: 1, createdAt: -1 });
 announcementSchema.index({ createdBy: 1 });
 
 // TTL index: auto-delete when expiresAt date is reached

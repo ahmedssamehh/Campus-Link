@@ -28,6 +28,9 @@ export const SocketProvider = ({ children }) => {
     // Tracks which chat/group the user is currently viewing
     const activeViewRef = useRef(null);
 
+    // ─── Unread announcement tracking ────────────────────────
+    const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+
     const currentUserId = (user?._id || user?.id)?.toString();
     const currentUserIdRef = useRef(currentUserId);
     currentUserIdRef.current = currentUserId;
@@ -48,14 +51,28 @@ export const SocketProvider = ({ children }) => {
         }
     }, [isAuthenticated]);
 
+    const fetchUnreadAnnouncementsCount = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const res = await axios.get('/announcements/unread-count');
+            if (res.data.success) {
+                setUnreadAnnouncements(res.data.unreadCount || 0);
+            }
+        } catch (err) {
+            console.error('Failed to fetch unread announcements count:', err.message);
+        }
+    }, [isAuthenticated]);
+
     // Fetch on mount and when auth changes
     useEffect(() => {
         if (isAuthenticated) {
             fetchUnreadCounts();
+            fetchUnreadAnnouncementsCount();
         } else {
             setUnreadMessages({ groups: {}, private: {} });
+            setUnreadAnnouncements(0);
         }
-    }, [isAuthenticated, fetchUnreadCounts]);
+    }, [isAuthenticated, fetchUnreadCounts, fetchUnreadAnnouncementsCount]);
 
     // Set active view + mark as read via API
     const setActiveView = useCallback((sourceId, type) => {
@@ -151,6 +168,11 @@ export const SocketProvider = ({ children }) => {
             if (lastSeen) {
                 setLastSeenMap((prev) => ({ ...prev, [userId]: lastSeen }));
             }
+        });
+
+        // ─── Realtime unread announcement increment ─────────
+        socket.on('newAnnouncement', () => {
+            setUnreadAnnouncements((prev) => prev + 1);
         });
 
         // ─── Realtime unread increment on new message ───────
@@ -361,6 +383,13 @@ export const SocketProvider = ({ children }) => {
         return () => socketRef.current?.off('userStopTyping', handler);
     }, []);
 
+    // ─── New announcement listener ───────────────────────────
+    const onNewAnnouncement = useCallback((handler) => {
+        if (!socketRef.current) return () => {};
+        socketRef.current.on('newAnnouncement', handler);
+        return () => socketRef.current?.off('newAnnouncement', handler);
+    }, [connected]);
+
     const value = {
         socket: socketRef.current,
         connected,
@@ -394,7 +423,12 @@ export const SocketProvider = ({ children }) => {
         emitTyping,
         emitStopTyping,
         onUserTyping,
-        onUserStopTyping
+        onUserStopTyping,
+        // Announcements
+        unreadAnnouncements,
+        setUnreadAnnouncements,
+        fetchUnreadAnnouncementsCount,
+        onNewAnnouncement
     };
 
     return (

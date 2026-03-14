@@ -19,6 +19,13 @@ const GroupsManagement = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [announcementSubmitting, setAnnouncementSubmitting] = useState(false);
+  const [announcementData, setAnnouncementData] = useState({
+    groupId: '',
+    title: '',
+    content: ''
+  });
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -115,12 +122,45 @@ const GroupsManagement = () => {
     }
   };
 
+  const handleAnnouncementChange = (e) => {
+    const { name, value } = e.target;
+    setAnnouncementData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateAnnouncement = async (e) => {
+    e.preventDefault();
+
+    if (!announcementData.groupId || !announcementData.title.trim() || !announcementData.content.trim()) {
+      setError('Please select a group and fill in announcement title/content');
+      return;
+    }
+
+    try {
+      setAnnouncementSubmitting(true);
+      setError('');
+      await axios.post('/announcements', {
+        groupId: announcementData.groupId,
+        title: announcementData.title.trim(),
+        content: announcementData.content.trim()
+      });
+
+      setShowAnnouncementModal(false);
+      setAnnouncementData({ groupId: '', title: '', content: '' });
+      setSuccessMessage('Announcement created successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create announcement');
+    } finally {
+      setAnnouncementSubmitting(false);
+    }
+  };
+
   return (
     <>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Study Groups Management
@@ -129,15 +169,26 @@ const GroupsManagement = () => {
               Create and manage study groups
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition duration-200 shadow-lg flex items-center space-x-2"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Create New Group</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAnnouncementModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition duration-200 shadow-lg flex items-center space-x-2"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <span>Create Announcement</span>
+            </button>
+            <button
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition duration-200 shadow-lg flex items-center space-x-2"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Create New Group</span>
+            </button>
+          </div>
         </div>
 
         {/* Success Message */}
@@ -363,6 +414,98 @@ const GroupsManagement = () => {
               {deleting ? 'Deleting…' : 'Delete'}
             </button>
           </div>
+        </div>
+      </div>
+    )}
+
+    {/* Create Announcement Modal */}
+    {showAnnouncementModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Create Announcement</h3>
+            <button
+              onClick={() => setShowAnnouncementModal(false)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              aria-label="Close"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleCreateAnnouncement} className="space-y-4">
+            <div>
+              <label htmlFor="announcement-group" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Group *
+              </label>
+              <select
+                id="announcement-group"
+                name="groupId"
+                value={announcementData.groupId}
+                onChange={handleAnnouncementChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                required
+              >
+                <option value="">Choose a group...</option>
+                {groups.map((group) => (
+                  <option key={group._id} value={group._id}>
+                    {group.name} - {group.subject}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="announcement-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Title *
+              </label>
+              <input
+                id="announcement-title"
+                name="title"
+                type="text"
+                value={announcementData.title}
+                onChange={handleAnnouncementChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                placeholder="Enter announcement title"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="announcement-content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Content *
+              </label>
+              <textarea
+                id="announcement-content"
+                name="content"
+                value={announcementData.content}
+                onChange={handleAnnouncementChange}
+                rows="5"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                placeholder="Write your announcement message"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAnnouncementModal(false)}
+                className="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={announcementSubmitting}
+                className="px-5 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {announcementSubmitting ? 'Sending...' : 'Send Announcement'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     )}

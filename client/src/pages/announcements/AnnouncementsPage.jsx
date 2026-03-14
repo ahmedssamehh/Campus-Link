@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import { Link } from 'react-router-dom';
 
 const AnnouncementsPage = () => {
   const { user } = useAuth();
   const { showSuccess, showError, showWarning, showConfirm } = useNotification();
+  const { onNewAnnouncement, setUnreadAnnouncements } = useSocket();
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
   const [announcements, setAnnouncements] = useState([]);
@@ -14,9 +16,13 @@ const AnnouncementsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [groups, setGroups] = useState([]);
+  const [groups, setGroups] = useState([]);         // all groups (for system admin)
+  const [adminGroups, setAdminGroups] = useState([]); // groups where current user is admin/owner
   const [formData, setFormData] = useState({ groupId: '', title: '', content: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  // Is the user a group admin in at least one group?
+  const isGroupAdmin = adminGroups.length > 0;
 
   const fetchAnnouncements = useCallback(async () => {
     try {
@@ -37,19 +43,27 @@ const AnnouncementsPage = () => {
     try {
       const response = await axios.get('/groups');
       if (response.data.success) {
-        setGroups(response.data.groups);
+        const allGroups = response.data.groups;
+        setGroups(allGroups);
+
+        // Determine which groups current user can post to (admin/owner of that group)
+        const userId = user?._id || user?.id;
+        const myAdminGroups = allGroups.filter(g => {
+          const isCreator = (g.createdBy?._id || g.createdBy) === userId;
+          const isGAdmin = g.admins?.some(a => (a._id || a) === userId);
+          return isCreator || isGAdmin;
+        });
+        setAdminGroups(myAdminGroups);
       }
     } catch (err) {
       console.error('Failed to fetch groups:', err);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchAnnouncements();
-    if (isAdminOrOwner) {
-      fetchGroups();
-    }
-  }, [fetchAnnouncements, fetchGroups, isAdminOrOwner]);
+    fetchGroups();
+  }, [fetchAnnouncements, fetchGroups]);
 
   const handleMarkAsRead = async (announcementId) => {
     try {
@@ -57,6 +71,8 @@ const AnnouncementsPage = () => {
       setAnnouncements(prev => prev.map(ann =>
         ann._id === announcementId ? { ...ann, isRead: true } : ann
       ));
+      // Decrement global unread badge
+      setUnreadAnnouncements(prev => Math.max(0, prev - 1));
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to mark as read');
     }
@@ -87,7 +103,17 @@ const AnnouncementsPage = () => {
 
     try {
       setSubmitting(true);
-      const response = await axios.post('/announcements', formData);
+      let response;
+      if (isAdminOrOwner) {
+        // System admin: use the generic endpoint (any group)
+        response = await axios.post('/announcements', formData);
+      } else {
+        // Group admin: use the group-scoped endpoint
+        response = await axios.post(`/announcements/group/${formData.groupId}`, {
+          title: formData.title,
+          content: formData.content
+        });
+      }
       if (response.data.success) {
         showSuccess('Announcement created successfully!');
         setShowCreateModal(false);
@@ -100,6 +126,18 @@ const AnnouncementsPage = () => {
       setSubmitting(false);
     }
   };
+
+  // Realtime: prepend new announcements received via socket
+  useEffect(() => {
+    const unsub = onNewAnnouncement((newAnn) => {
+      setAnnouncements(prev => {
+        // Avoid duplicates
+        if (prev.some(a => a._id === newAnn._id)) return prev;
+        return [{ ...newAnn, isRead: false }, ...prev];
+      });
+    });
+    return unsub;
+  }, [onNewAnnouncement]);
 
   const filteredAnnouncements = announcements.filter(ann => {
     if (filter === 'unread') return !ann.isRead;
@@ -135,7 +173,7 @@ const AnnouncementsPage = () => {
               Stay updated with announcements from your groups
             </p>
           </div>
-          {isAdminOrOwner && (
+          {(isAdminOrOwner || isGroupAdmin) && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition duration-200 shadow-lg flex items-center space-x-2"
@@ -338,7 +376,7 @@ const AnnouncementsPage = () => {
                   required
                 >
                   <option value="">Choose a group...</option>
-                  {groups.map((group) => (
+                  {(isAdminOrOwner ? groups : adminGroups).map((group) => (
                     <option key={group._id} value={group._id}>
                       {group.name} - {group.subject}
                     </option>

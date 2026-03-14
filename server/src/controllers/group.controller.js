@@ -232,14 +232,31 @@ exports.approveJoinRequest = async(req, res) => {
 
         // Create announcement to notify user of approval
         try {
-            const approvedGroupId = group._id || joinRequest.group ? ._id;
+            const approvedGroupId = group._id || joinRequest.group._id;
+            const adminName = req.user.name || 'Admin';
+            const requestedUserName = joinRequest.user.name || 'User';
+            const groupName = joinRequest.group.name || 'this group';
 
-            await Announcement.create({
-                group: approvedGroupId,
-                createdBy: req.user._id,
-                title: 'Join Request Approved',
-                content: `Welcome! Your request to join "${joinRequest.group.name}" has been approved. You can now access all group content and participate in discussions.`
-            });
+            const allAdminIds = [...new Set([
+                ...group.admins.map(a => a.toString()),
+                group.createdBy.toString()
+            ])].map(id => id);
+
+            await Announcement.create([{
+                    group: approvedGroupId,
+                    createdBy: req.user._id,
+                    title: 'Join Request Approved',
+                    content: `Your request to join ${groupName} has been approved.`,
+                    visibleTo: [joinRequest.user._id]
+                },
+                {
+                    group: approvedGroupId,
+                    createdBy: req.user._id,
+                    title: 'Join Request Approved',
+                    content: `${adminName} approved ${requestedUserName}'s request to join ${groupName}.`,
+                    visibleTo: allAdminIds
+                }
+            ]);
         } catch (announcementError) {
             console.error('Error creating approval announcement:', announcementError);
             // Don't fail the request if announcement fails
@@ -293,14 +310,31 @@ exports.rejectJoinRequest = async(req, res) => {
 
         // Create announcement to notify user of rejection
         try {
-            const rejectedGroupId = joinRequest.group ? ._id;
+            const rejectedGroupId = joinRequest.group._id;
+            const adminName = req.user.name || 'Admin';
+            const requestedUserName = joinRequest.user.name || 'User';
+            const groupName = joinRequest.group.name || 'this group';
 
-            await Announcement.create({
-                group: rejectedGroupId,
-                createdBy: req.user._id,
-                title: 'Join Request Rejected',
-                content: `Your request to join "${joinRequest.group.name}" was not approved at this time. You may submit a new request if you wish.`
-            });
+            const allAdminIds = [...new Set([
+                ...group.admins.map(a => a.toString()),
+                group.createdBy.toString()
+            ])].map(id => id);
+
+            await Announcement.create([{
+                    group: rejectedGroupId,
+                    createdBy: req.user._id,
+                    title: 'Join Request Rejected',
+                    content: `Your request to join ${groupName} has been rejected.`,
+                    visibleTo: [joinRequest.user._id]
+                },
+                {
+                    group: rejectedGroupId,
+                    createdBy: req.user._id,
+                    title: 'Join Request Rejected',
+                    content: `${adminName} rejected ${requestedUserName}'s request to join ${groupName}.`,
+                    visibleTo: allAdminIds
+                }
+            ]);
         } catch (announcementError) {
             console.error('Error creating rejection announcement:', announcementError);
             // Don't fail the request if announcement fails

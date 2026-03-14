@@ -100,7 +100,11 @@ function initSocketServer(httpServer) {
 
         // ── Auto-join all groups the user belongs to ─────────
         Group.find({ members: userId }).select('_id').then((groups) => {
-            groups.forEach((g) => socket.join(g._id.toString()));
+            groups.forEach((g) => {
+                const gid = g._id.toString();
+                socket.join(gid);
+                socket.join(`group:${gid}`);
+            });
             console.log(`📦 Auto-joined ${groups.length} group room(s) for ${socket.user.name}`);
         }).catch((err) => {
             console.error('Auto-join groups error:', err.message);
@@ -132,6 +136,7 @@ function initSocketServer(httpServer) {
 
                 // Join the socket room
                 socket.join(groupId);
+                socket.join(`group:${groupId}`);
                 console.log(`📦 ${socket.user.name} joined group room: ${groupId}`);
 
                 if (callback) callback({ success: true, groupName: group.name });

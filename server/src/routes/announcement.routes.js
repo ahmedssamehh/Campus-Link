@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const {
     createAnnouncement,
+    createGroupAnnouncement,
     getMyAnnouncements,
     getLatestAnnouncements,
     getUnreadCount,
@@ -17,6 +18,9 @@ router.use(protect);
 
 // POST /api/announcements - Create announcement (admin, owner)
 router.post('/', authorize('admin', 'owner'), createAnnouncement);
+
+// POST /api/announcements/group/:groupId - Create group announcement (group owner/admin)
+router.post('/group/:groupId', createGroupAnnouncement);
 
 // GET /api/announcements/all - Get all announcements (admin, owner)
 router.get('/all', authorize('admin', 'owner'), getAllAnnouncements);

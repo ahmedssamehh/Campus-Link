@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import WelcomeCard from '../../components/home/WelcomeCard';
 import StatsCard from '../../components/home/StatsCard';
@@ -8,13 +9,13 @@ import QuickActions from '../../components/home/QuickActions';
 
 const Home = () => {
   const { user } = useAuth();
+  const { unreadAnnouncements, onNewAnnouncement } = useSocket();
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
   const [stats, setStats] = useState({
     studyGroups: 0,
     unreadMessages: 0,
     pendingRequests: 0,
-    unreadAnnouncements: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [announcements, setAnnouncements] = useState([]);
@@ -38,20 +39,10 @@ const Home = () => {
         pendingCount = reqRes.data.success ? reqRes.data.count : 0;
       }
 
-      // Fetch unread announcements count
-      let unreadAnnouncementsCount = 0;
-      try {
-        const announcementsRes = await axios.get('/announcements/unread-count');
-        unreadAnnouncementsCount = announcementsRes.data.success ? announcementsRes.data.unreadCount : 0;
-      } catch (err) {
-        console.error('Failed to fetch unread announcements:', err);
-      }
-
       setStats({
         studyGroups: joinedCount,
-        unreadMessages: 0, // No messages API yet
+        unreadMessages: 0,
         pendingRequests: pendingCount,
-        unreadAnnouncements: unreadAnnouncementsCount,
       });
     } catch (err) {
       console.error('Failed to fetch home stats:', err);
@@ -81,6 +72,18 @@ const Home = () => {
   useEffect(() => {
     if (user) fetchAnnouncements();
   }, [user, fetchAnnouncements]);
+
+  // Realtime: prepend new announcements when received via socket
+  useEffect(() => {
+    const unsub = onNewAnnouncement((newAnn) => {
+      setAnnouncements(prev => {
+        if (prev.some(a => a._id === newAnn._id)) return prev;
+        // Keep only 5 latest (same as /latest endpoint)
+        return [{ ...newAnn, isRead: false }, ...prev].slice(0, 5);
+      });
+    });
+    return unsub;
+  }, [onNewAnnouncement]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
@@ -148,7 +151,7 @@ const Home = () => {
         </div>
 
         {/* Unread Announcements Badge */}
-        {stats.unreadAnnouncements > 0 && (
+        {unreadAnnouncements > 0 && (
           <div className="mb-8">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg shadow-md p-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -159,7 +162,7 @@ const Home = () => {
                 </div>
                 <div>
                   <p className="text-white font-semibold text-lg">
-                    {stats.unreadAnnouncements} New Announcement{stats.unreadAnnouncements !== 1 ? 's' : ''}
+                    {unreadAnnouncements} New Announcement{unreadAnnouncements !== 1 ? 's' : ''}
                   </p>
                   <p className="text-orange-100 text-sm">
                     You have unread announcements from your groups
@@ -203,7 +206,7 @@ const Home = () => {
           <Announcements 
             announcements={announcements} 
             loading={announcementsLoading}
-            unreadCount={stats.unreadAnnouncements}
+            unreadCount={unreadAnnouncements}
           />
         </div>
 

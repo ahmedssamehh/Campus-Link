@@ -6,6 +6,14 @@ const getMemberGroupIds = async(userId) => {
     return Group.distinct('_id', { members: userId });
 };
 
+const buildVisibilityFilter = (userId) => ({
+    $or: [
+        { visibleTo: { $exists: false } },
+        { visibleTo: { $size: 0 } },
+        { visibleTo: userId }
+    ]
+});
+
 // @desc    Create announcement in a group
 // @route   POST /api/announcements
 // @access  Private (admin, owner)
@@ -72,7 +80,10 @@ exports.getMyAnnouncements = async(req, res) => {
             });
         }
 
-        const announcements = await Announcement.find({ group: { $in: groupIds } })
+        const announcements = await Announcement.find({
+                group: { $in: groupIds },
+                ...buildVisibilityFilter(req.user._id)
+            })
             .populate('createdBy', 'name email role')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 });
@@ -113,7 +124,10 @@ exports.getLatestAnnouncements = async(req, res) => {
             });
         }
 
-        const announcements = await Announcement.find({ group: { $in: groupIds } })
+        const announcements = await Announcement.find({
+                group: { $in: groupIds },
+                ...buildVisibilityFilter(req.user._id)
+            })
             .populate('createdBy', 'name email role')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 })
@@ -156,6 +170,7 @@ exports.getUnreadCount = async(req, res) => {
 
         const unreadCount = await Announcement.countDocuments({
             group: { $in: groupIds },
+            ...buildVisibilityFilter(req.user._id),
             readBy: { $ne: req.user._id }
         });
 
@@ -185,6 +200,30 @@ exports.markAsRead = async(req, res) => {
                 success: false,
                 message: 'Announcement not found'
             });
+        }
+
+        const isTargeted = announcement.visibleTo && announcement.visibleTo.length > 0;
+        const isInVisibleTo = isTargeted &&
+            announcement.visibleTo.some((id) => id.toString() === req.user._id.toString());
+
+        // Targeted announcements (e.g. join-request notifications) are only visible to named users.
+        // Group-wide announcements (visibleTo empty) require group membership.
+        if (isTargeted && !isInVisibleTo) {
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have access to this announcement'
+            });
+        }
+
+        if (!isTargeted) {
+            // Group-wide: verify membership
+            const isMember = await Group.exists({ _id: announcement.group, members: req.user._id });
+            if (!isMember) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'You are not a member of this group'
+                });
+            }
         }
 
         // Check if user is already in readBy array
@@ -265,6 +304,86 @@ exports.getAllAnnouncements = async(req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching announcements',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Create announcement for a specific group by group owner/admin
+// @route   POST /api/announcements/group/:groupId
+// @access  Private (group owner/admin only)
+exports.createGroupAnnouncement = async(req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { title, content } = req.body;
+        const userId = req.user._id.toString();
+
+        if (!title || !content) {
+            return res.status(400).json({
+                success: false,
+                message: 'Title and content are required'
+            });
+        }
+
+        // Verify membership first (non-members cannot post)
+        const group = await Group.findOne({ _id: groupId, members: req.user._id })
+            .select('_id name createdBy admins members');
+
+        if (!group) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not a member of this group'
+            });
+        }
+
+        const isOwner = group.createdBy.toString() === userId;
+        const isGroupAdmin = group.admins.some((adminId) => adminId.toString() === userId);
+
+        if (!isOwner && !isGroupAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only group owner or group admins can create announcements'
+            });
+        }
+
+        const announcement = await Announcement.create({
+            group: group._id,
+            createdBy: req.user._id,
+            title: title.trim(),
+            content: content.trim()
+        });
+
+        await announcement.populate('createdBy', 'name email role');
+        await announcement.populate('group', 'name subject');
+
+        // Realtime broadcast to connected members in this group room.
+        const io = req.app.get('io');
+        if (io) {
+            const payload = {
+                _id: announcement._id,
+                group: announcement.group,
+                createdBy: announcement.createdBy,
+                title: announcement.title,
+                content: announcement.content,
+                createdAt: announcement.createdAt,
+                updatedAt: announcement.updatedAt
+            };
+
+            io.to(`group:${group._id.toString()}`).emit('newAnnouncement', payload);
+            // Backward compatibility with existing room usage in chat socket.
+            io.to(group._id.toString()).emit('newAnnouncement', payload);
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: 'Group announcement created successfully',
+            announcement
+        });
+    } catch (error) {
+        console.error('Create group announcement error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error creating group announcement',
             error: error.message
         });
     }
