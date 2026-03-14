@@ -4,9 +4,24 @@ import { useNavigate } from 'react-router-dom';
 const QuestionCard = ({ question }) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    navigate(`/discussion/${question.id}`);
+  const getRelativeTime = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return date.toLocaleDateString();
   };
+
+  const handleClick = () => {
+    navigate(`/discussion/${question._id}`);
+  };
+
+  const isSolved = (question.answersCount || 0) > 0;
+  const authorName = question.author?.name || 'Unknown User';
 
   return (
     <div
@@ -17,7 +32,7 @@ const QuestionCard = ({ question }) => {
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition duration-200">
           {question.title}
         </h3>
-        {question.isSolved && (
+        {isSolved && (
           <span className="ml-2 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-semibold px-3 py-1 rounded-full flex items-center">
             <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -38,12 +53,12 @@ const QuestionCard = ({ question }) => {
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-xs">
-                {question.author.charAt(0).toUpperCase()}
+                {authorName.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{question.author}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{question.time}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{authorName}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{getRelativeTime(question.createdAt)}</p>
             </div>
           </div>
         </div>
@@ -60,10 +75,10 @@ const QuestionCard = ({ question }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
             </svg>
-            <span className="text-sm font-medium">{question.answers}</span>
+            <span className="text-sm font-medium">{question.votes || 0}</span>
           </div>
           <div className="flex items-center text-gray-600 dark:text-gray-400">
             <svg
@@ -76,16 +91,10 @@ const QuestionCard = ({ question }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <span className="text-sm font-medium">{question.views}</span>
+            <span className="text-sm font-medium">{question.answersCount || 0}</span>
           </div>
         </div>
       </div>

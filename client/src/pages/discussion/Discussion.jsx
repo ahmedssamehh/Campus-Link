@@ -1,98 +1,55 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from '../../api/axios';
 import QuestionCard from '../../components/discussion/QuestionCard';
 
 const Discussion = () => {
   const navigate = useNavigate();
 
-  // Mock data for questions
-  const [questions] = useState([
-    {
-      id: 1,
-      title: 'How do I implement recursion in JavaScript?',
-      content: 'I am having trouble understanding how recursion works in JavaScript. Can someone explain with examples?',
-      author: 'John Doe',
-      time: '2 hours ago',
-      answers: 5,
-      views: 124,
-      isSolved: true,
-      tags: ['JavaScript', 'Programming', 'Recursion'],
-    },
-    {
-      id: 2,
-      title: 'What is the difference between let and var in JavaScript?',
-      content: 'I keep seeing both let and var being used in JavaScript. What are the differences and when should I use each?',
-      author: 'Sarah Johnson',
-      time: '5 hours ago',
-      answers: 8,
-      views: 256,
-      isSolved: true,
-      tags: ['JavaScript', 'Syntax'],
-    },
-    {
-      id: 3,
-      title: 'Help with calculus integration problem',
-      content: 'I am stuck on solving this integration problem: ∫(x^2 + 3x + 2)dx. Can someone show me the steps?',
-      author: 'Mike Chen',
-      time: '1 day ago',
-      answers: 3,
-      views: 89,
-      isSolved: false,
-      tags: ['Mathematics', 'Calculus'],
-    },
-    {
-      id: 4,
-      title: 'Best practices for React state management?',
-      content: 'What are the current best practices for managing state in a large React application? Should I use Context, Redux, or something else?',
-      author: 'Emma Davis',
-      time: '1 day ago',
-      answers: 12,
-      views: 342,
-      isSolved: false,
-      tags: ['React', 'State Management'],
-    },
-    {
-      id: 5,
-      title: 'Understanding Newtons Laws of Motion',
-      content: 'Can someone explain the practical applications of Newtons three laws of motion with real-world examples?',
-      author: 'Alex Brown',
-      time: '2 days ago',
-      answers: 7,
-      views: 178,
-      isSolved: true,
-      tags: ['Physics', 'Classical Mechanics'],
-    },
-    {
-      id: 6,
-      title: 'How to prepare for database design interview?',
-      content: 'I have an interview coming up and they mentioned database design. What topics should I focus on?',
-      author: 'Lisa Wang',
-      time: '3 days ago',
-      answers: 15,
-      views: 421,
-      isSolved: false,
-      tags: ['Database', 'Interview', 'Career'],
-    },
-  ]);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [filter, setFilter] = useState('all'); // all, solved, unsolved
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter questions
-  const filteredQuestions = questions.filter((question) => {
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await axios.get('/discussion/questions');
+        if (response.data.success) {
+          setQuestions(response.data.questions || []);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load discussion questions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  const filteredQuestions = useMemo(() => questions.filter((question) => {
+    const isSolved = (question.answersCount || 0) > 0;
     const matchesFilter =
       filter === 'all' ||
-      (filter === 'solved' && question.isSolved) ||
-      (filter === 'unsolved' && !question.isSolved);
+      (filter === 'solved' && isSolved) ||
+      (filter === 'unsolved' && !isSolved);
 
     const matchesSearch =
       searchTerm === '' ||
       question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       question.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      question.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      (question.tags || []).some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return matchesFilter && matchesSearch;
-  });
+  }), [questions, filter, searchTerm]);
+
+  const solvedCount = questions.filter((q) => (q.answersCount || 0) > 0).length;
+  const unsolvedCount = questions.length - solvedCount;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -230,9 +187,7 @@ const Discussion = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {questions.filter((q) => q.isSolved).length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{solvedCount}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Solved</p>
               </div>
             </div>
@@ -255,9 +210,7 @@ const Discussion = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {questions.filter((q) => !q.isSolved).length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{unsolvedCount}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Unsolved</p>
               </div>
             </div>
@@ -266,9 +219,17 @@ const Discussion = () => {
 
         {/* Questions List */}
         <div className="space-y-4">
-          {filteredQuestions.length > 0 ? (
+          {loading ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-10 text-center text-gray-600 dark:text-gray-300">
+              Loading questions...
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          ) : filteredQuestions.length > 0 ? (
             filteredQuestions.map((question) => (
-              <QuestionCard key={question.id} question={question} />
+              <QuestionCard key={question._id} question={question} />
             ))
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">

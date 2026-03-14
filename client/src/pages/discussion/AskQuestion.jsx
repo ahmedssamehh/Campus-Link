@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from '../../api/axios';
 import QuestionForm from '../../components/discussion/QuestionForm';
 
 const AskQuestion = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (formData) => {
-    setIsLoading(true);
+  const handleSubmit = async (formData) => {
+    try {
+      setIsLoading(true);
+      setError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Question submitted:', formData);
+      const response = await axios.post('/discussion/questions', {
+        title: formData.title,
+        content: formData.content,
+        tags: formData.tags
+      });
+
+      if (response.data.success) {
+        navigate(`/discussion/${response.data.question._id}`);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to post question');
+    } finally {
       setIsLoading(false);
-      // Redirect back to discussion board
-      navigate('/discussion');
-    }, 1000);
+    }
   };
 
   return (
@@ -28,6 +39,12 @@ const AskQuestion = () => {
             Get help from your classmates and contribute to the learning community
           </p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
 
         {/* Tips Card */}
         <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg p-6 mb-6">
