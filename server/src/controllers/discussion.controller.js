@@ -3,8 +3,8 @@ const Answer = require('../models/Answer');
 
 const buildVoteState = (doc, userId) => {
     const uid = userId ? userId.toString() : null;
-    const upvoteCount = doc.upvotes?.length || 0;
-    const downvoteCount = doc.downvotes?.length || 0;
+    const upvoteCount = doc.upvotes ? .length || 0;
+    const downvoteCount = doc.downvotes ? .length || 0;
 
     return {
         ...doc.toObject(),
@@ -12,8 +12,7 @@ const buildVoteState = (doc, userId) => {
         userVote: uid ?
             (doc.upvotes.some((id) => id.toString() === uid) ?
                 'up' :
-                (doc.downvotes.some((id) => id.toString() === uid) ? 'down' : null)) :
-            null
+                (doc.downvotes.some((id) => id.toString() === uid) ? 'down' : null)) : null
     };
 };
 
@@ -59,7 +58,7 @@ exports.getAllQuestions = async(req, res) => {
             answerCountRows.map((row) => [row._id.toString(), row.count])
         );
 
-        const currentUserId = req.user?._id?.toString();
+        const currentUserId = req.user ? ._id ? .toString();
 
         const payload = questions.map((q) => {
             return {
@@ -100,7 +99,7 @@ exports.getQuestionById = async(req, res) => {
             .populate('author', 'name role')
             .sort({ createdAt: 1 });
 
-        const currentUserId = req.user?._id;
+        const currentUserId = req.user ? ._id;
 
         return res.status(200).json({
             success: true,
@@ -276,6 +275,37 @@ exports.voteAnswer = async(req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Failed to vote on answer',
+            error: error.message
+        });
+    }
+};
+
+exports.setQuestionSolved = async(req, res) => {
+    try {
+        const { id } = req.params;
+        const { isSolved = true } = req.body;
+
+        const question = await Question.findById(id).populate('author', 'name role');
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question not found'
+            });
+        }
+
+        question.isSolved = Boolean(isSolved);
+        await question.save();
+
+        return res.status(200).json({
+            success: true,
+            message: question.isSolved ? 'Question marked as solved' : 'Question marked as unsolved',
+            question: buildVoteState(question, req.user._id)
+        });
+    } catch (error) {
+        console.error('Set question solved error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update question solved state',
             error: error.message
         });
     }

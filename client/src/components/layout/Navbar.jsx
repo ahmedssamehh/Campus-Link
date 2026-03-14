@@ -1,11 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [newDiscussionCount, setNewDiscussionCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setNewDiscussionCount(0);
+      return;
+    }
+
+    const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id}`;
+    const storedLastSeen = localStorage.getItem(discussionLastSeenKey);
+    if (!storedLastSeen) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchNewDiscussionCount = async () => {
+      try {
+        const response = await axios.get('/discussion/questions');
+        if (!isMounted || !response.data.success) {
+          return;
+        }
+
+        const lastSeenTime = new Date(localStorage.getItem(discussionLastSeenKey) || storedLastSeen).getTime();
+        const count = (response.data.questions || []).filter((question) => {
+          const createdAt = question.createdAt ? new Date(question.createdAt).getTime() : 0;
+          return createdAt > lastSeenTime;
+        }).length;
+
+        setNewDiscussionCount(count);
+      } catch (err) {
+        if (isMounted) {
+          setNewDiscussionCount(0);
+        }
+      }
+    };
+
+    fetchNewDiscussionCount();
+    const intervalId = window.setInterval(fetchNewDiscussionCount, 60000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout();
@@ -22,7 +70,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/home" className="flex items-center">
+          <Link to="/home" className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Campus Link logo"
+              className="w-9 h-9 rounded-md object-cover border border-white/20"
+            />
             <span className="text-white text-2xl font-bold">Campus Link</span>
           </Link>
 
@@ -50,9 +103,14 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/discussion"
-                  className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
+                  className="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium transition duration-200 inline-flex items-center gap-2"
                 >
                   Discussion
+                  {newDiscussionCount > 0 && (
+                    <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                      {newDiscussionCount > 99 ? '99+' : newDiscussionCount}
+                    </span>
+                  )}
                 </Link>
                 <div className="flex items-center space-x-3 border-l border-blue-500 pl-4">
                   <div className="flex items-center space-x-2">
@@ -169,9 +227,14 @@ const Navbar = () => {
                 <Link
                   to="/discussion"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-white hover:bg-blue-600 flex items-center justify-between px-3 py-2 rounded-md text-base font-medium"
                 >
-                  Discussion
+                  <span>Discussion</span>
+                  {newDiscussionCount > 0 && (
+                    <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                      {newDiscussionCount > 99 ? '99+' : newDiscussionCount}
+                    </span>
+                  )}
                 </Link>
                 <button
                   onClick={handleLogout}

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 import AnswerCard from '../../components/discussion/AnswerCard';
 
 const QuestionDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +17,9 @@ const QuestionDetails = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questionVoteLoading, setQuestionVoteLoading] = useState(false);
   const [answerVoteLoadingId, setAnswerVoteLoadingId] = useState(null);
+  const [solveLoading, setSolveLoading] = useState(false);
+
+  const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
   const getRelativeTime = (dateString) => {
     const now = new Date();
@@ -104,6 +109,23 @@ const QuestionDetails = () => {
     }
   };
 
+  const handleSolvedToggle = async () => {
+    try {
+      setSolveLoading(true);
+      setError('');
+      const response = await axios.patch(`/discussion/questions/${id}/solve`, {
+        isSolved: !question.isSolved
+      });
+      if (response.data.success) {
+        setQuestion((prev) => ({ ...prev, ...response.data.question }));
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update solved status');
+    } finally {
+      setSolveLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -168,18 +190,33 @@ const QuestionDetails = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{question.title}</h1>
-            {(answers.length > 0) && (
-              <span className="ml-4 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-sm font-semibold px-4 py-2 rounded-full flex items-center">
-                <svg className="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Solved
-              </span>
-            )}
+            <div className="ml-4 flex items-center gap-3">
+              {question.isSolved && (
+                <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-sm font-semibold px-4 py-2 rounded-full flex items-center">
+                  <svg className="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Solved
+                </span>
+              )}
+              {isAdminOrOwner && (
+                <button
+                  onClick={handleSolvedToggle}
+                  disabled={solveLoading}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    question.isSolved
+                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {solveLoading ? 'Updating...' : (question.isSolved ? 'Mark Unsolved' : 'Mark Solved')}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center space-x-4 mb-6">

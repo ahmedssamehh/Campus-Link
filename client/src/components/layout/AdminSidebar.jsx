@@ -83,9 +83,11 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
         {/* Logo/Brand */}
         <div className="flex items-center h-16 px-4 border-b border-purple-600 dark:border-purple-800">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Campus Link logo"
+              className="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-lg border border-white/20"
+            />
             {isOpen && (
               <div>
                 <span className="text-xl font-bold text-white whitespace-nowrap">

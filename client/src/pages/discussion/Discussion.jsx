@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 import QuestionCard from '../../components/discussion/QuestionCard';
 
 const Discussion = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [filter, setFilter] = useState('all'); // all, solved, unsolved
+  const [filter, setFilter] = useState('all'); // all, solved, unsolved, mine
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -33,11 +35,14 @@ const Discussion = () => {
   }, []);
 
   const filteredQuestions = useMemo(() => questions.filter((question) => {
-    const isSolved = (question.answersCount || 0) > 0;
+    const isSolved = Boolean(question.isSolved);
+    const currentUserId = user?._id || user?.id;
+    const isMine = currentUserId && (question.author?._id === currentUserId);
     const matchesFilter =
       filter === 'all' ||
       (filter === 'solved' && isSolved) ||
-      (filter === 'unsolved' && !isSolved);
+      (filter === 'unsolved' && !isSolved) ||
+      (filter === 'mine' && isMine);
 
     const matchesSearch =
       searchTerm === '' ||
@@ -46,9 +51,14 @@ const Discussion = () => {
       (question.tags || []).some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return matchesFilter && matchesSearch;
-  }), [questions, filter, searchTerm]);
+  }), [questions, filter, searchTerm, user]);
 
-  const solvedCount = questions.filter((q) => (q.answersCount || 0) > 0).length;
+  const myQuestionsCount = questions.filter((question) => {
+    const currentUserId = user?._id || user?.id;
+    return currentUserId && question.author?._id === currentUserId;
+  }).length;
+
+  const solvedCount = questions.filter((q) => Boolean(q.isSolved)).length;
   const unsolvedCount = questions.length - solvedCount;
 
   return (
@@ -141,6 +151,16 @@ const Discussion = () => {
                 }`}
               >
                 Unsolved
+              </button>
+              <button
+                onClick={() => setFilter('mine')}
+                className={`px-4 py-2 rounded-md font-medium transition duration-200 ${
+                  filter === 'mine'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                My Questions ({myQuestionsCount})
               </button>
             </div>
           </div>
@@ -248,7 +268,9 @@ const Discussion = () => {
               </svg>
               <p className="text-gray-600 dark:text-gray-400 text-lg">No questions found</p>
               <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
-                {searchTerm ? 'Try adjusting your search' : 'Be the first to ask a question!'}
+                {searchTerm
+                  ? 'Try adjusting your search'
+                  : (filter === 'mine' ? 'You have not asked any questions yet.' : 'Be the first to ask a question!')}
               </p>
             </div>
           )}

@@ -20,7 +20,7 @@ const QuestionCard = ({ question }) => {
     navigate(`/discussion/${question._id}`);
   };
 
-  const isSolved = (question.answersCount || 0) > 0;
+  const isSolved = Boolean(question.isSolved);
   const authorName = question.author?.name || 'Unknown User';
 
   return (

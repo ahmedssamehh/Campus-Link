@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axios from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 
@@ -8,8 +9,62 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { totalUnreadChat, totalUnreadGroups, connected, unreadAnnouncements } = useSocket();
+  const [newDiscussionCount, setNewDiscussionCount] = useState(0);
 
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+  const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id || 'guest'}`;
+
+  useEffect(() => {
+    if (!user) {
+      setNewDiscussionCount(0);
+      return;
+    }
+
+    const onDiscussionPage = location.pathname.startsWith('/discussion');
+    if (onDiscussionPage) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+
+    const storedLastSeen = localStorage.getItem(discussionLastSeenKey);
+    if (!storedLastSeen) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchNewDiscussionCount = async () => {
+      try {
+        const response = await axios.get('/discussion/questions');
+        if (!isMounted || !response.data.success) {
+          return;
+        }
+
+        const lastSeenTime = new Date(localStorage.getItem(discussionLastSeenKey) || storedLastSeen).getTime();
+        const count = (response.data.questions || []).filter((question) => {
+          const createdAt = question.createdAt ? new Date(question.createdAt).getTime() : 0;
+          return createdAt > lastSeenTime;
+        }).length;
+
+        setNewDiscussionCount(count);
+      } catch (err) {
+        if (isMounted) {
+          setNewDiscussionCount(0);
+        }
+      }
+    };
+
+    fetchNewDiscussionCount();
+    const intervalId = window.setInterval(fetchNewDiscussionCount, 60000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [location.pathname, user, discussionLastSeenKey]);
 
   const handleLogout = () => {
     logout();
@@ -64,6 +119,7 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
     {
       name: 'Discussion',
       path: '/discussion',
+      badge: newDiscussionCount,
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -136,9 +192,11 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
         {/* Logo/Brand */}
         <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-lg">CL</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Campus Link logo"
+              className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200 dark:border-gray-600"
+            />
             {isOpen && (
               <span className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
                 Campus Link

@@ -25,6 +25,10 @@ const questionSchema = new mongoose.Schema({
         type: String,
         trim: true
     }],
+    isSolved: {
+        type: Boolean,
+        default: false
+    },
     votes: {
         type: Number,
         default: 0
