@@ -14,4 +14,6 @@ const groupSchema = new mongoose.Schema({
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 }, { timestamps: true });
 
+groupSchema.index({ members: 1 });
+
 module.exports = mongoose.model("Group", groupSchema);

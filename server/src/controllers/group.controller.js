@@ -232,8 +232,10 @@ exports.approveJoinRequest = async(req, res) => {
 
         // Create announcement to notify user of approval
         try {
+            const approvedGroupId = group._id || joinRequest.group ? ._id;
+
             await Announcement.create({
-                group: group._id,
+                group: approvedGroupId,
                 createdBy: req.user._id,
                 title: 'Join Request Approved',
                 content: `Welcome! Your request to join "${joinRequest.group.name}" has been approved. You can now access all group content and participate in discussions.`
@@ -291,10 +293,12 @@ exports.rejectJoinRequest = async(req, res) => {
 
         // Create announcement to notify user of rejection
         try {
+            const rejectedGroupId = joinRequest.group ? ._id;
+
             await Announcement.create({
-                group: joinRequest.group._id,
+                group: rejectedGroupId,
                 createdBy: req.user._id,
-                title: 'Join Request Not Approved',
+                title: 'Join Request Rejected',
                 content: `Your request to join "${joinRequest.group.name}" was not approved at this time. You may submit a new request if you wish.`
             });
         } catch (announcementError) {

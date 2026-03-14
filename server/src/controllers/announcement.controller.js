@@ -2,6 +2,10 @@
 const Announcement = require('../models/Announcement');
 const Group = require('../models/Group');
 
+const getMemberGroupIds = async(userId) => {
+    return Group.distinct('_id', { members: userId });
+};
+
 // @desc    Create announcement in a group
 // @route   POST /api/announcements
 // @access  Private (admin, owner)
@@ -58,11 +62,16 @@ exports.createAnnouncement = async(req, res) => {
 // @access  Private
 exports.getMyAnnouncements = async(req, res) => {
     try {
-        // Find all groups where user is a member
-        const groups = await Group.find({ members: req.user._id }).select('_id');
-        const groupIds = groups.map(g => g._id);
+        const groupIds = await getMemberGroupIds(req.user._id);
 
-        // Get all announcements from these groups
+        if (groupIds.length === 0) {
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                announcements: []
+            });
+        }
+
         const announcements = await Announcement.find({ group: { $in: groupIds } })
             .populate('createdBy', 'name email role')
             .populate('group', 'name subject')
@@ -94,11 +103,16 @@ exports.getMyAnnouncements = async(req, res) => {
 // @access  Private
 exports.getLatestAnnouncements = async(req, res) => {
     try {
-        // Find all groups where user is a member
-        const groups = await Group.find({ members: req.user._id }).select('_id');
-        const groupIds = groups.map(g => g._id);
+        const groupIds = await getMemberGroupIds(req.user._id);
 
-        // Get latest 5 announcements from these groups
+        if (groupIds.length === 0) {
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                announcements: []
+            });
+        }
+
         const announcements = await Announcement.find({ group: { $in: groupIds } })
             .populate('createdBy', 'name email role')
             .populate('group', 'name subject')
@@ -131,11 +145,15 @@ exports.getLatestAnnouncements = async(req, res) => {
 // @access  Private
 exports.getUnreadCount = async(req, res) => {
     try {
-        // Find all groups where user is a member
-        const groups = await Group.find({ members: req.user._id }).select('_id');
-        const groupIds = groups.map(g => g._id);
+        const groupIds = await getMemberGroupIds(req.user._id);
 
-        // Count announcements that user hasn't read
+        if (groupIds.length === 0) {
+            return res.status(200).json({
+                success: true,
+                unreadCount: 0
+            });
+        }
+
         const unreadCount = await Announcement.countDocuments({
             group: { $in: groupIds },
             readBy: { $ne: req.user._id }
