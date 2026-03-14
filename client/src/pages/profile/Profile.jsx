@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import axios from '../../api/axios';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    email: user?.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(user?.profilePhoto || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -42,12 +46,6 @@ const Profile = () => {
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-
     // Password validation (only if changing password)
     if (formData.newPassword) {
       if (!formData.currentPassword) {
@@ -64,7 +62,26 @@ const Profile = () => {
     return newErrors;
   };
 
-  const handleSave = (e) => {
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setApiError('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setApiError('Image must be 5MB or less');
+      return;
+    }
+
+    setApiError('');
+    setSelectedPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
 
     const newErrors = validateForm();
@@ -74,50 +91,84 @@ const Profile = () => {
       return;
     }
 
-    // Mock save - in real app, this would be an API call
-    console.log('Saving profile:', formData);
+    try {
+      setIsSaving(true);
+      setApiError('');
 
-    // Update user in localStorage (mock)
-    const updatedUser = {
-      ...user,
-      name: formData.name,
-      email: formData.email,
-    };
-    localStorage.setItem('campusLinkUser', JSON.stringify(updatedUser));
+      // 1) Update profile (name + optional photo)
+      const payload = new FormData();
+      payload.append('name', formData.name);
+      if (selectedPhoto) {
+        payload.append('profilePhoto', selectedPhoto);
+      }
 
-    setSuccessMessage('Profile updated successfully!');
-    setIsEditing(false);
+      const profileRes = await axios.put('/auth/profile', payload);
 
-    // Clear password fields
-    setFormData((prev) => ({
-      ...prev,
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    }));
+      if (!profileRes.data.success) {
+        throw new Error(profileRes.data.message || 'Failed to update profile');
+      }
 
-    // Clear success message after 3 seconds
-    setTimeout(() => {
-      setSuccessMessage('');
-    }, 3000);
+      let mergedUser = profileRes.data.user;
+
+      // 2) Change password only when requested
+      if (formData.newPassword) {
+        const passwordRes = await axios.patch('/auth/change-password', {
+          oldPassword: formData.currentPassword,
+          newPassword: formData.newPassword
+        });
+
+        if (!passwordRes.data.success) {
+          throw new Error(passwordRes.data.message || 'Failed to update password');
+        }
+      }
+
+      updateUser(mergedUser);
+
+      setSuccessMessage(formData.newPassword ? 'Profile and password updated successfully!' : 'Profile updated successfully!');
+      setIsEditing(false);
+      setSelectedPhoto(null);
+      setPhotoPreview(mergedUser?.profilePhoto || '');
+      setFormData((prev) => ({
+        ...prev,
+        name: mergedUser?.name || prev.name,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }));
+
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || 'Failed to save profile changes');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    // Mock delete account - in real app, this would be an API call
-    console.log('Deleting account...');
-    logout();
-    navigate('/login');
+  const handleDeleteAccount = async () => {
+    try {
+      setApiError('');
+      const response = await axios.delete('/auth/account');
+      if (response.data.success) {
+        logout();
+        navigate('/login');
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || 'Failed to delete account');
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     setFormData({
       name: user?.name || '',
-      email: user?.email || '',
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
     });
+    setSelectedPhoto(null);
+    setPhotoPreview(user?.profilePhoto || '');
     setErrors({});
   };
 
@@ -152,6 +203,12 @@ const Profile = () => {
           </div>
         )}
 
+        {apiError && (
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-red-800 dark:text-red-200 font-medium">{apiError}</p>
+          </div>
+        )}
+
         {/* Profile Card */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -171,14 +228,35 @@ const Profile = () => {
           <form onSubmit={handleSave} className="space-y-6">
             {/* Profile Picture */}
             <div className="flex items-center space-x-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">
-                  {formData.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {photoPreview ? (
+                <img
+                  src={photoPreview.startsWith('/uploads') ? `http://localhost:6000${photoPreview}` : photoPreview}
+                  alt="Profile"
+                  className="w-20 h-20 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-2xl">
+                    {formData.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{formData.name}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{user?.role || 'User'}</p>
+                {isEditing && (
+                  <div className="mt-2">
+                    <label className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700 transition duration-200">
+                      Upload Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePhotoChange}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -201,7 +279,7 @@ const Profile = () => {
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
 
-            {/* Email Field */}
+            {/* Email Field (read-only) */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address
@@ -210,14 +288,11 @@ const Profile = () => {
                 type="email"
                 id="email"
                 name="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className={`w-full px-4 py-2 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:bg-gray-700 dark:text-white`}
+                value={user?.email || ''}
+                disabled
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 dark:text-white"
               />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed.</p>
             </div>
 
             {/* Password Section - Only when editing */}
@@ -310,9 +385,10 @@ const Profile = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition duration-200"
+                  disabled={isSaving}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             )}

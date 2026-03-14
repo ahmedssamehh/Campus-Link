@@ -75,6 +75,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('campusLinkUser');
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('campusLinkUser', JSON.stringify(userData));
+  };
+
   // Get current user from backend
   const getCurrentUser = async () => {
     try {
@@ -93,6 +98,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    updateUser,
     login,
     register,
     logout,
