@@ -36,7 +36,9 @@ const Home = () => {
       let pendingCount = 0;
       if (isAdminOrOwner) {
         const reqRes = await axios.get('/groups/requests/all');
-        pendingCount = reqRes.data.success ? reqRes.data.count : 0;
+        if (reqRes.data.success) {
+          pendingCount = (reqRes.data.requests || []).filter(r => r.status === 'pending').length;
+        }
       }
 
       setStats({

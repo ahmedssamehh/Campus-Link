@@ -30,14 +30,17 @@ const AnnouncementsPage = () => {
       setError('');
       const response = await axios.get('/announcements/my');
       if (response.data.success) {
-        setAnnouncements(response.data.announcements);
+        const fetched = response.data.announcements;
+        setAnnouncements(fetched);
+        const actualUnread = fetched.filter(a => !a.isRead).length;
+        setUnreadAnnouncements(actualUnread);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch announcements');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setUnreadAnnouncements]);
 
   const fetchGroups = useCallback(async () => {
     try {

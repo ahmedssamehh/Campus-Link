@@ -141,8 +141,8 @@ export const SocketProvider = ({ children }) => {
         socket.on('connect', () => {
             console.log('🔌 Socket connected:', socket.id);
             setConnected(true);
-            // Re-fetch unread counts on reconnect
             fetchUnreadCounts();
+            fetchUnreadAnnouncementsCount();
         });
 
         socket.on('disconnect', (reason) => {
@@ -174,8 +174,9 @@ export const SocketProvider = ({ children }) => {
         // ─── Realtime unread announcement increment ─────────
         socket.on('newAnnouncement', (data) => {
             const annId = data && data._id;
-            if (annId && seenAnnouncementIds.current.has(annId)) return;
-            if (annId) seenAnnouncementIds.current.add(annId);
+            if (!annId) return;
+            if (seenAnnouncementIds.current.has(annId)) return;
+            seenAnnouncementIds.current.add(annId);
             setUnreadAnnouncements((prev) => prev + 1);
         });
 
