@@ -6,7 +6,7 @@ import axios from '../api/axios';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'http://localhost:6000';
+const SOCKET_URL = 'http://localhost:5000';
 
 // Generate unique client message ID for dedup
 let messageCounter = 0;

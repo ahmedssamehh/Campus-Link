@@ -15,35 +15,42 @@ function getPublisher() {
 
     const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
+    const MAX_RETRIES = 3;
+
     publisher = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         retryStrategy(times) {
-            // Exponential backoff with cap at 30 seconds, never stop retrying
-            const delay = Math.min(times * 500, 30000);
-            console.log(`⏳ Redis publisher retry #${times} in ${delay}ms`);
+            if (times > MAX_RETRIES) {
+                return null;
+            }
+            const delay = Math.min(times * 500, 5000);
+            console.log(`⏳ Redis publisher retry #${times}/${MAX_RETRIES} in ${delay}ms`);
             return delay;
         },
         lazyConnect: true,
         enableReadyCheck: true,
         reconnectOnError(err) {
-            // Reconnect on connection reset errors
             const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
             return targetErrors.some(e => err.message.includes(e));
         }
     });
 
+    let errorLogged = false;
+
     publisher.on('error', (err) => {
-        console.warn('⚠️  Redis publisher error:', err.message);
+        if (!errorLogged) {
+            console.warn('⚠️  Redis publisher error:', err.message);
+            errorLogged = true;
+        }
     });
 
     publisher.on('connect', () => {
         console.log('✅ Redis publisher connected');
         reconnecting = false;
+        errorLogged = false;
     });
 
-    publisher.on('close', () => {
-        console.warn('⚠️  Redis publisher connection closed');
-    });
+    publisher.on('close', () => {});
 
     publisher.on('reconnecting', () => {
         if (!reconnecting) {

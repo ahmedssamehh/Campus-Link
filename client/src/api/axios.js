@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:6000/api',
+    baseURL: 'http://localhost:5000/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -29,12 +29,12 @@ axiosInstance.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response && error.response.status === 401) {
-            // Token expired or invalid - clear auth data
+        const requestUrl = (error.config && error.config.url) || '';
+        const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
+        if (error.response && error.response.status === 401 && !isAuthEndpoint) {
             localStorage.removeItem('campusLinkToken');
             localStorage.removeItem('campusLinkUser');
-
-            // Redirect to login page
             window.location.href = '/login';
         }
         return Promise.reject(error);

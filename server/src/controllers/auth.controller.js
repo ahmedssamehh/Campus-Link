@@ -122,7 +122,7 @@ exports.login = async(req, res) => {
         }
 
         // Find user and include password
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
         if (!user) {
             return res.status(401).json({
                 success: false,

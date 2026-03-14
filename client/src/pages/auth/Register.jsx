@@ -113,7 +113,7 @@ const Register = () => {
       <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
           <img
-            src="/logo.jpg"
+            src="/logo.png"
             alt="Campus Link logo"
             className="w-20 h-20 rounded-xl object-cover mx-auto mb-4 border border-gray-200 dark:border-gray-700"
           />

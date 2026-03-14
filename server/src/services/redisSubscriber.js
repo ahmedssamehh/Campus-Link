@@ -17,11 +17,17 @@ function initSubscriber(handler) {
     messageHandler = handler;
     const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
+    const MAX_RETRIES = 3;
+
     subscriber = new Redis(redisUrl, {
         maxRetriesPerRequest: 3,
         retryStrategy(times) {
-            const delay = Math.min(times * 500, 30000);
-            console.log(`⏳ Redis subscriber retry #${times} in ${delay}ms`);
+            if (times > MAX_RETRIES) {
+                console.log('ℹ️  Redis unavailable — running in single-server mode');
+                return null;
+            }
+            const delay = Math.min(times * 500, 5000);
+            console.log(`⏳ Redis subscriber retry #${times}/${MAX_RETRIES} in ${delay}ms`);
             return delay;
         },
         lazyConnect: true,
@@ -32,18 +38,22 @@ function initSubscriber(handler) {
         }
     });
 
+    let errorLogged = false;
+
     subscriber.on('error', (err) => {
-        console.warn('⚠️  Redis subscriber error:', err.message);
+        if (!errorLogged) {
+            console.warn('⚠️  Redis subscriber error:', err.message);
+            errorLogged = true;
+        }
     });
 
     subscriber.on('connect', () => {
         console.log('✅ Redis subscriber connected');
         reconnecting = false;
+        errorLogged = false;
     });
 
-    subscriber.on('close', () => {
-        console.warn('⚠️  Redis subscriber connection closed');
-    });
+    subscriber.on('close', () => {});
 
     subscriber.on('reconnecting', () => {
         if (!reconnecting) {

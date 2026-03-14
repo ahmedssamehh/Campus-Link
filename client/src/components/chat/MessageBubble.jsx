@@ -29,12 +29,19 @@ const MessageBubble = ({
     if (!isSent || chatType !== 'private') return null;
     const readBy = message.readBy || [];
     const deliveredTo = message.deliveredTo || [];
-    if (readBy.length > 0) {
+    const senderId = typeof message.sender === 'object'
+      ? (message.sender._id || message.sender.id || '').toString()
+      : (message.sender || '').toString();
+
+    const readByOther = readBy.some(id => (id || '').toString() !== senderId);
+    const deliveredToOther = deliveredTo.some(id => (id || '').toString() !== senderId);
+
+    if (readByOther) {
       return (
         <span className="text-blue-400 ml-1" title="Read">✓✓</span>
       );
     }
-    if (deliveredTo.length > 0) {
+    if (deliveredToOther) {
       return (
         <span className="text-gray-400 dark:text-gray-500 ml-1" title="Delivered">✓✓</span>
       );
