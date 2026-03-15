@@ -1,51 +1,32 @@
-// src/server.js
 require('dotenv').config();
 const http = require('http');
-const mongoose = require('mongoose');
 const app = require('./app');
 const connectDB = require('./config/db');
 const { initSocketServer } = require('./socket/chat.socket');
 const { initChatWorker } = require('./workers/chat.worker');
+const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 5000;
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-    console.log('❌ Unhandled Rejection:', err.message);
+    logger.error('Unhandled Rejection: %s', err.message);
     process.exit(1);
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    console.log('❌ Uncaught Exception:', err.message);
+    logger.error('Uncaught Exception: %s', err.message);
     process.exit(1);
 });
 
-// Connect to MongoDB and start server
 connectDB().then(() => {
-    // Verify models are loaded
-    console.log('🔍 Verifying models after connection...');
-    console.log('Available models:', Object.keys(mongoose.models));
-    console.log('🔍 Database name from mongoose:', mongoose.connection.db.databaseName);
-
-    // Create HTTP server from Express app
     const server = http.createServer(app);
-
-    // Initialize Socket.io on the HTTP server
     const io = initSocketServer(server);
-    console.log('✅ Socket.io initialized');
+    logger.info('Socket.io initialized');
 
-    // Initialize Chat Worker (Redis subscriber → MongoDB → broadcast)
     initChatWorker(io);
-
-    // Make io accessible from app if needed
     app.set('io', io);
 
     server.listen(PORT, () => {
-        console.log(`🚀 Server is running on port ${PORT}`);
-        console.log(`📍 Environment: ${process.env.NODE_ENV}`);
-        console.log(`🌐 API URL: http://localhost:${PORT}`);
-        console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
-        console.log('✅ All systems ready!');
+        logger.info('Server running on port %d (%s)', PORT, process.env.NODE_ENV || 'development');
     });
 });

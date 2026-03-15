@@ -1,6 +1,7 @@
 // src/controllers/announcement.controller.js
 const Announcement = require('../models/Announcement');
 const Group = require('../models/Group');
+const logger = require('../utils/logger');
 
 const getMemberGroupIds = async(userId) => {
     return Group.distinct('_id', { members: userId });
@@ -71,7 +72,7 @@ exports.createAnnouncement = async(req, res) => {
             announcement
         });
     } catch (error) {
-        console.error('Create announcement error:', error);
+        logger.error('Create announcement error:', error);
         res.status(500).json({
             success: false,
             message: 'Error creating announcement',
@@ -101,11 +102,12 @@ exports.getMyAnnouncements = async(req, res) => {
             })
             .populate('createdBy', 'name email role profilePhoto')
             .populate('group', 'name subject')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         // Add isRead flag for each announcement
         const announcementsWithReadStatus = announcements.map(ann => ({
-            ...ann.toObject(),
+            ...ann,
             isRead: ann.readBy.some(id => id.toString() === req.user._id.toString())
         }));
 
@@ -115,7 +117,7 @@ exports.getMyAnnouncements = async(req, res) => {
             announcements: announcementsWithReadStatus
         });
     } catch (error) {
-        console.error('Get my announcements error:', error);
+        logger.error('Get my announcements error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching announcements',
@@ -146,11 +148,12 @@ exports.getLatestAnnouncements = async(req, res) => {
             .populate('createdBy', 'name email role profilePhoto')
             .populate('group', 'name subject')
             .sort({ createdAt: -1 })
-            .limit(5);
+            .limit(5)
+            .lean();
 
         // Add isRead flag for each announcement
         const announcementsWithReadStatus = announcements.map(ann => ({
-            ...ann.toObject(),
+            ...ann,
             isRead: ann.readBy.some(id => id.toString() === req.user._id.toString())
         }));
 
@@ -160,7 +163,7 @@ exports.getLatestAnnouncements = async(req, res) => {
             announcements: announcementsWithReadStatus
         });
     } catch (error) {
-        console.error('Get latest announcements error:', error);
+        logger.error('Get latest announcements error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching latest announcements',
@@ -194,7 +197,7 @@ exports.getUnreadCount = async(req, res) => {
             unreadCount
         });
     } catch (error) {
-        console.error('Get unread count error:', error);
+        logger.error('Get unread count error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching unread count',
@@ -260,7 +263,7 @@ exports.markAsRead = async(req, res) => {
             message: 'Announcement marked as read'
         });
     } catch (error) {
-        console.error('Mark as read error:', error);
+        logger.error('Mark as read error:', error);
         res.status(500).json({
             success: false,
             message: 'Error marking announcement as read',
@@ -290,7 +293,7 @@ exports.deleteAnnouncement = async(req, res) => {
             message: 'Announcement deleted successfully'
         });
     } catch (error) {
-        console.error('Delete announcement error:', error);
+        logger.error('Delete announcement error:', error);
         res.status(500).json({
             success: false,
             message: 'Error deleting announcement',
@@ -307,7 +310,8 @@ exports.getAllAnnouncements = async(req, res) => {
         const announcements = await Announcement.find()
             .populate('createdBy', 'name email role profilePhoto')
             .populate('group', 'name subject')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -315,7 +319,7 @@ exports.getAllAnnouncements = async(req, res) => {
             announcements
         });
     } catch (error) {
-        console.error('Get all announcements error:', error);
+        logger.error('Get all announcements error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching announcements',
@@ -393,7 +397,7 @@ exports.createGroupAnnouncement = async(req, res) => {
             announcement
         });
     } catch (error) {
-        console.error('Create group announcement error:', error);
+        logger.error('Create group announcement error:', error);
         return res.status(500).json({
             success: false,
             message: 'Error creating group announcement',

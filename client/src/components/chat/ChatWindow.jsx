@@ -23,6 +23,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [editInput, setEditInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -64,7 +65,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
         setHasMore(response.data.hasMore || false);
       }
     } catch (err) {
-      console.error('Failed to fetch private messages:', err);
+      if (!before) setError('Failed to load messages');
     } finally {
       setMessagesLoading(false);
       setLoadingMore(false);
@@ -83,11 +84,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
     setHasMore(false);
 
     // Join the private socket room
-    joinPrivate(chat.id).then(() => {
-      console.log('Joined private room with:', chat.name);
-    }).catch((err) => {
-      console.error('Failed to join private room:', err.message);
-    });
+    joinPrivate(chat.id).catch(() => {});
 
     // Fetch message history
     fetchMessages(chat.id);
@@ -242,7 +239,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
       setMessageInput('');
       emitStopTyping({ receiver: chat.id });
     } catch (err) {
-      console.error('Failed to send message:', err.message);
     } finally {
       setSending(false);
     }
@@ -273,7 +269,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
         });
       }
     } catch (err) {
-      console.error('File upload failed:', err.message);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -298,7 +293,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
       setEditingMessage(null);
       setEditInput('');
     } catch (err) {
-      console.error('Failed to edit message:', err.message);
     }
   };
 
@@ -307,7 +301,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
     try {
       await emitDeleteMessage({ messageId });
     } catch (err) {
-      console.error('Failed to delete message:', err.message);
     }
   };
 
@@ -316,7 +309,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
     try {
       await emitAddReaction({ messageId, emoji });
     } catch (err) {
-      console.error('Failed to add reaction:', err.message);
     }
   };
 
@@ -324,7 +316,6 @@ const ChatWindow = ({ chat, currentUserId }) => {
     try {
       await emitRemoveReaction({ messageId });
     } catch (err) {
-      console.error('Failed to remove reaction:', err.message);
     }
   };
 
@@ -448,6 +439,10 @@ const ChatWindow = ({ chat, currentUserId }) => {
         {messagesLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : error ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-red-500 text-sm">{error}</p>
           </div>
         ) : (
           <div className="space-y-4">

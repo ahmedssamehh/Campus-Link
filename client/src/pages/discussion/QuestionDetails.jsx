@@ -128,12 +128,8 @@ const QuestionDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center text-gray-600 dark:text-gray-300">
-            Loading question...
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -298,6 +294,14 @@ const QuestionDetails = () => {
             {answers.length} {answers.length === 1 ? 'Answer' : 'Answers'}
           </h2>
           <div className="space-y-4">
+            {answers.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400">No answers yet. Be the first to answer!</p>
+              </div>
+            )}
             {answers.map((answer) => (
               <AnswerCard
                 key={answer._id}

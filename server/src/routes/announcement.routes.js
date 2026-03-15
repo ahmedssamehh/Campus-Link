@@ -1,43 +1,22 @@
-// src/routes/announcement.routes.js
 const express = require('express');
 const router = express.Router();
 const {
-    createAnnouncement,
-    createGroupAnnouncement,
-    getMyAnnouncements,
-    getLatestAnnouncements,
-    getUnreadCount,
-    markAsRead,
-    deleteAnnouncement,
-    getAllAnnouncements
+    createAnnouncement, createGroupAnnouncement,
+    getMyAnnouncements, getLatestAnnouncements,
+    getUnreadCount, markAsRead, deleteAnnouncement, getAllAnnouncements
 } = require('../controllers/announcement.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
+const { validate, schemas } = require('../middleware/validate');
 
-// All routes require authentication
 router.use(protect);
 
-// POST /api/announcements - Create announcement (admin, owner)
-router.post('/', authorize('admin', 'owner'), createAnnouncement);
-
-// POST /api/announcements/group/:groupId - Create group announcement (group owner/admin)
-router.post('/group/:groupId', createGroupAnnouncement);
-
-// GET /api/announcements/all - Get all announcements (admin, owner)
+router.post('/', authorize('admin', 'owner'), validate(schemas.createAnnouncement), createAnnouncement);
+router.post('/group/:groupId', validate(schemas.createGroupAnnouncement), createGroupAnnouncement);
 router.get('/all', authorize('admin', 'owner'), getAllAnnouncements);
-
-// GET /api/announcements/my - Get user's announcements
 router.get('/my', getMyAnnouncements);
-
-// GET /api/announcements/latest - Get latest 5 announcements
 router.get('/latest', getLatestAnnouncements);
-
-// GET /api/announcements/unread-count - Get unread count
 router.get('/unread-count', getUnreadCount);
-
-// PATCH /api/announcements/:id/read - Mark as read
 router.patch('/:id/read', markAsRead);
-
-// DELETE /api/announcements/:id - Delete announcement (admin, owner)
 router.delete('/:id', authorize('admin', 'owner'), deleteAnnouncement);
 
 module.exports = router;

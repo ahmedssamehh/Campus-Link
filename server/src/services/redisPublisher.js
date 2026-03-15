@@ -1,5 +1,6 @@
 // src/services/redisPublisher.js
 const Redis = require('ioredis');
+const logger = require('../utils/logger');
 
 const CHANNEL = 'chat_messages';
 
@@ -24,7 +25,7 @@ function getPublisher() {
                 return null;
             }
             const delay = Math.min(times * 500, 5000);
-            console.log(`⏳ Redis publisher retry #${times}/${MAX_RETRIES} in ${delay}ms`);
+            logger.info(`Redis publisher retry #${times}/${MAX_RETRIES} in ${delay}ms`);
             return delay;
         },
         lazyConnect: true,
@@ -39,13 +40,13 @@ function getPublisher() {
 
     publisher.on('error', (err) => {
         if (!errorLogged) {
-            console.warn('⚠️  Redis publisher error:', err.message);
+            logger.warn('Redis publisher error:', err.message);
             errorLogged = true;
         }
     });
 
     publisher.on('connect', () => {
-        console.log('✅ Redis publisher connected');
+        logger.info('Redis publisher connected');
         reconnecting = false;
         errorLogged = false;
     });
@@ -54,13 +55,13 @@ function getPublisher() {
 
     publisher.on('reconnecting', () => {
         if (!reconnecting) {
-            console.log('🔄 Redis publisher reconnecting...');
+            logger.info('Redis publisher reconnecting...');
             reconnecting = true;
         }
     });
 
     publisher.on('ready', () => {
-        console.log('✅ Redis publisher ready');
+        logger.info('Redis publisher ready');
     });
 
     return publisher;
@@ -83,7 +84,7 @@ async function publishMessage(payload) {
         }
         return false;
     } catch (err) {
-        console.warn('⚠️  Redis publish failed:', err.message);
+        logger.warn('Redis publish failed:', err.message);
         return false;
     }
 }

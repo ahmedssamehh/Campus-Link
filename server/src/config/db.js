@@ -1,12 +1,11 @@
-// src/config/db.js
 const mongoose = require('mongoose');
+const logger = require('../utils/logger');
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 5000;
 
-const connectDB = async() => {
-    console.log('🔌 Connecting to MongoDB...');
-    console.log('URI:', process.env.MONGODB_URI ? 'Found' : 'Missing');
+const connectDB = async () => {
+    logger.info('Connecting to MongoDB...');
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
@@ -21,29 +20,28 @@ const connectDB = async() => {
                 retryReads: true,
             });
 
-            console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-            console.log("✅ CONNECTED DB:", mongoose.connection.name);
+            logger.info('MongoDB connected: %s', conn.connection.host);
 
             mongoose.connection.on('error', (err) => {
-                console.error('⚠️  MongoDB connection error:', err.message);
+                logger.error('MongoDB connection error: %s', err.message);
             });
 
             mongoose.connection.on('disconnected', () => {
-                console.warn('⚠️  MongoDB disconnected. Mongoose will auto-reconnect...');
+                logger.warn('MongoDB disconnected. Mongoose will auto-reconnect...');
             });
 
             mongoose.connection.on('reconnected', () => {
-                console.log('✅ MongoDB reconnected');
+                logger.info('MongoDB reconnected');
             });
 
             return;
         } catch (error) {
-            console.error(`❌ MongoDB connection attempt ${attempt}/${MAX_RETRIES} failed: ${error.message}`);
+            logger.error('MongoDB connection attempt %d/%d failed: %s', attempt, MAX_RETRIES, error.message);
             if (attempt < MAX_RETRIES) {
-                console.log(`⏳ Retrying in ${RETRY_DELAY_MS / 1000}s...`);
-                await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+                logger.info('Retrying in %ds...', RETRY_DELAY_MS / 1000);
+                await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
             } else {
-                console.error('❌ All MongoDB connection attempts failed. Exiting.');
+                logger.error('All MongoDB connection attempts failed. Exiting.');
                 process.exit(1);
             }
         }

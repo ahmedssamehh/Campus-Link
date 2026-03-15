@@ -48,7 +48,6 @@ export const SocketProvider = ({ children }) => {
                 });
             }
         } catch (err) {
-            console.error('Failed to fetch unread counts:', err.message);
         }
     }, [isAuthenticated]);
 
@@ -60,7 +59,6 @@ export const SocketProvider = ({ children }) => {
                 setUnreadAnnouncements(res.data.unreadCount || 0);
             }
         } catch (err) {
-            console.error('Failed to fetch unread announcements count:', err.message);
         }
     }, [isAuthenticated]);
 
@@ -93,9 +91,7 @@ export const SocketProvider = ({ children }) => {
         const endpoint = type === 'group'
             ? `/messages/read/group/${sourceId}`
             : `/messages/read/private/${sourceId}`;
-        axios.patch(endpoint).catch((err) => {
-            console.error('Failed to mark as read:', err.message);
-        });
+        axios.patch(endpoint).catch(() => {});
     }, []);
 
     // Clear unread for a specific source
@@ -139,19 +135,17 @@ export const SocketProvider = ({ children }) => {
         });
 
         socket.on('connect', () => {
-            console.log('🔌 Socket connected:', socket.id);
             setConnected(true);
+            seenAnnouncementIds.current.clear();
             fetchUnreadCounts();
             fetchUnreadAnnouncementsCount();
         });
 
-        socket.on('disconnect', (reason) => {
-            console.log('🔌 Socket disconnected:', reason);
+        socket.on('disconnect', () => {
             setConnected(false);
         });
 
-        socket.on('connect_error', (err) => {
-            console.warn('Socket connection error:', err.message);
+        socket.on('connect_error', () => {
             setConnected(false);
         });
 

@@ -5,6 +5,7 @@ const ChatMembership = require('../models/ChatMembership');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../utils/logger');
 
 // ─── Multer config for file uploads ─────────────────────────
 const storage = multer.diskStorage({
@@ -66,7 +67,7 @@ exports.uploadFiles = async(req, res) => {
 
         res.status(200).json({ success: true, attachments });
     } catch (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error:', error);
         res.status(500).json({ success: false, message: 'Upload failed', error: error.message });
     }
 };
@@ -80,7 +81,7 @@ exports.getGroupMessages = async(req, res) => {
         const { page = 1, limit = 50, before } = req.query;
 
         // Verify user is a member of the group
-        const group = await Group.findById(groupId).select('members');
+        const group = await Group.findById(groupId).select('members').lean();
         if (!group) {
             return res.status(404).json({
                 success: false,
@@ -111,7 +112,8 @@ exports.getGroupMessages = async(req, res) => {
         const messages = await Message.find(query)
             .populate('sender', 'name email profilePhoto')
             .sort({ createdAt: -1 })
-            .limit(parsedLimit);
+            .limit(parsedLimit)
+            .lean();
 
         const total = await Message.countDocuments({ group: groupId });
         const hasMore = messages.length === parsedLimit;
@@ -131,7 +133,7 @@ exports.getGroupMessages = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get group messages error:', error);
+        logger.error('Get group messages error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching group messages',
@@ -166,7 +168,8 @@ exports.getPrivateMessages = async(req, res) => {
         const messages = await Message.find(query)
             .populate('sender', 'name email profilePhoto')
             .sort({ createdAt: -1 })
-            .limit(parsedLimit);
+            .limit(parsedLimit)
+            .lean();
 
         const total = await Message.countDocuments({
             $or: [
@@ -192,7 +195,7 @@ exports.getPrivateMessages = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get private messages error:', error);
+        logger.error('Get private messages error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching private messages',
@@ -259,7 +262,7 @@ exports.getUnreadCounts = async(req, res) => {
             private: privateChats
         });
     } catch (error) {
-        console.error('Get unread counts error:', error);
+        logger.error('Get unread counts error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching unread counts',
@@ -297,7 +300,7 @@ exports.markGroupRead = async(req, res) => {
             modifiedCount: result.modifiedCount
         });
     } catch (error) {
-        console.error('Mark group read error:', error);
+        logger.error('Mark group read error:', error);
         res.status(500).json({
             success: false,
             message: 'Error marking messages as read',
@@ -327,7 +330,7 @@ exports.markPrivateRead = async(req, res) => {
             modifiedCount: result.modifiedCount
         });
     } catch (error) {
-        console.error('Mark private read error:', error);
+        logger.error('Mark private read error:', error);
         res.status(500).json({
             success: false,
             message: 'Error marking messages as read',
@@ -375,7 +378,7 @@ exports.editMessage = async(req, res) => {
 
         res.status(200).json({ success: true, message });
     } catch (error) {
-        console.error('Edit message error:', error);
+        logger.error('Edit message error:', error);
         res.status(500).json({ success: false, message: 'Error editing message', error: error.message });
     }
 };
@@ -407,7 +410,7 @@ exports.deleteMessage = async(req, res) => {
 
         res.status(200).json({ success: true });
     } catch (error) {
-        console.error('Delete message error:', error);
+        logger.error('Delete message error:', error);
         res.status(500).json({ success: false, message: 'Error deleting message', error: error.message });
     }
 };

@@ -6,6 +6,7 @@ const Message = require('../models/Message');
 const ChatMembership = require('../models/ChatMembership');
 const { publishMessage } = require('../services/redisPublisher');
 const { checkRateLimit, resetRateLimit } = require('../middleware/rateLimiter');
+const logger = require('../utils/logger');
 
 // Track connected users: Map<userId, Set<socketId>>
 const onlineUsers = new Map();
@@ -79,7 +80,7 @@ function initSocketServer(httpServer) {
 
             next();
         } catch (err) {
-            console.error('Socket auth error:', err.message);
+            logger.error('Socket auth error:', err.message);
             next(new Error('Invalid token'));
         }
     });
@@ -87,7 +88,7 @@ function initSocketServer(httpServer) {
     // ─── Connection handler ─────────────────────────────────
     io.on('connection', (socket) => {
         const userId = socket.user._id;
-        console.log(`🔌 Socket connected: ${socket.user.name} (${userId})`);
+        logger.info(`Socket connected: ${socket.user.name} (${userId})`);
 
         // Track online status
         if (!onlineUsers.has(userId)) {
@@ -105,9 +106,9 @@ function initSocketServer(httpServer) {
                 socket.join(gid);
                 socket.join(`group:${gid}`);
             });
-            console.log(`📦 Auto-joined ${groups.length} group room(s) for ${socket.user.name}`);
+            logger.info(`Auto-joined ${groups.length} group room(s) for ${socket.user.name}`);
         }).catch((err) => {
-            console.error('Auto-join groups error:', err.message);
+            logger.error('Auto-join groups error:', err.message);
         });
 
         // Broadcast online status with lastSeen
@@ -137,11 +138,11 @@ function initSocketServer(httpServer) {
                 // Join the socket room
                 socket.join(groupId);
                 socket.join(`group:${groupId}`);
-                console.log(`📦 ${socket.user.name} joined group room: ${groupId}`);
+                logger.debug(`${socket.user.name} joined group room: ${groupId}`);
 
                 if (callback) callback({ success: true, groupName: group.name });
             } catch (err) {
-                console.error('joinGroup error:', err.message);
+                logger.error('joinGroup error:', err.message);
                 if (callback) callback({ error: 'Failed to join group room' });
             }
         });
@@ -157,11 +158,11 @@ function initSocketServer(httpServer) {
 
                 const roomId = getPrivateRoomId(user1, user2);
                 socket.join(roomId);
-                console.log(`🔒 ${socket.user.name} joined private room: ${roomId}`);
+                logger.debug(`${socket.user.name} joined private room: ${roomId}`);
 
                 if (callback) callback({ success: true, roomId });
             } catch (err) {
-                console.error('joinPrivate error:', err.message);
+                logger.error('joinPrivate error:', err.message);
                 if (callback) callback({ error: 'Failed to join private room' });
             }
         });
@@ -231,7 +232,7 @@ function initSocketServer(httpServer) {
 
                 if (callback) callback({ success: true });
             } catch (err) {
-                console.error('sendMessage error:', err.message);
+                logger.error('sendMessage error:', err.message);
                 if (callback) callback({ error: 'Failed to send message' });
             }
         });
@@ -268,7 +269,7 @@ function initSocketServer(httpServer) {
 
                 if (callback) callback({ success: true });
             } catch (err) {
-                console.error('messagesSeen error:', err.message);
+                logger.error('messagesSeen error:', err.message);
                 if (callback) callback({ error: 'Failed to mark messages as seen' });
             }
         });
@@ -320,7 +321,7 @@ function initSocketServer(httpServer) {
 
                 if (callback) callback({ success: true });
             } catch (err) {
-                console.error('addReaction error:', err.message);
+                logger.error('addReaction error:', err.message);
                 if (callback) callback({ error: 'Failed to add reaction' });
             }
         });
@@ -361,7 +362,7 @@ function initSocketServer(httpServer) {
 
                 if (callback) callback({ success: true });
             } catch (err) {
-                console.error('removeReaction error:', err.message);
+                logger.error('removeReaction error:', err.message);
                 if (callback) callback({ error: 'Failed to remove reaction' });
             }
         });
@@ -422,7 +423,7 @@ function initSocketServer(httpServer) {
 
                 if (callback) callback({ success: true });
             } catch (err) {
-                console.error('editMessage error:', err.message);
+                logger.error('editMessage error:', err.message);
                 if (callback) callback({ error: 'Failed to edit message' });
             }
         });
@@ -473,7 +474,7 @@ function initSocketServer(httpServer) {
 
                 if (callback) callback({ success: true });
             } catch (err) {
-                console.error('deleteMessage error:', err.message);
+                logger.error('deleteMessage error:', err.message);
                 if (callback) callback({ error: 'Failed to delete message' });
             }
         });
@@ -506,7 +507,7 @@ function initSocketServer(httpServer) {
 
         // ── Disconnect ───────────────────────────────────────
         socket.on('disconnect', () => {
-            console.log(`🔌 Socket disconnected: ${socket.user.name}`);
+            logger.info(`Socket disconnected: ${socket.user.name}`);
 
             // Clean up online tracking
             const sockets = onlineUsers.get(userId);
@@ -564,9 +565,9 @@ async function deliverPendingMessages(userId, io) {
             });
         }
 
-        console.log(`📬 Delivered ${undelivered.length} pending messages to ${userId}`);
+        logger.info(`Delivered ${undelivered.length} pending messages to ${userId}`);
     } catch (err) {
-        console.error('deliverPendingMessages error:', err.message);
+        logger.error('deliverPendingMessages error:', err.message);
     }
 }
 

@@ -7,7 +7,7 @@ import ChatWindow from '../../components/chat/ChatWindow';
 
 const Chat = () => {
   const { user } = useAuth();
-  const { onlineUsers, onNewMessage, connected, unreadMessages, setActiveView, clearUnread, lastSeenMap } = useSocket();
+  const { onlineUsers, onNewMessage, connected, unreadMessages, setActiveView, lastSeenMap } = useSocket();
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -32,6 +32,9 @@ Thumbs.db
 # Uploads (user-generated content)
 server/uploads/
 
+# Logs
+logs/
+
 # Misc
 .pnp
 .pnp.js

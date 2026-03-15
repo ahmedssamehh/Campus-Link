@@ -124,7 +124,7 @@ const GroupChat = () => {
         setHasMore(response.data.hasMore || false);
       }
     } catch (err) {
-      console.error('Failed to fetch messages:', err);
+      if (!before) setError('Failed to load messages');
     } finally {
       setMessagesLoading(false);
       setLoadingMore(false);
@@ -146,11 +146,7 @@ const GroupChat = () => {
     setEditingMessage(null);
     setHasMore(false);
 
-    joinGroup(id).then(() => {
-      console.log('Joined group socket room:', id);
-    }).catch((err) => {
-      console.error('Failed to join group room:', err.message);
-    });
+    joinGroup(id).catch(() => {});
 
     fetchMessages();
 
@@ -355,14 +351,12 @@ const GroupChat = () => {
     try {
       await emitAddReaction({ messageId, emoji });
     } catch (err) {
-      console.error('Failed to add reaction:', err.message);
     }
   };
   const handleRemoveReaction = async (messageId) => {
     try {
       await emitRemoveReaction({ messageId });
     } catch (err) {
-      console.error('Failed to remove reaction:', err.message);
     }
   };
 

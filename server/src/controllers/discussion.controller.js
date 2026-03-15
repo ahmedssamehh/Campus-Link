@@ -1,13 +1,15 @@
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
+const logger = require('../utils/logger');
 
 const buildVoteState = (doc, userId) => {
     const uid = userId ? userId.toString() : null;
     const upvoteCount = doc.upvotes?.length || 0;
     const downvoteCount = doc.downvotes?.length || 0;
+    const obj = typeof doc.toObject === 'function' ? doc.toObject() : doc;
 
     return {
-        ...doc.toObject(),
+        ...obj,
         votes: upvoteCount - downvoteCount,
         userVote: uid ?
             (doc.upvotes.some((id) => id.toString() === uid) ?
@@ -46,7 +48,8 @@ exports.getAllQuestions = async(req, res) => {
     try {
         const questions = await Question.find()
             .populate('author', 'name role profilePhoto')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         const answerCountRows = await Answer.aggregate([{
             $group: {
@@ -73,7 +76,7 @@ exports.getAllQuestions = async(req, res) => {
             questions: payload
         });
     } catch (error) {
-        console.error('Get all questions error:', error);
+        logger.error('Get all questions error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to fetch questions',
@@ -86,7 +89,8 @@ exports.getQuestionById = async(req, res) => {
     try {
         const question = await Question.findById(req.params.id)
             .populate('author', 'name role profilePhoto')
-            .populate('group', 'name subject');
+            .populate('group', 'name subject')
+            .lean();
 
         if (!question) {
             return res.status(404).json({
@@ -97,7 +101,8 @@ exports.getQuestionById = async(req, res) => {
 
         const answers = await Answer.find({ question: question._id })
             .populate('author', 'name role profilePhoto')
-            .sort({ createdAt: 1 });
+            .sort({ createdAt: 1 })
+            .lean();
 
         const currentUserId = req.user?._id;
 
@@ -107,7 +112,7 @@ exports.getQuestionById = async(req, res) => {
             answers: answers.map((answer) => buildVoteState(answer, currentUserId))
         });
     } catch (error) {
-        console.error('Get question by id error:', error);
+        logger.error('Get question by id error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to fetch question details',
@@ -150,7 +155,7 @@ exports.createQuestion = async(req, res) => {
             question: buildVoteState(question, req.user._id)
         });
     } catch (error) {
-        console.error('Create question error:', error);
+        logger.error('Create question error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to create question',
@@ -193,7 +198,7 @@ exports.createAnswer = async(req, res) => {
             answer: buildVoteState(answer, req.user._id)
         });
     } catch (error) {
-        console.error('Create answer error:', error);
+        logger.error('Create answer error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to post answer',
@@ -232,7 +237,7 @@ exports.voteQuestion = async(req, res) => {
             question: buildVoteState(question, req.user._id)
         });
     } catch (error) {
-        console.error('Vote question error:', error);
+        logger.error('Vote question error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to vote on question',
@@ -271,7 +276,7 @@ exports.voteAnswer = async(req, res) => {
             answer: buildVoteState(answer, req.user._id)
         });
     } catch (error) {
-        console.error('Vote answer error:', error);
+        logger.error('Vote answer error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to vote on answer',
@@ -302,7 +307,7 @@ exports.setQuestionSolved = async(req, res) => {
             question: buildVoteState(question, req.user._id)
         });
     } catch (error) {
-        console.error('Set question solved error:', error);
+        logger.error('Set question solved error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to update question solved state',

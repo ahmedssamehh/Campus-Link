@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Group = require('../models/Group');
 const JoinRequest = require('../models/JoinRequest');
 const Activity = require('../models/Activity');
+const logger = require('../utils/logger');
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -10,7 +11,7 @@ const Activity = require('../models/Activity');
 exports.getAllUsers = async(req, res) => {
     try {
         // Get all users excluding passwords
-        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        const users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
 
         res.status(200).json({
             success: true,
@@ -18,7 +19,7 @@ exports.getAllUsers = async(req, res) => {
             users
         });
     } catch (error) {
-        console.error('Get all users error:', error);
+        logger.error('Get all users error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching users',
@@ -82,7 +83,7 @@ exports.promoteToAdmin = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Promote to admin error:', error);
+        logger.error('Promote to admin error:', error);
         res.status(500).json({
             success: false,
             message: 'Error promoting user',
@@ -155,7 +156,7 @@ exports.demoteToUser = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Demote to user error:', error);
+        logger.error('Demote to user error:', error);
         res.status(500).json({
             success: false,
             message: 'Error demoting user',
@@ -219,7 +220,7 @@ exports.deleteUser = async(req, res) => {
             message: `User ${user.name} has been deleted from the platform`
         });
     } catch (error) {
-        console.error('Delete user error:', error);
+        logger.error('Delete user error:', error);
         res.status(500).json({
             success: false,
             message: 'Error deleting user',
@@ -262,7 +263,7 @@ exports.getDashboardStats = async(req, res) => {
             activity,
         });
     } catch (error) {
-        console.error('Get dashboard stats error:', error);
+        logger.error('Get dashboard stats error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching dashboard stats',
@@ -276,10 +277,10 @@ exports.getDashboardStats = async(req, res) => {
 // @access  Private (admin, owner)
 exports.getAllActivities = async(req, res) => {
     try {
-        const activities = await Activity.find().sort({ date: -1 });
+        const activities = await Activity.find().sort({ date: -1 }).lean();
         res.status(200).json({ success: true, activities });
     } catch (error) {
-        console.error('Get all activities error:', error);
+        logger.error('Get all activities error:', error);
         res.status(500).json({ success: false, message: 'Error fetching activities', error: error.message });
     }
 };
@@ -296,7 +297,7 @@ exports.deleteActivities = async(req, res) => {
         const result = await Activity.deleteMany({ _id: { $in: ids } });
         res.status(200).json({ success: true, message: result.deletedCount + ' activities deleted' });
     } catch (error) {
-        console.error('Delete activities error:', error);
+        logger.error('Delete activities error:', error);
         res.status(500).json({ success: false, message: 'Error deleting activities', error: error.message });
     }
 };
@@ -309,7 +310,7 @@ exports.deleteAllActivities = async(req, res) => {
         await Activity.deleteMany({});
         res.status(200).json({ success: true, message: 'All activities deleted' });
     } catch (error) {
-        console.error('Delete all activities error:', error);
+        logger.error('Delete all activities error:', error);
         res.status(500).json({ success: false, message: 'Error deleting all activities', error: error.message });
     }
 };

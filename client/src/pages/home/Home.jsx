@@ -47,7 +47,6 @@ const Home = () => {
         pendingRequests: pendingCount,
       });
     } catch (err) {
-      console.error('Failed to fetch home stats:', err);
     } finally {
       setStatsLoading(false);
     }
@@ -65,7 +64,6 @@ const Home = () => {
         setAnnouncements(response.data.announcements);
       }
     } catch (err) {
-      console.error('Failed to fetch announcements:', err);
     } finally {
       setAnnouncementsLoading(false);
     }

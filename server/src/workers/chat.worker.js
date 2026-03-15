@@ -1,5 +1,6 @@
 // src/workers/chat.worker.js
 const Message = require('../models/Message');
+const logger = require('../utils/logger');
 
 /**
  * Compute consistent private room ID (same logic as chat.socket.js).
@@ -25,11 +26,11 @@ async function processMessage(payload, io) {
 
     // ── Validate ─────────────────────────────────────────────
     if (!sender || !content) {
-        console.error('❌ Worker: invalid payload (missing sender or content)');
+        logger.error('Worker: invalid payload (missing sender or content)');
         return;
     }
     if (!group && !receiver) {
-        console.error('❌ Worker: invalid payload (missing group and receiver)');
+        logger.error('Worker: invalid payload (missing group and receiver)');
         return;
     }
 
@@ -38,7 +39,7 @@ async function processMessage(payload, io) {
         if (clientMessageId) {
             const existing = await Message.findOne({ clientMessageId }).select('_id');
             if (existing) {
-                console.log(`⏭️ Duplicate message skipped: ${clientMessageId}`);
+                logger.debug(`Duplicate message skipped: ${clientMessageId}`);
                 return;
             }
         }
@@ -125,9 +126,9 @@ async function processMessage(payload, io) {
             }
         }
 
-        console.log(`💬 Message saved & broadcast: ${senderName} → ${group ? 'group:' + group : 'user:' + receiver}`);
+        logger.info(`Message saved & broadcast: ${senderName} → ${group ? 'group:' + group : 'user:' + receiver}`);
     } catch (err) {
-        console.error('❌ Worker: failed to process message:', err.message);
+        logger.error('Worker: failed to process message:', err.message);
     }
 }
 
@@ -144,7 +145,7 @@ function initChatWorker(io) {
         await processMessage(payload, io);
     });
 
-    console.log('✅ Chat worker initialized');
+    logger.info('Chat worker initialized');
 }
 
 module.exports = { initChatWorker, processMessage };

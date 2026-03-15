@@ -4,17 +4,14 @@ const JoinRequest = require('../models/JoinRequest');
 const User = require('../models/User');
 const Activity = require('../models/Activity');
 const Announcement = require('../models/Announcement');
+const logger = require('../utils/logger');
 
 // @desc    Create a new study group
 // @route   POST /api/groups
 // @access  Private (admin, owner)
 exports.createGroup = async(req, res) => {
     try {
-        console.log("🚀 CREATE GROUP CONTROLLER HIT");
-        console.log("BODY:", req.body);
-        console.log("USER:", req.user);
-
-        const group = await require("../models/Group").create({
+        const group = await Group.create({
             name: req.body.name,
             subject: req.body.subject,
             description: req.body.description,
@@ -22,8 +19,6 @@ exports.createGroup = async(req, res) => {
             admins: [req.user._id],
             members: [req.user._id],
         });
-
-        console.log("✅ GROUP SAVED WITH ID:", group._id);
 
         // Save activity record
         Activity.create({ type: 'group', name: req.user.name || 'Unknown', action: 'created group "' + group.name + '"', date: group.createdAt }).catch(() => {});
@@ -33,7 +28,7 @@ exports.createGroup = async(req, res) => {
             data: group,
         });
     } catch (error) {
-        console.error("❌ CREATE GROUP FAILED:", error);
+        logger.error('Create group failed:', error);
         return res.status(500).json({
             success: false,
             message: error.message,
@@ -50,7 +45,8 @@ exports.getAllGroups = async(req, res) => {
             .populate('createdBy', 'name email role profilePhoto')
             .populate('admins', 'name email role profilePhoto')
             .populate('members', 'name email role profilePhoto')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -58,7 +54,7 @@ exports.getAllGroups = async(req, res) => {
             groups
         });
     } catch (error) {
-        console.error('Get all groups error:', error);
+        logger.error('Get all groups error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching groups',
@@ -128,7 +124,7 @@ exports.requestToJoinGroup = async(req, res) => {
             joinRequest
         });
     } catch (error) {
-        console.error('Request to join group error:', error);
+        logger.error('Request to join group error:', error);
 
         // Handle duplicate key error
         if (error.code === 11000) {
@@ -156,7 +152,8 @@ exports.getJoinRequests = async(req, res) => {
         const requests = await JoinRequest.find()
             .populate('user', 'name email profilePhoto')
             .populate('group', 'name subject')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -164,7 +161,7 @@ exports.getJoinRequests = async(req, res) => {
             requests
         });
     } catch (error) {
-        console.error('Get join requests error:', error);
+        logger.error('Get join requests error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching join requests',
@@ -258,7 +255,7 @@ exports.approveJoinRequest = async(req, res) => {
                 }
             ]);
         } catch (announcementError) {
-            console.error('Error creating approval announcement:', announcementError);
+            logger.error('Error creating approval announcement:', announcementError);
             // Don't fail the request if announcement fails
         }
 
@@ -268,7 +265,7 @@ exports.approveJoinRequest = async(req, res) => {
             joinRequest
         });
     } catch (error) {
-        console.error('Approve join request error:', error);
+        logger.error('Approve join request error:', error);
         res.status(500).json({
             success: false,
             message: 'Error approving join request',
@@ -336,7 +333,7 @@ exports.rejectJoinRequest = async(req, res) => {
                 }
             ]);
         } catch (announcementError) {
-            console.error('Error creating rejection announcement:', announcementError);
+            logger.error('Error creating rejection announcement:', announcementError);
             // Don't fail the request if announcement fails
         }
 
@@ -346,7 +343,7 @@ exports.rejectJoinRequest = async(req, res) => {
             joinRequest
         });
     } catch (error) {
-        console.error('Reject join request error:', error);
+        logger.error('Reject join request error:', error);
         res.status(500).json({
             success: false,
             message: 'Error rejecting join request',
@@ -364,7 +361,8 @@ exports.getMyGroups = async(req, res) => {
             .populate('createdBy', 'name email role profilePhoto')
             .populate('admins', 'name email role profilePhoto')
             .populate('members', 'name email role profilePhoto')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -372,7 +370,7 @@ exports.getMyGroups = async(req, res) => {
             groups
         });
     } catch (error) {
-        console.error('Get my groups error:', error);
+        logger.error('Get my groups error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching your groups',
@@ -391,7 +389,8 @@ exports.getGroupById = async(req, res) => {
         const group = await Group.findById(id)
             .populate('createdBy', 'name email role profilePhoto')
             .populate('admins', 'name email role profilePhoto')
-            .populate('members', 'name email role profilePhoto');
+            .populate('members', 'name email role profilePhoto')
+            .lean();
 
         if (!group) {
             return res.status(404).json({
@@ -414,7 +413,7 @@ exports.getGroupById = async(req, res) => {
         }
 
         // Compute per-member group-specific role
-        const groupObj = group.toObject();
+        const groupObj = { ...group };
         const creatorId = groupObj.createdBy && groupObj.createdBy._id ?
             groupObj.createdBy._id.toString() :
             null;
@@ -434,7 +433,7 @@ exports.getGroupById = async(req, res) => {
             group: groupObj
         });
     } catch (error) {
-        console.error('Get group by ID error:', error);
+        logger.error('Get group by ID error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching group',
@@ -456,7 +455,7 @@ exports.deleteGroup = async(req, res) => {
         await JoinRequest.deleteMany({ group: req.params.id });
         res.status(200).json({ success: true, message: 'Group deleted successfully' });
     } catch (error) {
-        console.error('Delete group error:', error);
+        logger.error('Delete group error:', error);
         res.status(500).json({ success: false, message: 'Error deleting group', error: error.message });
     }
 };
@@ -500,7 +499,7 @@ exports.removeMember = async(req, res) => {
             group
         });
     } catch (error) {
-        console.error('Remove member error:', error);
+        logger.error('Remove member error:', error);
         res.status(500).json({
             success: false,
             message: 'Error removing member',
@@ -548,7 +547,7 @@ exports.leaveGroup = async(req, res) => {
             message: 'You have left the group successfully'
         });
     } catch (error) {
-        console.error('Leave group error:', error);
+        logger.error('Leave group error:', error);
         res.status(500).json({
             success: false,
             message: 'Error leaving group',

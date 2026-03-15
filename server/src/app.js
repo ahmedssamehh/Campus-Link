@@ -1,66 +1,79 @@
-// src/app.js
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
+const logger = require('./utils/logger');
 
 const app = express();
 
-// Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Security headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// Rate limiting: 200 requests per 15 minutes per IP
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests, please try again later.' },
+});
+app.use('/api', limiter);
+
+// CORS
+const allowedOrigins = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',')
+    : ['http://localhost:3000'];
+
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+}));
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files
 app.use('/uploads', express.static(uploadsDir));
 
-// Health check route
+// Health check
 app.get('/', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Campus Link API is running',
-        version: '1.0.0'
-    });
+    res.json({ success: true, message: 'Campus Link API is running', version: '1.0.0' });
 });
 
 // API Routes
-const authRoutes = require('./routes/auth.routes');
-const adminRoutes = require('./routes/admin.routes');
-const groupRoutes = require('./routes/group.routes');
-const chatRoutes = require('./routes/chat.routes');
-const announcementRoutes = require('./routes/announcement.routes');
-const messageRoutes = require('./routes/message.routes');
-const discussionRoutes = require('./routes/discussion.routes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/groups', groupRoutes);
-app.use('/api/chats', chatRoutes);
-app.use('/api/announcements', announcementRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/discussion', discussionRoutes);
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/groups', require('./routes/group.routes'));
+app.use('/api/chats', require('./routes/chat.routes'));
+app.use('/api/announcements', require('./routes/announcement.routes'));
+app.use('/api/messages', require('./routes/message.routes'));
+app.use('/api/discussion', require('./routes/discussion.routes'));
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route not found'
-    });
+    res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.statusCode || 500).json({
+// Global error handler
+app.use((err, req, res, _next) => {
+    logger.error(err.message, { stack: err.stack, url: req.originalUrl, method: req.method });
+
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({
         success: false,
-        message: err.message || 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { error: err.stack })
+        message: process.env.NODE_ENV === 'production'
+            ? 'Internal server error'
+            : err.message || 'Internal server error',
     });
 });
 

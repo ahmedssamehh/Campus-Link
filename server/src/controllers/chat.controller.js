@@ -1,5 +1,6 @@
 // src/controllers/chat.controller.js
 const Group = require('../models/Group');
+const logger = require('../utils/logger');
 
 // @desc    Get users available to chat with (share at least one group)
 // @route   GET /api/chats/available-users
@@ -11,7 +12,8 @@ exports.getAvailableUsers = async(req, res) => {
         // 1. Find all groups where the current user is a member
         const myGroups = await Group.find({ members: req.user._id })
             .populate('members', 'name email profilePhoto')
-            .select('members createdBy admins');
+            .select('members createdBy admins')
+            .lean();
 
         if (myGroups.length === 0) {
             return res.status(200).json({
@@ -64,7 +66,7 @@ exports.getAvailableUsers = async(req, res) => {
             users
         });
     } catch (error) {
-        console.error('Get available users error:', error);
+        logger.error('Get available users error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching available users',

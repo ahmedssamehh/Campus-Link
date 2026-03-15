@@ -78,12 +78,6 @@ const Register = () => {
     setIsLoading(true);
     setApiError('');
     
-    console.log('📝 Submitting registration form with data:', {
-      name: formData.name,
-      email: formData.email,
-      password: '***'
-    });
-    
     // Call real register API with correct field mapping
     const result = await register({
       name: formData.name,        // Backend expects 'name'
@@ -95,7 +89,6 @@ const Register = () => {
     setIsLoading(false);
     
     if (result.success) {
-      console.log('✅ Registration successful!');
       setShowSuccess(true);
       
       // Redirect to login after showing success message
@@ -103,7 +96,6 @@ const Register = () => {
         navigate('/login');
       }, 1500);
     } else {
-      console.error('❌ Registration failed:', result.message);
       setApiError(result.message || 'Registration failed. Please try again.');
     }
   };

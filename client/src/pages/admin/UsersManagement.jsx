@@ -215,8 +215,8 @@ const UsersManagement = () => {
         {/* Users Table */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-600 dark:text-gray-400">Loading users...</p>
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
             </div>
           ) : error ? (
             <div className="p-8 text-center">

@@ -15,6 +15,7 @@ const Announcement = require('../models/Announcement');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const ChatMembership = require('../models/ChatMembership');
+const logger = require('../utils/logger');
 
 const profileStorage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -100,7 +101,7 @@ exports.register = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Register error:', error);
+        logger.error('Register error:', error);
         res.status(500).json({
             success: false,
             message: 'Error registering user',
@@ -162,12 +163,12 @@ exports.login = async(req, res) => {
                 error.message.includes('topology was destroyed');
 
             if (isTransient && attempt < MAX_RETRIES) {
-                console.warn(`⚠️  Login DB error (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
+                logger.warn(`Login DB error (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
                 await new Promise(r => setTimeout(r, 1000 * attempt));
                 continue;
             }
 
-            console.error('Login error:', error.message);
+            logger.error('Login error:', error.message);
             return res.status(500).json({
                 success: false,
                 message: 'Server is temporarily unavailable. Please try again.'
@@ -201,7 +202,7 @@ exports.getMe = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Get me error:', error);
+        logger.error('Get me error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching user data',
@@ -270,7 +271,7 @@ exports.updateProfile = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Update profile error:', error);
+        logger.error('Update profile error:', error);
         return res.status(500).json({
             success: false,
             message: 'Error updating profile',
@@ -332,7 +333,7 @@ exports.changePassword = async(req, res) => {
             message: 'Password updated successfully'
         });
     } catch (error) {
-        console.error('Change password error:', error);
+        logger.error('Change password error:', error);
         return res.status(500).json({
             success: false,
             message: 'Error changing password',
@@ -386,7 +387,7 @@ exports.forgotPassword = async(req, res) => {
 
         return res.status(200).json({ success: true, message: GENERIC_MSG });
     } catch (error) {
-        console.error('Forgot-password error:', error.message, error.code || '');
+        logger.error('Forgot-password error:', error.message, error.code || '');
         return res.status(500).json({
             success: false,
             message: 'Unable to send reset email. Please try again later.'
@@ -469,7 +470,7 @@ exports.resetPassword = async(req, res) => {
             message: 'Password has been reset successfully'
         });
     } catch (error) {
-        console.error('Reset-password error:', error.message);
+        logger.error('Reset-password error:', error.message);
         return res.status(500).json({
             success: false,
             message: 'Error resetting password. Please try again.'
@@ -532,7 +533,7 @@ exports.deleteAccount = async(req, res) => {
             message: 'Account deleted successfully'
         });
     } catch (error) {
-        console.error('Delete account error:', error);
+        logger.error('Delete account error:', error);
         return res.status(500).json({
             success: false,
             message: 'Error deleting account',

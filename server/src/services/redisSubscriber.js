@@ -1,6 +1,7 @@
 // src/services/redisSubscriber.js
 const Redis = require('ioredis');
 const { CHANNEL } = require('./redisPublisher');
+const logger = require('../utils/logger');
 
 let subscriber = null;
 let messageHandler = null;
@@ -23,11 +24,11 @@ function initSubscriber(handler) {
         maxRetriesPerRequest: 3,
         retryStrategy(times) {
             if (times > MAX_RETRIES) {
-                console.log('ℹ️  Redis unavailable — running in single-server mode');
+                logger.info('Redis unavailable — running in single-server mode');
                 return null;
             }
             const delay = Math.min(times * 500, 5000);
-            console.log(`⏳ Redis subscriber retry #${times}/${MAX_RETRIES} in ${delay}ms`);
+            logger.info(`Redis subscriber retry #${times}/${MAX_RETRIES} in ${delay}ms`);
             return delay;
         },
         lazyConnect: true,
@@ -42,13 +43,13 @@ function initSubscriber(handler) {
 
     subscriber.on('error', (err) => {
         if (!errorLogged) {
-            console.warn('⚠️  Redis subscriber error:', err.message);
+            logger.warn('Redis subscriber error:', err.message);
             errorLogged = true;
         }
     });
 
     subscriber.on('connect', () => {
-        console.log('✅ Redis subscriber connected');
+        logger.info('Redis subscriber connected');
         reconnecting = false;
         errorLogged = false;
     });
@@ -57,18 +58,18 @@ function initSubscriber(handler) {
 
     subscriber.on('reconnecting', () => {
         if (!reconnecting) {
-            console.log('🔄 Redis subscriber reconnecting...');
+            logger.info('Redis subscriber reconnecting...');
             reconnecting = true;
         }
     });
 
     // Re-subscribe on ready (handles reconnect case)
     subscriber.on('ready', () => {
-        console.log('✅ Redis subscriber ready, subscribing to channel...');
+        logger.info('Redis subscriber ready, subscribing to channel...');
         subscriber.subscribe(CHANNEL).then(() => {
-            console.log(`✅ Redis subscribed to channel: ${CHANNEL}`);
+            logger.info(`Redis subscribed to channel: ${CHANNEL}`);
         }).catch((err) => {
-            console.error('❌ Failed to subscribe after ready:', err.message);
+            logger.error('Failed to subscribe after ready:', err.message);
         });
     });
 
@@ -78,7 +79,7 @@ function initSubscriber(handler) {
                 const payload = JSON.parse(message);
                 messageHandler(payload);
             } catch (err) {
-                console.error('❌ Failed to parse Redis message:', err.message);
+                logger.error('Failed to parse Redis message:', err.message);
             }
         }
     });
@@ -86,10 +87,10 @@ function initSubscriber(handler) {
     // Connect
     subscriber.connect()
         .then(() => subscriber.subscribe(CHANNEL))
-        .then(() => console.log(`✅ Redis subscribed to channel: ${CHANNEL}`))
+        .then(() => logger.info(`Redis subscribed to channel: ${CHANNEL}`))
         .catch((err) => {
-            console.warn('⚠️  Redis subscriber connection failed:', err.message);
-            console.log('ℹ️  Running in single-server mode (no Redis)');
+            logger.warn('Redis subscriber connection failed:', err.message);
+            logger.info('Running in single-server mode (no Redis)');
         });
 
     return subscriber;

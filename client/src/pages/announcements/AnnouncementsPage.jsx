@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
-import { Link } from 'react-router-dom';
 
 const AnnouncementsPage = () => {
   const { user } = useAuth();
@@ -60,7 +59,6 @@ const AnnouncementsPage = () => {
         setAdminGroups(myAdminGroups);
       }
     } catch (err) {
-      console.error('Failed to fetch groups:', err);
     }
   }, [user]);
 

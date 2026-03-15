@@ -23,9 +23,7 @@ export const AuthProvider = ({ children }) => {
   // Register function
   const register = async (userData) => {
     try {
-      console.log('🔵 Registering user with payload:', userData);
       const response = await axios.post('/auth/register', userData);
-      console.log('✅ Registration response:', response.data);
       
       if (response.data.success) {
         return { success: true, message: response.data.message };
@@ -33,7 +31,6 @@ export const AuthProvider = ({ children }) => {
       
       return { success: false, message: response.data.message };
     } catch (error) {
-      console.error('❌ Registration error:', error.response?.data || error.message);
       return {
         success: false,
         message: error.response?.data?.message || error.message || 'Registration failed'
@@ -91,7 +88,6 @@ export const AuthProvider = ({ children }) => {
         return userData;
       }
     } catch (error) {
-      console.error('Failed to get current user:', error);
       logout();
     }
   };
