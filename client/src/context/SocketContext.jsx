@@ -264,14 +264,14 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newMessage', handler);
         return () => socketRef.current?.off('newMessage', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Message delivery status ─────────────────────────────
     const onMessagesDelivered = useCallback((handler) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messagesDelivered', handler);
         return () => socketRef.current?.off('messagesDelivered', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Read receipts ──────────────────────────────────────
     const emitMessagesSeen = useCallback((data) => {
@@ -290,7 +290,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messagesRead', handler);
         return () => socketRef.current?.off('messagesRead', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Reactions ───────────────────────────────────────────
     const emitAddReaction = useCallback((data) => {
@@ -321,7 +321,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('reactionUpdated', handler);
         return () => socketRef.current?.off('reactionUpdated', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Edit message ────────────────────────────────────────
     const emitEditMessage = useCallback((data) => {
@@ -340,7 +340,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messageEdited', handler);
         return () => socketRef.current?.off('messageEdited', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Delete message ──────────────────────────────────────
     const emitDeleteMessage = useCallback((data) => {
@@ -359,7 +359,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messageDeleted', handler);
         return () => socketRef.current?.off('messageDeleted', handler);
-    }, [connected]);
+    }, []);
 
     // ─── Typing indicators ──────────────────────────────────
     const emitTyping = useCallback((data) => {
@@ -387,7 +387,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newAnnouncement', handler);
         return () => socketRef.current?.off('newAnnouncement', handler);
-    }, [connected]);
+    }, []);
 
     const value = {
         socket: socketRef.current,
