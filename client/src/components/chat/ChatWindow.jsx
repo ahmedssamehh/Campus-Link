@@ -88,6 +88,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
 
     // Fetch message history
     fetchMessages(chat.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat?.id, connected, joinPrivate, fetchMessages]);
 
   // Infinite scroll - load older messages
@@ -133,6 +134,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
     });
 
     return unsubscribe;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat?.id, currentUserId, onNewMessage, emitMessagesSeen]);
 
   // Listen for delivery receipts
