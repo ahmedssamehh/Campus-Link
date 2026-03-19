@@ -3,8 +3,8 @@ const Answer = require('../models/Answer');
 
 const buildVoteState = (doc, userId) => {
     const uid = userId ? userId.toString() : null;
-    const upvoteCount = doc.upvotes ? .length || 0;
-    const downvoteCount = doc.downvotes ? .length || 0;
+    const upvoteCount = (doc.upvotes && doc.upvotes.length) || 0;
+    const downvoteCount = (doc.downvotes && doc.downvotes.length) || 0;
 
     return {
         ...doc.toObject(),
@@ -58,7 +58,7 @@ exports.getAllQuestions = async(req, res) => {
             answerCountRows.map((row) => [row._id.toString(), row.count])
         );
 
-        const currentUserId = req.user ? ._id ? .toString();
+        const currentUserId = req.user && req.user._id ? req.user._id.toString() : null;
 
         const payload = questions.map((q) => {
             return {
@@ -99,7 +99,7 @@ exports.getQuestionById = async(req, res) => {
             .populate('author', 'name role')
             .sort({ createdAt: 1 });
 
-        const currentUserId = req.user ? ._id;
+        const currentUserId = req.user && req.user._id;
 
         return res.status(200).json({
             success: true,
