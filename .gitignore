@@ -39,3 +39,4 @@ logs/
 .pnp
 .pnp.js
 server/.env
+server/.env
