@@ -1,5 +1,6 @@
 // src/controllers/auth.controller.js
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -42,6 +43,10 @@ const profileUpload = multer({
 exports.profileUploadMiddleware = profileUpload.single('profilePhoto');
 
 const getAuthUserId = (req) => req.user?._id || req.user?.id || null;
+
+// In-memory reset code store for lightweight password reset flow.
+// key: email, value: { code, expiresAt }
+const passwordResetCodes = new Map();
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -159,6 +164,90 @@ exports.login = async(req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error logging in',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Request password reset code
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async(req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email: String(email).toLowerCase().trim() });
+
+        // Return same response whether user exists or not to avoid user enumeration.
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: 'If this email exists, a reset code has been sent.'
+            });
+        }
+
+        const code = crypto.randomInt(100000, 1000000).toString();
+        passwordResetCodes.set(user.email, {
+            code,
+            expiresAt: Date.now() + (10 * 60 * 1000)
+        });
+
+        // TODO: Integrate email provider (SendGrid/SMTP). For now, log in development.
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`Password reset code for ${user.email}: ${code}`);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'If this email exists, a reset code has been sent.'
+        });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error requesting password reset',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Reset password with code
+// @route   POST /api/auth/reset-password
+// @access  Public
+exports.resetPassword = async(req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+        const normalizedEmail = String(email).toLowerCase().trim();
+
+        const record = passwordResetCodes.get(normalizedEmail);
+        if (!record || record.expiresAt < Date.now() || record.code !== String(code)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset code'
+            });
+        }
+
+        const user = await User.findOne({ email: normalizedEmail }).select('+password');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        user.password = newPassword;
+        await user.save();
+        passwordResetCodes.delete(normalizedEmail);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password reset successfully'
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error resetting password',
             error: error.message
         });
     }
