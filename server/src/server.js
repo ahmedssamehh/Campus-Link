@@ -23,7 +23,7 @@ logger.info('Socket.io initialized');
 initChatWorker(io);
 app.set('io', io);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     logger.info('Server running on port %d (%s)', PORT, process.env.NODE_ENV || 'development');
 });
 
