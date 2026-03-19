@@ -42,7 +42,7 @@ const profileUpload = multer({
 
 exports.profileUploadMiddleware = profileUpload.single('profilePhoto');
 
-const getAuthUserId = (req) => req.user?._id || req.user?.id || null;
+const getAuthUserId = (req) => req.user ? ._id || req.user ? .id || null;
 
 // In-memory reset code store for lightweight password reset flow.
 // key: email, value: { code, expiresAt }
