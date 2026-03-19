@@ -230,7 +230,7 @@ const Profile = () => {
             <div className="flex items-center space-x-4 pb-6 border-b border-gray-200 dark:border-gray-700">
               {photoPreview ? (
                 <img
-                  src={photoPreview.startsWith('blob:') ? photoPreview : photoPreview}
+                  src={photoPreview.startsWith('/uploads') ? `http://localhost:6000${photoPreview}` : photoPreview}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                 />

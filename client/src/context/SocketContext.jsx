@@ -6,7 +6,7 @@ import axios from '../api/axios';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:6000';
 
 // Generate unique client message ID for dedup
 let messageCounter = 0;
@@ -30,7 +30,6 @@ export const SocketProvider = ({ children }) => {
 
     // ─── Unread announcement tracking ────────────────────────
     const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
-    const seenAnnouncementIds = useRef(new Set());
 
     const currentUserId = (user?._id || user?.id)?.toString();
     const currentUserIdRef = useRef(currentUserId);
@@ -48,6 +47,7 @@ export const SocketProvider = ({ children }) => {
                 });
             }
         } catch (err) {
+            console.error('Failed to fetch unread counts:', err.message);
         }
     }, [isAuthenticated]);
 
@@ -59,6 +59,7 @@ export const SocketProvider = ({ children }) => {
                 setUnreadAnnouncements(res.data.unreadCount || 0);
             }
         } catch (err) {
+            console.error('Failed to fetch unread announcements count:', err.message);
         }
     }, [isAuthenticated]);
 
@@ -91,7 +92,9 @@ export const SocketProvider = ({ children }) => {
         const endpoint = type === 'group'
             ? `/messages/read/group/${sourceId}`
             : `/messages/read/private/${sourceId}`;
-        axios.patch(endpoint).catch(() => {});
+        axios.patch(endpoint).catch((err) => {
+            console.error('Failed to mark as read:', err.message);
+        });
     }, []);
 
     // Clear unread for a specific source
@@ -135,17 +138,19 @@ export const SocketProvider = ({ children }) => {
         });
 
         socket.on('connect', () => {
+            console.log('🔌 Socket connected:', socket.id);
             setConnected(true);
-            seenAnnouncementIds.current.clear();
+            // Re-fetch unread counts on reconnect
             fetchUnreadCounts();
-            fetchUnreadAnnouncementsCount();
         });
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (reason) => {
+            console.log('🔌 Socket disconnected:', reason);
             setConnected(false);
         });
 
-        socket.on('connect_error', () => {
+        socket.on('connect_error', (err) => {
+            console.warn('Socket connection error:', err.message);
             setConnected(false);
         });
 
@@ -166,11 +171,7 @@ export const SocketProvider = ({ children }) => {
         });
 
         // ─── Realtime unread announcement increment ─────────
-        socket.on('newAnnouncement', (data) => {
-            const annId = data && data._id;
-            if (!annId) return;
-            if (seenAnnouncementIds.current.has(annId)) return;
-            seenAnnouncementIds.current.add(annId);
+        socket.on('newAnnouncement', () => {
             setUnreadAnnouncements((prev) => prev + 1);
         });
 
@@ -264,14 +265,14 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newMessage', handler);
         return () => socketRef.current?.off('newMessage', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Message delivery status ─────────────────────────────
     const onMessagesDelivered = useCallback((handler) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messagesDelivered', handler);
         return () => socketRef.current?.off('messagesDelivered', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Read receipts ──────────────────────────────────────
     const emitMessagesSeen = useCallback((data) => {
@@ -290,7 +291,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messagesRead', handler);
         return () => socketRef.current?.off('messagesRead', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Reactions ───────────────────────────────────────────
     const emitAddReaction = useCallback((data) => {
@@ -321,7 +322,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('reactionUpdated', handler);
         return () => socketRef.current?.off('reactionUpdated', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Edit message ────────────────────────────────────────
     const emitEditMessage = useCallback((data) => {
@@ -340,7 +341,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messageEdited', handler);
         return () => socketRef.current?.off('messageEdited', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Delete message ──────────────────────────────────────
     const emitDeleteMessage = useCallback((data) => {
@@ -359,7 +360,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('messageDeleted', handler);
         return () => socketRef.current?.off('messageDeleted', handler);
-    }, []);
+    }, [connected]);
 
     // ─── Typing indicators ──────────────────────────────────
     const emitTyping = useCallback((data) => {
@@ -387,7 +388,7 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current) return () => {};
         socketRef.current.on('newAnnouncement', handler);
         return () => socketRef.current?.off('newAnnouncement', handler);
-    }, []);
+    }, [connected]);
 
     const value = {
         socket: socketRef.current,
