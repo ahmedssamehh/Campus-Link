@@ -12,24 +12,21 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// ─── CORS must be first — before helmet, before everything ───────────────────
+// ─── CORS — must be first, before helmet ─────────────────────────────────────
 app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
     next();
 });
 
-// Security headers (after CORS so it doesn't interfere with preflight)
+// Security headers
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    crossOriginOpenerPolicy: false,
-    crossOriginEmbedderPolicy: false,
 }));
 
 // Rate limiting: 200 requests per 15 minutes per IP
@@ -71,7 +68,6 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, _next) => {
     logger.error(err.message, { stack: err.stack, url: req.originalUrl, method: req.method });
-
     const statusCode = err.statusCode || 500;
     res.status(statusCode).json({
         success: false,
