@@ -39,8 +39,8 @@ app.use(cors({
         if (!origin) return callback(null, true);
         // Allow exact matches from CLIENT_URL list
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        // Allow any Vercel preview deployment for this project
-        if (/^https:\/\/campus-link-s2z8[a-z0-9-]*\.vercel\.app$/.test(origin)) return callback(null, true);
+        // Allow any Vercel deployment for this project
+        if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return callback(null, true);
         // Allow localhost for development
         if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
         callback(new Error(`CORS: origin ${origin} not allowed`));
