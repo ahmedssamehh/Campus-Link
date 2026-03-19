@@ -10,23 +10,24 @@ const PORT = process.env.PORT || 5000;
 
 process.on('unhandledRejection', (err) => {
     logger.error('Unhandled Rejection: %s', err.message);
-    process.exit(1);
 });
 
 process.on('uncaughtException', (err) => {
     logger.error('Uncaught Exception: %s', err.message);
-    process.exit(1);
 });
 
-connectDB().then(() => {
-    const server = http.createServer(app);
-    const io = initSocketServer(server);
-    logger.info('Socket.io initialized');
+// Start the HTTP server immediately so Railway health checks pass
+const server = http.createServer(app);
+const io = initSocketServer(server);
+logger.info('Socket.io initialized');
+initChatWorker(io);
+app.set('io', io);
 
-    initChatWorker(io);
-    app.set('io', io);
+server.listen(PORT, () => {
+    logger.info('Server running on port %d (%s)', PORT, process.env.NODE_ENV || 'development');
+});
 
-    server.listen(PORT, () => {
-        logger.info('Server running on port %d (%s)', PORT, process.env.NODE_ENV || 'development');
-    });
+// Connect to MongoDB in the background
+connectDB().catch((err) => {
+    logger.error('MongoDB connection failed: %s', err.message);
 });
