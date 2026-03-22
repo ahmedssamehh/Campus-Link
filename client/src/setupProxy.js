@@ -1,6 +1,6 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-const BACKEND = 'http://localhost:6000';
+const BACKEND = 'http://localhost:5000';
 
 module.exports = function(app) {
     app.use(
