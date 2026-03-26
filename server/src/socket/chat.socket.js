@@ -44,14 +44,25 @@ function getPrivateRoomId(userA, userB) {
 function initSocketServer(httpServer) {
     const { Server } = require('socket.io');
 
+    const allowedOrigins = [
+        process.env.CLIENT_URL,
+        'http://localhost:3000',
+    ].filter(Boolean);
+
     const io = new Server(httpServer, {
         cors: {
-            origin: process.env.CLIENT_URL || 'http://localhost:3000',
+            origin(origin, callback) {
+                if (!origin || allowedOrigins.includes(origin)) {
+                    return callback(null, true);
+                }
+                logger.warn('Socket.IO blocked by CORS: %s', origin);
+                return callback(new Error('Origin not allowed'));
+            },
             methods: ['GET', 'POST'],
-            credentials: true
+            credentials: true,
         },
         pingTimeout: 60000,
-        pingInterval: 25000
+        pingInterval: 25000,
     });
 
     // ─── Authentication middleware ───────────────────────────
