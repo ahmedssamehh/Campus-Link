@@ -44,10 +44,14 @@ function getPrivateRoomId(userA, userB) {
 function initSocketServer(httpServer) {
     const { Server } = require('socket.io');
 
-    const allowedOrigins = [
-        process.env.CLIENT_URL,
+    const allowedOrigins = Array.from(new Set([
+        ...(process.env.CLIENT_URL || '')
+            .split(',')
+            .map((origin) => origin.trim())
+            .filter(Boolean),
         'http://localhost:3000',
-    ].filter(Boolean);
+        'http://localhost:3001',
+    ]));
 
     const io = new Server(httpServer, {
         cors: {

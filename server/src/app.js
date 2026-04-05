@@ -7,10 +7,14 @@ const fs = require('fs');
 const logger = require('./utils/logger');
 
 // ─── Allowed Origins ─────────────────────────────────────────────────────────
-const allowedOrigins = [
-    process.env.CLIENT_URL,
+const allowedOrigins = Array.from(new Set([
+    ...(process.env.CLIENT_URL || '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
     'http://localhost:3000',
-].filter(Boolean);
+    'http://localhost:3001',
+]));
 
 const corsOptions = {
     origin(origin, callback) {
