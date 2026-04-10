@@ -7,9 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  # ─── Backend ──────────────────────────────────────────────────────────────
   backend:
-    name: Backend — Install & Lint
+    name: Backend — Install & Verify
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,7 +31,6 @@ jobs:
       - name: Check for syntax errors
         run: node --check src/server.js src/app.js
 
-  # ─── Frontend ─────────────────────────────────────────────────────────────
   frontend:
     name: Frontend — Install & Build
     runs-on: ubuntu-latest
@@ -41,9 +39,8 @@ jobs:
         working-directory: client
 
     env:
-      # Dummy values so the build doesn't fail without real secrets
-      REACT_APP_API_URL: https://campus-link-api.up.railway.app/api
-      REACT_APP_SOCKET_URL: https://campus-link-api.up.railway.app
+      REACT_APP_API_URL: https://placeholder.up.railway.app/api
+      REACT_APP_SOCKET_URL: https://placeholder.up.railway.app
 
     steps:
       - name: Checkout code
@@ -61,10 +58,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: client/build
-          retention-days: 7
