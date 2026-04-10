@@ -39,8 +39,8 @@ jobs:
         working-directory: client
 
     env:
-      REACT_APP_API_URL: https://placeholder.up.railway.app/api
-      REACT_APP_SOCKET_URL: https://placeholder.up.railway.app
+      REACT_APP_API_URL: https://campus-link-production.up.railway.app/api
+      REACT_APP_SOCKET_URL: https://campus-link-production.up.railway.app
 
     steps:
       - name: Checkout code
