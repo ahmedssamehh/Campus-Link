@@ -44,19 +44,25 @@ function getPrivateRoomId(userA, userB) {
 function initSocketServer(httpServer) {
     const { Server } = require('socket.io');
 
-    const allowedOrigins = Array.from(new Set([
+    const allowedOrigins = [
         ...(process.env.CLIENT_URL || '')
             .split(',')
-            .map((origin) => origin.trim())
+            .map((o) => o.trim())
             .filter(Boolean),
         'http://localhost:3000',
         'http://localhost:3001',
-    ]));
+    ];
+
+    function isOriginAllowed(origin) {
+        if (allowedOrigins.includes(origin)) return true;
+        if (/^https:\/\/campus-link[a-z0-9-]*\.vercel\.app$/.test(origin)) return true;
+        return false;
+    }
 
     const io = new Server(httpServer, {
         cors: {
             origin(origin, callback) {
-                if (!origin || allowedOrigins.includes(origin)) {
+                if (!origin || isOriginAllowed(origin)) {
                     return callback(null, true);
                 }
                 logger.warn('Socket.IO blocked by CORS: %s', origin);

@@ -7,21 +7,27 @@ const fs = require('fs');
 const logger = require('./utils/logger');
 
 // ─── Allowed Origins ─────────────────────────────────────────────────────────
-const allowedOrigins = Array.from(new Set([
+const allowedOrigins = [
     ...(process.env.CLIENT_URL || '')
         .split(',')
-        .map((origin) => origin.trim())
+        .map((o) => o.trim())
         .filter(Boolean),
     'http://localhost:3000',
     'http://localhost:3001',
-]));
+];
+
+function isOriginAllowed(origin) {
+    if (allowedOrigins.includes(origin)) return true;
+    // Allow all Vercel preview/deployment URLs for this project
+    if (/^https:\/\/campus-link[a-z0-9-]*\.vercel\.app$/.test(origin)) return true;
+    return false;
+}
 
 const corsOptions = {
     origin(origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, server-to-server)
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin)) {
+        if (isOriginAllowed(origin)) {
             return callback(null, true);
         }
 
