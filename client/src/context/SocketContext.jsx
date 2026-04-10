@@ -6,7 +6,7 @@ import axios from '../api/axios';
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = 'http://localhost:6000';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 
 // Generate unique client message ID for dedup
 let messageCounter = 0;
@@ -130,11 +130,12 @@ export const SocketProvider = ({ children }) => {
         const socket = io(SOCKET_URL, {
             auth: { token },
             transports: ['websocket', 'polling'],
+            withCredentials: true,
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 30000,
             reconnectionAttempts: Infinity,
-            timeout: 20000
+            timeout: 20000,
         });
 
         socket.on('connect', () => {

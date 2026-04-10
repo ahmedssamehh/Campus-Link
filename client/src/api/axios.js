@@ -6,6 +6,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 // Create axios instance with base configuration
 const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
+    withCredentials: true,
 });
 
 // Request interceptor - attach JWT token to every request
