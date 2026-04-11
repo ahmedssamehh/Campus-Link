@@ -62,23 +62,27 @@ const Discussion = () => {
   const unsolvedCount = questions.length - solvedCount;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Discussion Board</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Ask questions and help your classmates</p>
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-4 pb-20 sm:py-6 md:py-8 md:pb-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
+        {/* Header — stack on mobile to avoid horizontal overflow */}
+        <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Discussion Board</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 break-words">
+              Ask questions and help your classmates
+            </p>
           </div>
           <button
+            type="button"
             onClick={() => navigate('/discussion/ask')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition duration-200 flex items-center"
+            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 sm:px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-blue-700 transition duration-200"
           >
             <svg
-              className="h-5 w-5 mr-2"
+              className="h-5 w-5 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden
             >
               <path
                 strokeLinecap="round"
@@ -92,17 +96,17 @@ const Discussion = () => {
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6 min-w-0 overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 min-w-0">
             {/* Search Bar */}
-            <div className="flex-1 md:mr-4">
+            <div className="flex-1 min-w-0 lg:mr-4">
               <div className="relative">
                 <input
-                  type="text"
+                  type="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search questions or tags..."
-                  className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
+                  className="w-full min-w-0 px-4 py-2.5 pl-10 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
                 />
                 <svg
                   className="absolute left-3 top-3 h-5 w-5 text-gray-400"
@@ -121,10 +125,11 @@ const Discussion = () => {
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2 min-w-0">
               <button
+                type="button"
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-md font-medium transition duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
                   filter === 'all'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -133,8 +138,9 @@ const Discussion = () => {
                 All
               </button>
               <button
+                type="button"
                 onClick={() => setFilter('solved')}
-                className={`px-4 py-2 rounded-md font-medium transition duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
                   filter === 'solved'
                     ? 'bg-green-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -143,8 +149,9 @@ const Discussion = () => {
                 Solved
               </button>
               <button
+                type="button"
                 onClick={() => setFilter('unsolved')}
-                className={`px-4 py-2 rounded-md font-medium transition duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
                   filter === 'unsolved'
                     ? 'bg-orange-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -153,8 +160,9 @@ const Discussion = () => {
                 Unsolved
               </button>
               <button
+                type="button"
                 onClick={() => setFilter('mine')}
-                className={`px-4 py-2 rounded-md font-medium transition duration-200 ${
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
                   filter === 'mine'
                     ? 'bg-purple-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -166,13 +174,13 @@ const Discussion = () => {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center mr-3">
+        {/* Stats — 3-up on small screens to save vertical space */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 min-w-0">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 min-w-0">
+            <div className="flex items-center min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
                 <svg
-                  className="h-6 w-6 text-blue-600"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -186,14 +194,14 @@ const Discussion = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{questions.length}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Questions</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{questions.length}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-tight">Total</p>
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center mr-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 min-w-0">
+            <div className="flex items-center min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
                 <svg
                   className="h-6 w-6 text-green-600"
                   fill="currentColor"
@@ -207,14 +215,14 @@ const Discussion = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{solvedCount}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Solved</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{solvedCount}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-tight">Solved</p>
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/40 rounded-lg flex items-center justify-center mr-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 min-w-0">
+            <div className="flex items-center min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-900/40 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
                 <svg
                   className="h-6 w-6 text-orange-600"
                   fill="none"
@@ -230,8 +238,8 @@ const Discussion = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{unsolvedCount}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Unsolved</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{unsolvedCount}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-tight">Unsolved</p>
               </div>
             </div>
           </div>

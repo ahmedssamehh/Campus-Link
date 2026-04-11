@@ -9,7 +9,7 @@ const UserLayout = () => {
   return (
     <>
       <TopNavbar />
-      <div className="md:pt-16">
+      <div className="md:pt-16 w-full min-w-0 max-w-[100vw] overflow-x-hidden">
         <Outlet />
       </div>
       <MobileNav />

@@ -103,8 +103,8 @@ const Home = () => {
   }, [onNewAnnouncement]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8 transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
         {/* Mobile Announcements Banner */}
         <Link
           to="/announcements"

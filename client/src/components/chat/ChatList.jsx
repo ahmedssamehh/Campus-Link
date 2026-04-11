@@ -17,7 +17,15 @@ const RoleBadge = ({ role }) => {
   );
 };
 
-const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages, lastSeenMap }) => {
+const ChatList = ({
+  chats,
+  activeChat,
+  showChatWindow,
+  listTypingByUserId,
+  onSelectChat,
+  unreadMessages,
+  lastSeenMap,
+}) => {
   const formatLastSeen = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -45,9 +53,14 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages, lastSeenMap
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {chats.map((chat) => {
-          const unreadCount = unreadMessages?.[chat.id] || 0;
+          const chatId = String(chat.id);
+          const unreadCount = unreadMessages?.[chat.id] || unreadMessages?.[chatId] || 0;
           const previewMsg = chat.lastMessage;
           const previewTime = chat.lastMessageTime;
+          const peerTypingName = listTypingByUserId?.[chatId];
+          const hideTypingInThisRow =
+            Boolean(activeChat && String(activeChat.id) === chatId && showChatWindow);
+          const showTypingPreview = Boolean(peerTypingName) && !hideTypingInThisRow;
 
           return (
           <div
@@ -97,9 +110,17 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages, lastSeenMap
                   Last seen {formatLastSeen(lastSeenMap[chat.id])}
                 </p>
               )}
-              <div className="flex items-center justify-between">
-                <p className={`text-sm truncate ${unreadCount > 0 ? 'text-gray-900 dark:text-gray-200 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
-                  {previewMsg}
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <p
+                  className={`text-sm truncate min-w-0 ${
+                    showTypingPreview
+                      ? 'italic text-blue-600 dark:text-blue-400'
+                      : unreadCount > 0
+                        ? 'text-gray-900 dark:text-gray-200 font-medium'
+                        : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  {showTypingPreview ? `${peerTypingName} is typing…` : previewMsg || 'Tap to chat'}
                 </p>
                 {unreadCount > 0 && (
                   <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full min-w-[24px] text-center">

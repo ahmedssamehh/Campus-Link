@@ -54,22 +54,23 @@ const QuickActions = () => {
         </svg>
       ),
       color: 'from-purple-500 to-purple-600',
-      path: '/discussions',
+      path: '/discussion',
     },
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 min-w-0 max-w-full">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">Quick Actions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {actions.map((action) => (
           <button
+            type="button"
             key={action.id}
             onClick={() => navigate(action.path)}
-            className="group relative overflow-hidden rounded-lg bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-transparent hover:shadow-lg transition-all duration-300"
+            className="group relative overflow-hidden rounded-lg bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-transparent hover:shadow-lg transition-all duration-300 text-left min-h-[88px] sm:min-h-0"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-            <div className="relative p-6">
+            <div className="relative p-4 sm:p-6">
               <div className={`w-12 h-12 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center text-white mb-3 group-hover:bg-white group-hover:text-blue-600 transition-colors duration-300`}>
                 {action.icon}
               </div>

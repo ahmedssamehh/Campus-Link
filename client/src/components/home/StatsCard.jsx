@@ -11,7 +11,7 @@ const StatsCard = ({ title, value, icon, color = 'blue', subtitle }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300 min-w-0 max-w-full">
       <div className="flex items-center justify-between mb-4">
         <div className={`w-12 h-12 bg-gradient-to-br ${colorClasses[color]} rounded-lg flex items-center justify-center text-white`}>
           {icon}

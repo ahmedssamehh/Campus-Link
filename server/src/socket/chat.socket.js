@@ -525,9 +525,10 @@ function initSocketServer(httpServer) {
                 const gid = typeof group === 'object' && group?.toString ? group.toString() : String(group);
                 socket.to(gid).emit('userTyping', { ...typingData, group: gid });
             } else if (receiver) {
+                // Notify the peer via their personal room (userId) so typing works even before
+                // they join the DM room — e.g. conversation list view.
                 const recv = typeof receiver === 'object' && receiver?.toString ? receiver.toString() : String(receiver);
-                const roomId = getPrivateRoomId(userId, recv);
-                socket.to(roomId).emit('userTyping', { ...typingData, receiver: recv });
+                socket.to(recv).emit('userTyping', { ...typingData, receiver: recv });
             }
         });
 
@@ -539,8 +540,7 @@ function initSocketServer(httpServer) {
                 socket.to(gid).emit('userStopTyping', { ...typingData, group: gid });
             } else if (receiver) {
                 const recv = typeof receiver === 'object' && receiver?.toString ? receiver.toString() : String(receiver);
-                const roomId = getPrivateRoomId(userId, recv);
-                socket.to(roomId).emit('userStopTyping', { ...typingData, receiver: recv });
+                socket.to(recv).emit('userStopTyping', { ...typingData, receiver: recv });
             }
         });
 

@@ -174,12 +174,12 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 break-words">
             Manage your account settings and preferences
           </p>
         </div>
@@ -211,15 +211,16 @@ const Profile = () => {
         )}
 
         {/* Profile Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-8 mb-6 min-w-0 max-w-full">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
               Account Information
             </h2>
             {!isEditing && (
               <button
+                type="button"
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition duration-200"
+                className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition duration-200"
               >
                 Edit Profile
               </button>
@@ -228,7 +229,7 @@ const Profile = () => {
 
           <form onSubmit={handleSave} className="space-y-6">
             {/* Profile Picture */}
-            <div className="flex items-center space-x-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:space-x-4 pb-6 border-b border-gray-200 dark:border-gray-700 min-w-0">
               {photoPreview ? (
                 <img
                   src={getMediaUrl(photoPreview)}
@@ -273,7 +274,7 @@ const Profile = () => {
                 value={formData.name}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className={`w-full px-4 py-2 border ${
+                className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
                   errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:bg-gray-700 dark:text-white`}
               />
@@ -291,7 +292,7 @@ const Profile = () => {
                 name="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 dark:text-white"
+                className="w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 dark:text-white"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed.</p>
             </div>
@@ -317,7 +318,7 @@ const Profile = () => {
                     name="currentPassword"
                     value={formData.currentPassword}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 border ${
+                    className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
                       errors.currentPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                   />
@@ -340,7 +341,7 @@ const Profile = () => {
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 border ${
+                    className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
                       errors.newPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                   />
@@ -363,7 +364,7 @@ const Profile = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2 border ${
+                    className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
                       errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
                   />
@@ -376,18 +377,18 @@ const Profile = () => {
 
             {/* Action Buttons - Only when editing */}
             {isEditing && (
-              <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -397,7 +398,7 @@ const Profile = () => {
         </div>
 
         {/* Sign out */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-6 border border-gray-200 dark:border-gray-700 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             Sign out
           </h2>
@@ -417,7 +418,7 @@ const Profile = () => {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 border-2 border-red-200 dark:border-red-900">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-8 border-2 border-red-200 dark:border-red-900 min-w-0">
           <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">
             Danger Zone
           </h2>
@@ -425,8 +426,9 @@ const Profile = () => {
             Once you delete your account, there is no going back. Please be certain.
           </p>
           <button
+            type="button"
             onClick={() => setShowDeleteModal(true)}
-            className="px-6 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition duration-200"
+            className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition duration-200"
           >
             Delete Account
           </button>

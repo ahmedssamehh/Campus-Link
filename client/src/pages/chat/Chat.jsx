@@ -4,15 +4,28 @@ import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import ChatList from '../../components/chat/ChatList';
 import ChatWindow from '../../components/chat/ChatWindow';
+import { formatMessageListPreview } from '../../utils/messagePreview';
 
 const Chat = () => {
   const { user } = useAuth();
-  const { onlineUsers, onNewMessage, connected, unreadMessages, setActiveView, lastSeenMap } = useSocket();
+  const {
+    onlineUsers,
+    onNewMessage,
+    onUserTyping,
+    onUserStopTyping,
+    connected,
+    unreadMessages,
+    setActiveView,
+    lastSeenMap,
+  } = useSocket();
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const currentUserId = (user?._id || user?.id)?.toString();
+  const [showChatWindow, setShowChatWindow] = useState(false);
+  /** peer userId -> name — for "typing…" on conversation list */
+  const [listTypingByUserId, setListTypingByUserId] = useState({});
 
   const fetchAvailableUsers = useCallback(async () => {
     try {
@@ -72,7 +85,7 @@ const Chat = () => {
             if (chat.id === otherUserId) {
               return {
                 ...chat,
-                lastMessage: msg.content || msg.text || '',
+                lastMessage: formatMessageListPreview(msg),
                 lastMessageTime: msg.createdAt
                   ? new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                   : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
@@ -87,7 +100,35 @@ const Chat = () => {
     return unsubscribe;
   }, [onNewMessage, currentUserId]);
 
-  const [showChatWindow, setShowChatWindow] = useState(false);
+  // Typing indicator on conversation list (when peer types; works without opening DM first — server sends to personal room)
+  useEffect(() => {
+    if (!currentUserId) return undefined;
+
+    const unsubTyping = onUserTyping(({ userId: typingUserId, userName, receiver, group }) => {
+      if (group) return;
+      if (!receiver || String(receiver) !== String(currentUserId)) return;
+      if (String(typingUserId) === String(currentUserId)) return;
+      setListTypingByUserId((prev) => ({
+        ...prev,
+        [String(typingUserId)]: userName || 'Someone',
+      }));
+    });
+
+    const unsubStop = onUserStopTyping(({ userId: typingUserId, receiver, group }) => {
+      if (group) return;
+      if (!receiver || String(receiver) !== String(currentUserId)) return;
+      setListTypingByUserId((prev) => {
+        const next = { ...prev };
+        delete next[String(typingUserId)];
+        return next;
+      });
+    });
+
+    return () => {
+      unsubTyping();
+      unsubStop();
+    };
+  }, [currentUserId, onUserTyping, onUserStopTyping]);
 
   const handleSelectChat = (chat) => {
     setActiveChat(chat);
@@ -160,6 +201,8 @@ const Chat = () => {
             <ChatList
               chats={chats}
               activeChat={activeChat}
+              showChatWindow={showChatWindow}
+              listTypingByUserId={listTypingByUserId}
               onSelectChat={handleSelectChat}
               unreadMessages={unreadMessages.private}
               lastSeenMap={lastSeenMap}

@@ -100,12 +100,12 @@ const MessageToast = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-3 left-3 right-3 z-[9999] flex flex-col items-stretch sm:items-end gap-2 pointer-events-none sm:top-4 sm:left-auto sm:right-4 sm:w-80 sm:max-w-none max-w-lg ml-auto">
       {toasts.map((toast) => (
         <div
           key={toast.id}
           onClick={() => handleToastClick(toast)}
-          className="pointer-events-auto w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 cursor-pointer transform transition-all duration-300 ease-out animate-slide-in-right hover:scale-[1.02] hover:shadow-3xl"
+          className="pointer-events-auto w-full max-w-full sm:w-80 min-w-0 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 cursor-pointer transform transition-all duration-300 ease-out animate-slide-in-right hover:scale-[1.02] hover:shadow-3xl"
         >
           <div className="flex items-start space-x-3">
             {/* Avatar */}
