@@ -434,7 +434,7 @@ const GroupChat = () => {
   const memberCount = group.members?.length || 0;
 
   return (
-    <div className="h-screen fixed inset-0 z-50 md:relative md:z-auto md:h-screen flex flex-col">
+    <div className="h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-screen flex flex-col">
       {/* Group Header */}
       <div className={`bg-gradient-to-r ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4`}>
         <div className="flex items-center justify-between">
@@ -613,7 +613,7 @@ const GroupChat = () => {
           )}
 
           {/* Message Input */}
-          <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-6 py-4">
+          <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-3 md:px-6 py-3 md:py-4 pb-[env(safe-area-inset-bottom,0.75rem)]">
             <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleSaveEdit(); } : handleSendMessage} className="flex items-center space-x-3">
               {/* File upload */}
               <input

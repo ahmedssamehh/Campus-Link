@@ -515,7 +515,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
       )}
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-3 md:px-6 py-3 md:py-4 pb-[env(safe-area-inset-bottom,0.75rem)]">
         <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleSaveEdit(); } : handleSendMessage} className="flex items-center space-x-3">
           {/* File upload button */}
           <input
