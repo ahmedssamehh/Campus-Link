@@ -62,12 +62,13 @@ const MessageBubble = ({
     return (
       <div className="mt-2 space-y-1">
         {message.attachments.map((att, idx) => {
+          const fileUrl = getMediaUrl(att.url);
           const isImage = att.mimetype && att.mimetype.startsWith('image/');
           if (isImage) {
             return (
-              <a key={idx} href={att.url} target="_blank" rel="noopener noreferrer">
+              <a key={idx} href={fileUrl} target="_blank" rel="noopener noreferrer">
                 <img
-                  src={att.url}
+                  src={fileUrl}
                   alt={att.filename}
                   className="max-w-full max-h-48 rounded-lg cursor-pointer"
                 />
@@ -77,7 +78,7 @@ const MessageBubble = ({
           return (
             <a
               key={idx}
-              href={att.url}
+              href={fileUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={`flex items-center space-x-2 p-2 rounded-lg text-sm ${

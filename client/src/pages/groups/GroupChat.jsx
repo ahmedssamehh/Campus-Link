@@ -434,7 +434,7 @@ const GroupChat = () => {
   const memberCount = group.members?.length || 0;
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] md:h-screen flex flex-col">
+    <div className="h-screen fixed inset-0 z-50 md:relative md:z-auto md:h-screen flex flex-col">
       {/* Group Header */}
       <div className={`bg-gradient-to-r ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4`}>
         <div className="flex items-center justify-between">
