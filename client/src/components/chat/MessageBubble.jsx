@@ -85,21 +85,21 @@ const MessageBubble = ({
               </a>
             );
           }
-          return (
+            return (
             <a
               key={idx}
               href={fileUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center space-x-2 p-2 rounded-lg text-sm ${
+              className={`flex min-w-0 max-w-full items-center gap-2 p-2 rounded-lg text-sm ${
                 isSent ? 'bg-blue-700/30 text-blue-100 hover:bg-blue-700/50' : 'bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-500'
               }`}
             >
               <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span className="truncate">{att.filename}</span>
-              {att.size && <span className="text-xs opacity-70">({(att.size / 1024).toFixed(0)}KB)</span>}
+              <span className="min-w-0 flex-1 break-all text-left [overflow-wrap:anywhere]">{att.filename}</span>
+              {att.size && <span className="text-xs opacity-70 flex-shrink-0">({(att.size / 1024).toFixed(0)}KB)</span>}
             </a>
           );
         })}
@@ -142,8 +142,8 @@ const MessageBubble = ({
   // Deleted message
   if (isDeleted) {
     return (
-      <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
+      <div className={`flex w-full min-w-0 max-w-full ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
+        <div className={`flex min-w-0 max-w-[min(100%,20rem)] sm:max-w-xs lg:max-w-md items-end space-x-2 ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
           {!isSent && (
             (senderPhoto && !avatarError) ? (
               <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
@@ -168,8 +168,8 @@ const MessageBubble = ({
   // Edit mode
   if (isEditing) {
     return (
-      <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div className="max-w-xs lg:max-w-md w-full">
+      <div className={`flex w-full min-w-0 max-w-full ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
+        <div className="min-w-0 w-full max-w-[min(100%,20rem)] sm:max-w-xs lg:max-w-md">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3">
             <input
               type="text"
@@ -191,11 +191,13 @@ const MessageBubble = ({
 
   return (
     <div
-      className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4 group`}
+      className={`flex w-full min-w-0 max-w-full ${isSent ? 'justify-end' : 'justify-start'} mb-4 group`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => { setShowActions(false); setShowEmojiPicker(false); }}
     >
-      <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
+      <div
+        className={`flex min-w-0 max-w-[min(100%,85vw)] sm:max-w-xs lg:max-w-md items-end space-x-2 ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}
+      >
         {/* Avatar */}
         {!isSent && (
           (senderPhoto && !avatarError) ? (
@@ -210,19 +212,21 @@ const MessageBubble = ({
         )}
 
         {/* Message Content */}
-        <div className="relative">
+        <div className="relative min-w-0 max-w-full">
           {!isSent && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1">{senderName}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1 break-words">{senderName}</p>
           )}
           <div
-            className={`rounded-lg ${
+            className={`max-w-full min-w-0 rounded-lg ${
               isImageOnlyMessage
                 ? 'overflow-hidden'
                 : `px-4 py-2 ${isSent ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`
             }`}
           >
             {!isImageOnlyMessage && messageText && (
-              <p className="text-sm whitespace-pre-wrap break-words">{messageText}</p>
+              <p className="text-sm whitespace-pre-wrap break-words [overflow-wrap:anywhere] [word-break:break-word]">
+                {messageText}
+              </p>
             )}
             {renderAttachments()}
           </div>

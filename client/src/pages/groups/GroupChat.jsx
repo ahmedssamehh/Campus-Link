@@ -526,7 +526,7 @@ const GroupChat = () => {
           <div
             ref={messagesContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900 p-3 sm:p-6"
           >
             {/* Load more indicator */}
             {loadingMore && (
