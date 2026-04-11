@@ -88,9 +88,16 @@ const Chat = () => {
     return unsubscribe;
   }, [onNewMessage, currentUserId]);
 
+  const [showChatWindow, setShowChatWindow] = useState(false);
+
   const handleSelectChat = (chat) => {
     setActiveChat(chat);
-    setActiveView(chat.id, 'private');  // Mark this conversation as being viewed → clears unread
+    setShowChatWindow(true);
+    setActiveView(chat.id, 'private');
+  };
+
+  const handleBackToList = () => {
+    setShowChatWindow(false);
   };
 
   // Clear active view when leaving the chat page
@@ -99,15 +106,14 @@ const Chat = () => {
   }, [setActiveView]);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Page Header */}
-      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4">
+    <div className="h-[calc(100vh-3.5rem)] md:h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      {/* Page Header — hidden on mobile when viewing a conversation */}
+      <div className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 md:px-6 py-3 md:py-4 ${showChatWindow ? 'hidden md:block' : ''}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Chat with your classmates and study groups</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
+            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Chat with your classmates</p>
           </div>
-          {/* Connection indicator */}
           <div className="flex items-center space-x-2">
             <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -119,8 +125,8 @@ const Chat = () => {
 
       {/* Chat Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Chat List */}
-        <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-shrink-0 overflow-hidden flex flex-col">
+        {/* Left Sidebar - Chat List: hidden on mobile when a chat is open */}
+        <div className={`w-full md:w-96 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-shrink-0 overflow-hidden flex flex-col ${showChatWindow ? 'hidden md:flex' : 'flex'}`}>
           {loading && (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -154,9 +160,9 @@ const Chat = () => {
           )}
         </div>
 
-        {/* Right Section - Chat Window */}
-        <div className="flex-1 overflow-hidden">
-          <ChatWindow chat={activeChat} currentUserId={currentUserId} />
+        {/* Right Section - Chat Window: full-screen on mobile when a chat is open */}
+        <div className={`flex-1 overflow-hidden ${showChatWindow ? 'flex flex-col' : 'hidden md:block'}`}>
+          <ChatWindow chat={activeChat} currentUserId={currentUserId} onBack={handleBackToList} />
         </div>
       </div>
     </div>

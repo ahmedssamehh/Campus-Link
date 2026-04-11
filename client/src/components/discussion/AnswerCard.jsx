@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getMediaUrl } from '../../utils/media';
 
 const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
   const [localError, setLocalError] = useState('');
@@ -91,7 +92,7 @@ const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {answer.author?.profilePhoto ? (
-                <img src={answer.author.profilePhoto} alt={authorName} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                <img src={getMediaUrl(answer.author.profilePhoto)} alt={authorName} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">

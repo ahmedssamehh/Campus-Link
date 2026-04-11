@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import axios from '../../api/axios';
+import { getMediaUrl } from '../../utils/media';
 
 const Profile = () => {
   const { user, updateUser, logout } = useAuth();
@@ -173,7 +174,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -230,7 +231,7 @@ const Profile = () => {
             <div className="flex items-center space-x-4 pb-6 border-b border-gray-200 dark:border-gray-700">
               {photoPreview ? (
                 <img
-                  src={photoPreview.startsWith('/uploads') ? `http://localhost:6000${photoPreview}` : photoPreview}
+                  src={getMediaUrl(photoPreview)}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                 />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getMediaUrl } from '../../utils/media';
 
 const sizeClasses = {
   xs: 'w-6 h-6 text-[10px]',
@@ -44,7 +45,7 @@ const UserAvatar = ({
   if (profilePhoto) {
     return (
       <img
-        src={profilePhoto}
+        src={getMediaUrl(profilePhoto)}
         alt={name}
         className={`${sizeClass} rounded-full object-cover flex-shrink-0 ${borderClass} ${className}`}
       />

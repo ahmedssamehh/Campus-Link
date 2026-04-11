@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getMediaUrl } from '../../utils/media';
 
 const QuestionCard = ({ question }) => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const QuestionCard = ({ question }) => {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             {question.author?.profilePhoto ? (
-              <img src={question.author.profilePhoto} alt={authorName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+              <img src={getMediaUrl(question.author.profilePhoto)} alt={authorName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
             ) : (
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold text-xs">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
+import { getMediaUrl } from '../../utils/media';
 
 const UsersManagement = () => {
   const { user: currentUser } = useAuth();
@@ -249,7 +250,7 @@ const UsersManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             {user.profilePhoto ? (
-                              <img src={user.profilePhoto} alt={user.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
+                              <img src={getMediaUrl(user.profilePhoto)} alt={user.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
                             ) : (
                               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-semibold text-sm">

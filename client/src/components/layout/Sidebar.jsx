@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { getMediaUrl } from '../../utils/media';
 
 const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
@@ -259,7 +260,7 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
             <div className="flex items-center space-x-3">
               {user?.profilePhoto ? (
                 <img
-                  src={user.profilePhoto}
+                  src={getMediaUrl(user.profilePhoto)}
                   alt={user.name}
                   className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600"
                 />

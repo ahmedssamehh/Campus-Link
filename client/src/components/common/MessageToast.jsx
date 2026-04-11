@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
+import { getMediaUrl } from '../../utils/media';
 
 const MessageToast = () => {
   const { onNewMessage } = useSocket();
@@ -58,7 +59,7 @@ const MessageToast = () => {
       }
 
       const senderPhoto = typeof msg.sender === 'object'
-        ? msg.sender?.profilePhoto || ''
+        ? getMediaUrl(msg.sender?.profilePhoto || '')
         : '';
 
       const toast = {

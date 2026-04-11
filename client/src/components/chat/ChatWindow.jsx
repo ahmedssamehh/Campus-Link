@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import MessageBubble from './MessageBubble';
+import { getMediaUrl } from '../../utils/media';
 
-const ChatWindow = ({ chat, currentUserId }) => {
+const ChatWindow = ({ chat, currentUserId, onBack }) => {
   const {
     joinPrivate, sendMessage, onNewMessage, connected,
     emitTyping, emitStopTyping, onUserTyping, onUserStopTyping,
@@ -202,12 +203,12 @@ const ChatWindow = ({ chat, currentUserId }) => {
     return unsub;
   }, [chat?.id, onMessageDeleted]);
 
-  // Listen for typing indicators
+  // Listen for typing indicators (ignore own typing events)
   useEffect(() => {
     if (!chat) return;
 
-    const unsubTyping = onUserTyping(({ userName, receiver }) => {
-      if (receiver) {
+    const unsubTyping = onUserTyping(({ userId: typingUserId, userName, receiver }) => {
+      if (receiver && typingUserId !== currentUserId) {
         setTypingUsers((prev) => {
           if (prev.includes(userName)) return prev;
           return [...prev, userName];
@@ -215,8 +216,8 @@ const ChatWindow = ({ chat, currentUserId }) => {
       }
     });
 
-    const unsubStopTyping = onUserStopTyping(({ receiver }) => {
-      if (receiver) {
+    const unsubStopTyping = onUserStopTyping(({ userId: typingUserId, receiver }) => {
+      if (receiver && typingUserId !== currentUserId) {
         setTypingUsers([]);
       }
     });
@@ -225,7 +226,7 @@ const ChatWindow = ({ chat, currentUserId }) => {
       unsubTyping();
       unsubStopTyping();
     };
-  }, [chat?.id, onUserTyping, onUserStopTyping]);
+  }, [chat?.id, currentUserId, onUserTyping, onUserStopTyping]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -365,12 +366,20 @@ const ChatWindow = ({ chat, currentUserId }) => {
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900">
       {/* Chat Header */}
-      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
+          {/* Mobile back button */}
+          {onBack && (
+            <button onClick={onBack} className="md:hidden p-1 -ml-1 mr-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+              <svg className="h-6 w-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
           <div className="relative">
             {chat.profilePhoto ? (
               <img
-                src={chat.profilePhoto}
+                src={getMediaUrl(chat.profilePhoto)}
                 alt={chat.name}
                 className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
               />

@@ -5,6 +5,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import MessageBubble from '../../components/chat/MessageBubble';
+import { getMediaUrl } from '../../utils/media';
 
 const colorClasses = {
   blue: 'from-blue-500 to-blue-600',
@@ -230,10 +231,10 @@ const GroupChat = () => {
     return unsub;
   }, [id, onMessageDeleted]);
 
-  // Listen for typing indicators
+  // Listen for typing indicators (ignore own typing events)
   useEffect(() => {
-    const unsubTyping = onUserTyping(({ userName, group: typingGroup }) => {
-      if (typingGroup === id) {
+    const unsubTyping = onUserTyping(({ userId: typingUserId, userName, group: typingGroup }) => {
+      if (typingGroup === id && typingUserId !== currentUserId) {
         setTypingUsers((prev) => {
           if (prev.includes(userName)) return prev;
           return [...prev, userName];
@@ -242,7 +243,7 @@ const GroupChat = () => {
     });
 
     const unsubStopTyping = onUserStopTyping(({ userId: typingUserId, group: typingGroup }) => {
-      if (typingGroup === id) {
+      if (typingGroup === id && typingUserId !== currentUserId) {
         setTypingUsers((prev) => prev.filter((name) => name !== typingUserId));
       }
     });
@@ -251,7 +252,7 @@ const GroupChat = () => {
       unsubTyping();
       unsubStopTyping();
     };
-  }, [id, onUserTyping, onUserStopTyping]);
+  }, [id, currentUserId, onUserTyping, onUserStopTyping]);
 
   const handleLeaveGroup = async () => {
     const confirmed = await showConfirm('Are you sure you want to leave this group?');
@@ -433,9 +434,9 @@ const GroupChat = () => {
   const memberCount = group.members?.length || 0;
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-[calc(100vh-3.5rem)] md:h-screen flex flex-col">
       {/* Group Header */}
-      <div className={`bg-gradient-to-r ${gradientClass} text-white px-6 py-4`}>
+      <div className={`bg-gradient-to-r ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
@@ -447,7 +448,7 @@ const GroupChat = () => {
               </svg>
             </button>
             <div>
-              <h1 className="text-2xl font-bold">{group.name}</h1>
+              <h1 className="text-lg md:text-2xl font-bold truncate max-w-[180px] md:max-w-none">{group.name}</h1>
               <p className="text-sm text-white text-opacity-90">
                 {memberCount} member{memberCount !== 1 ? 's' : ''} • {group.subject}
                 {connected && <span className="ml-2 inline-block w-2 h-2 bg-green-400 rounded-full"></span>}
@@ -677,7 +678,7 @@ const GroupChat = () => {
                   return (
                     <div key={member._id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
                       {member.profilePhoto ? (
-                        <img src={member.profilePhoto} alt={member.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
+                        <img src={getMediaUrl(member.profilePhoto)} alt={member.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-semibold text-sm">

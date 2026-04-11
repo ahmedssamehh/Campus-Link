@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
+import { getMediaUrl } from '../../utils/media';
 
 const JoinRequests = () => {
   const { showSuccess, showError } = useNotification();
@@ -254,7 +255,7 @@ const JoinRequests = () => {
                 <div className="flex items-start space-x-4 flex-1">
                   {/* User Avatar */}
                   {request.user?.profilePhoto ? (
-                    <img src={request.user.profilePhoto} alt={request.user.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
+                    <img src={getMediaUrl(request.user.profilePhoto)} alt={request.user.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
                   ) : (
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-semibold text-lg">

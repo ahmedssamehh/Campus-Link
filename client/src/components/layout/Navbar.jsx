@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import { getMediaUrl } from '../../utils/media';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -116,7 +117,7 @@ const Navbar = () => {
                   <div className="flex items-center space-x-2">
                     {user?.profilePhoto ? (
                       <img
-                        src={user.profilePhoto}
+                        src={getMediaUrl(user.profilePhoto)}
                         alt={user.name}
                         className="w-8 h-8 rounded-full object-cover border border-white/30"
                       />
@@ -202,7 +203,7 @@ const Navbar = () => {
                   <div className="flex items-center space-x-2">
                     {user?.profilePhoto ? (
                       <img
-                        src={user.profilePhoto}
+                        src={getMediaUrl(user.profilePhoto)}
                         alt={user.name}
                         className="w-8 h-8 rounded-full object-cover border border-white/30"
                       />

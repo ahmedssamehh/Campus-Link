@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getMediaUrl } from '../../utils/media';
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -17,7 +18,7 @@ const MessageBubble = ({
     : message.sender || 'Unknown';
 
   const senderPhoto = typeof message.sender === 'object'
-    ? message.sender?.profilePhoto || ''
+    ? getMediaUrl(message.sender?.profilePhoto || '')
     : '';
 
   const messageText = message.text || message.content || '';

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getMediaUrl } from '../../utils/media';
 
 const roleMeta = {
   owner: { label: 'Owner', cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
@@ -60,7 +61,7 @@ const ChatList = ({ chats, activeChat, onSelectChat, unreadMessages, lastSeenMap
             <div className="relative">
               {chat.profilePhoto ? (
                 <img
-                  src={chat.profilePhoto}
+                  src={getMediaUrl(chat.profilePhoto)}
                   alt={chat.name}
                   className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600"
                 />

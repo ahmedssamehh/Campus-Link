@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getMediaUrl } from '../../utils/media';
 
 const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
   const location = useLocation();
@@ -147,7 +148,7 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
             <div className="flex items-center space-x-3">
               {user?.profilePhoto ? (
                 <img
-                  src={user.profilePhoto}
+                  src={getMediaUrl(user.profilePhoto)}
                   alt={user.name}
                   className="w-10 h-10 rounded-full object-cover flex-shrink-0 shadow-lg border border-purple-400"
                 />
