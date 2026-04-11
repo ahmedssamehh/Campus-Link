@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSocket } from '../../context/SocketContext';
+import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 import MessageBubble from './MessageBubble';
 import { getMediaUrl } from '../../utils/media';
+import { isWithinEditWindow } from '../../utils/messageEdit';
 
 const ChatWindow = ({ chat, currentUserId, onBack }) => {
+  const { showError: notifyError } = useNotification();
   const {
     joinPrivate, sendMessage, onNewMessage, connected,
     emitTyping, emitStopTyping, onUserTyping, onUserStopTyping,
@@ -205,23 +208,28 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
     return unsub;
   }, [chat?.id, onMessageDeleted]);
 
-  // Listen for typing indicators (ignore own typing events)
+  // Listen for typing indicators — only for THIS DM (typer must be chat.id, recipient must be me)
   useEffect(() => {
     if (!chat) return;
 
+    const peerId = String(chat.id);
+    const me = String(currentUserId);
+
     const unsubTyping = onUserTyping(({ userId: typingUserId, userName, receiver }) => {
-      if (receiver && typingUserId !== currentUserId) {
-        setTypingUsers((prev) => {
-          if (prev.includes(userName)) return prev;
-          return [...prev, userName];
-        });
-      }
+      if (!receiver || String(typingUserId) === me) return;
+      if (String(receiver) !== me) return;
+      if (String(typingUserId) !== peerId) return;
+      setTypingUsers((prev) => {
+        if (prev.includes(userName)) return prev;
+        return [...prev, userName];
+      });
     });
 
     const unsubStopTyping = onUserStopTyping(({ userId: typingUserId, receiver }) => {
-      if (receiver && typingUserId !== currentUserId) {
-        setTypingUsers([]);
-      }
+      if (!receiver || String(typingUserId) === me) return;
+      if (String(receiver) !== me) return;
+      if (String(typingUserId) !== peerId) return;
+      setTypingUsers([]);
     });
 
     return () => {
@@ -280,8 +288,9 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
     }
   };
 
-  // Handle edit
+  // Handle edit (only within server-enforced window; UI hides edit after 10 min)
   const handleStartEdit = (message) => {
+    if (!isWithinEditWindow(message.createdAt)) return;
     setEditingMessage(message._id);
     setEditInput(message.content || message.text || '');
   };
@@ -298,6 +307,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
       setEditingMessage(null);
       setEditInput('');
     } catch (err) {
+      notifyError(err.message || 'Failed to edit message');
     }
   };
 

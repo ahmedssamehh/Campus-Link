@@ -6,6 +6,7 @@ import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import MessageBubble from '../../components/chat/MessageBubble';
 import { getMediaUrl } from '../../utils/media';
+import { isWithinEditWindow } from '../../utils/messageEdit';
 
 const colorClasses = {
   blue: 'from-blue-500 to-blue-600',
@@ -231,21 +232,22 @@ const GroupChat = () => {
     return unsub;
   }, [id, onMessageDeleted]);
 
-  // Listen for typing indicators (ignore own typing events)
+  // Listen for typing indicators — only for this group (room-scoped + strict id match)
   useEffect(() => {
+    const gid = String(id);
+    const me = String(currentUserId);
+
     const unsubTyping = onUserTyping(({ userId: typingUserId, userName, group: typingGroup }) => {
-      if (typingGroup === id && typingUserId !== currentUserId) {
-        setTypingUsers((prev) => {
-          if (prev.includes(userName)) return prev;
-          return [...prev, userName];
-        });
-      }
+      if (String(typingGroup) !== gid || String(typingUserId) === me) return;
+      setTypingUsers((prev) => {
+        if (prev.some((t) => String(t.userId) === String(typingUserId))) return prev;
+        return [...prev, { userId: typingUserId, userName: userName || 'Someone' }];
+      });
     });
 
     const unsubStopTyping = onUserStopTyping(({ userId: typingUserId, group: typingGroup }) => {
-      if (typingGroup === id && typingUserId !== currentUserId) {
-        setTypingUsers((prev) => prev.filter((name) => name !== typingUserId));
-      }
+      if (String(typingGroup) !== gid || String(typingUserId) === me) return;
+      setTypingUsers((prev) => prev.filter((t) => String(t.userId) !== String(typingUserId)));
     });
 
     return () => {
@@ -323,6 +325,7 @@ const GroupChat = () => {
 
   // Edit handlers
   const handleStartEdit = (message) => {
+    if (!isWithinEditWindow(message.createdAt)) return;
     setEditingMessage(message._id);
     setEditInput(message.content || message.text || '');
   };
@@ -334,7 +337,7 @@ const GroupChat = () => {
       setEditingMessage(null);
       setEditInput('');
     } catch (err) {
-      showError('Failed to edit message');
+      showError(err.message || 'Failed to edit message');
     }
   };
 
@@ -598,7 +601,7 @@ const GroupChat = () => {
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                  {typingUsers.map((t) => t.userName).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                 </span>
               </div>
             )}

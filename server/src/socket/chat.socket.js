@@ -7,6 +7,7 @@ const ChatMembership = require('../models/ChatMembership');
 const { publishMessage } = require('../services/redisPublisher');
 const { checkRateLimit, resetRateLimit } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
+const { isWithinEditWindow } = require('../constants/messaging');
 
 // Track connected users: Map<userId, Set<socketId>>
 const onlineUsers = new Map();
@@ -418,6 +419,11 @@ function initSocketServer(httpServer) {
                     return;
                 }
 
+                if (!isWithinEditWindow(message.createdAt)) {
+                    if (callback) callback({ error: 'This message can no longer be edited (10 minute limit)' });
+                    return;
+                }
+
                 // Sanitize
                 const sanitized = content
                     .replace(/</g, '&lt;')
@@ -504,7 +510,7 @@ function initSocketServer(httpServer) {
             }
         });
 
-        // ── typing indicators ────────────────────────────────
+        // ── typing indicators (scoped to group room or private DM room only)
         socket.on('typing', ({ group, receiver }) => {
             const typingData = {
                 userId,
@@ -512,10 +518,12 @@ function initSocketServer(httpServer) {
             };
 
             if (group) {
-                socket.to(group).emit('userTyping', {...typingData, group });
+                const gid = typeof group === 'object' && group?.toString ? group.toString() : String(group);
+                socket.to(gid).emit('userTyping', { ...typingData, group: gid });
             } else if (receiver) {
-                const roomId = getPrivateRoomId(userId, receiver);
-                socket.to(roomId).emit('userTyping', {...typingData, receiver });
+                const recv = typeof receiver === 'object' && receiver?.toString ? receiver.toString() : String(receiver);
+                const roomId = getPrivateRoomId(userId, recv);
+                socket.to(roomId).emit('userTyping', { ...typingData, receiver: recv });
             }
         });
 
@@ -523,10 +531,12 @@ function initSocketServer(httpServer) {
             const typingData = { userId };
 
             if (group) {
-                socket.to(group).emit('userStopTyping', {...typingData, group });
+                const gid = typeof group === 'object' && group?.toString ? group.toString() : String(group);
+                socket.to(gid).emit('userStopTyping', { ...typingData, group: gid });
             } else if (receiver) {
-                const roomId = getPrivateRoomId(userId, receiver);
-                socket.to(roomId).emit('userStopTyping', {...typingData, receiver });
+                const recv = typeof receiver === 'object' && receiver?.toString ? receiver.toString() : String(receiver);
+                const roomId = getPrivateRoomId(userId, recv);
+                socket.to(roomId).emit('userStopTyping', { ...typingData, receiver: recv });
             }
         });
 

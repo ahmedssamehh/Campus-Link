@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getMediaUrl } from '../../utils/media';
+import { isWithinEditWindow } from '../../utils/messageEdit';
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -35,6 +36,7 @@ const MessageBubble = ({
     : '');
 
   const isDeleted = message.deleted;
+  const canEditOwnMessage = isSent && isWithinEditWindow(message.createdAt);
 
   // Delivery status for sent messages (private chat)
   const getDeliveryStatus = () => {
@@ -255,6 +257,7 @@ const MessageBubble = ({
               {/* Edit/Delete for own messages */}
               {isSent && (
                 <>
+                  {canEditOwnMessage && (
                   <button
                     onClick={onStartEdit}
                     className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
@@ -264,6 +267,7 @@ const MessageBubble = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
+                  )}
                   <button
                     onClick={onDelete}
                     className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-600"

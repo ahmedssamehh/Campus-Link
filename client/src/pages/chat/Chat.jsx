@@ -106,17 +106,25 @@ const Chat = () => {
 
   return (
     <div className={`${showChatWindow ? 'h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-[calc(100vh-4rem)]' : 'h-[calc(100dvh-3.5rem)]'} md:h-[calc(100vh-4rem)] flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200`}>
-      {/* Page Header — hidden on mobile when viewing a conversation */}
-      <div className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 md:px-6 py-3 md:py-4 ${showChatWindow ? 'hidden md:block' : ''}`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
-            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Chat with your classmates</p>
+      {/* Page Header — compact; hidden on mobile when viewing a conversation */}
+      <div className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-3 md:px-6 py-2 md:py-2.5 ${showChatWindow ? 'hidden md:block' : ''}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-base md:text-lg font-bold text-gray-900 dark:text-white leading-tight">
+              Messages
+              <span className="font-normal text-gray-500 dark:text-gray-400 hidden sm:inline">
+                {' '}
+                · Chat with your classmates
+              </span>
+            </h1>
+            <p className="text-[11px] sm:hidden text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
+              Chat with your classmates
+            </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {connected ? 'Connected' : 'Disconnected'}
+          <div className="flex items-center space-x-1.5 flex-shrink-0">
+            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} title={connected ? 'Connected' : 'Disconnected'} />
+            <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
+              {connected ? 'Live' : 'Off'}
             </span>
           </div>
         </div>
