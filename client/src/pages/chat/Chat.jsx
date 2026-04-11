@@ -105,7 +105,7 @@ const Chat = () => {
   }, [setActiveView]);
 
   return (
-    <div className={`${showChatWindow ? 'h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto' : 'h-[calc(100dvh-3.5rem)]'} md:h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200`}>
+    <div className={`${showChatWindow ? 'h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-[calc(100vh-4rem)]' : 'h-[calc(100dvh-3.5rem)]'} md:h-[calc(100vh-4rem)] flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200`}>
       {/* Page Header — hidden on mobile when viewing a conversation */}
       <div className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 md:px-6 py-3 md:py-4 ${showChatWindow ? 'hidden md:block' : ''}`}>
         <div className="flex items-center justify-between">

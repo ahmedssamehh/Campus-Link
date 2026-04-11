@@ -1,42 +1,169 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import { useSocket } from '../../context/SocketContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
+import { getMediaUrl } from '../../utils/media';
+import axios from '../../api/axios';
 
 const UserLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
     <>
-      {/* Sidebar: hidden on mobile, visible on md+ */}
-      <div className="hidden md:block">
-        <Sidebar
-          isOpen={sidebarOpen}
-          onMouseEnter={() => setSidebarOpen(true)}
-          onMouseLeave={() => setSidebarOpen(false)}
-        />
-      </div>
-
-      {/* Overlay when sidebar is expanded on desktop */}
-      {sidebarOpen && (
-        <div className="hidden md:block fixed inset-0 bg-black/10 backdrop-blur-[1px] z-40 transition-all duration-300" />
-      )}
-
-      {/* Main content: no left margin on mobile, ml-20 on md+ */}
-      <div
-        className={`
-          md:ml-20
-          ${sidebarOpen ? 'md:blur-sm md:pointer-events-none' : ''}
-          transition-all duration-300
-        `}
-      >
+      <TopNavbar />
+      <div className="pt-16">
         <Outlet />
       </div>
-
-      {/* Mobile bottom navigation */}
       <MobileNav />
     </>
+  );
+};
+
+const TopNavbar = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { totalUnreadChat, totalUnreadGroups, connected, unreadAnnouncements } = useSocket();
+  const [newDiscussionCount, setNewDiscussionCount] = useState(0);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+  const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id || 'guest'}`;
+
+  useEffect(() => {
+    if (!user) { setNewDiscussionCount(0); return; }
+    if (location.pathname.startsWith('/discussion')) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+    const storedLastSeen = localStorage.getItem(discussionLastSeenKey);
+    if (!storedLastSeen) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+    let isMounted = true;
+    const fetchCount = async () => {
+      try {
+        const response = await axios.get('/discussion/questions');
+        if (!isMounted || !response.data.success) return;
+        const lastSeenTime = new Date(localStorage.getItem(discussionLastSeenKey) || storedLastSeen).getTime();
+        const count = (response.data.questions || []).filter((q) => {
+          const t = q.createdAt ? new Date(q.createdAt).getTime() : 0;
+          return t > lastSeenTime;
+        }).length;
+        setNewDiscussionCount(count);
+      } catch { if (isMounted) setNewDiscussionCount(0); }
+    };
+    fetchCount();
+    const id = setInterval(fetchCount, 60000);
+    return () => { isMounted = false; clearInterval(id); };
+  }, [location.pathname, user, discussionLastSeenKey]);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleLogout = () => { logout(); navigate('/login'); };
+
+  const navItems = [
+    { name: 'Home', path: '/home' },
+    { name: 'Chat', path: '/chat', badge: totalUnreadChat },
+    { name: 'Groups', path: '/groups', badge: totalUnreadGroups },
+    { name: 'Discussion', path: '/discussion', badge: newDiscussionCount },
+    { name: 'News', path: '/announcements', badge: unreadAnnouncements },
+    ...(isAdminOrOwner ? [{ name: 'Admin', path: '/admin' }] : []),
+  ];
+
+  const isActive = (path) => {
+    if (path === '/home') return location.pathname === '/home';
+    return location.pathname.startsWith(path);
+  };
+
+  return (
+    <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/home" className="flex items-center space-x-2.5 flex-shrink-0">
+            <img src="/logo.png" alt="Campus Link" className="w-9 h-9 rounded-lg object-cover border border-gray-200 dark:border-gray-600" />
+            <span className="text-lg font-bold text-gray-900 dark:text-white hidden lg:inline">Campus Link</span>
+          </Link>
+
+          {/* Nav links */}
+          <div className="flex items-center space-x-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {item.name}
+                {item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+
+          {/* Right side: connection + profile */}
+          <div className="flex items-center space-x-3" ref={profileRef}>
+            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} title={connected ? 'Connected' : 'Disconnected'} />
+
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              {user?.profilePhoto ? (
+                <img src={getMediaUrl(user.profilePhoto)} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600" />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">{user?.name?.charAt(0).toUpperCase()}</span>
+                </div>
+              )}
+              <svg className={`w-4 h-4 text-gray-500 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Profile dropdown */}
+            {profileOpen && (
+              <div className="absolute right-4 top-14 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                </div>
+                <Link
+                  to="/profile"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  <span>Profile</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 };
 
@@ -63,11 +190,11 @@ const MobileNav = () => {
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom">
       <div className="flex justify-around items-center h-14">
         {items.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
+          const active = location.pathname.startsWith(item.path);
           return (
             <Link key={item.path} to={item.path} className="flex flex-col items-center justify-center flex-1 py-1 relative">
               <div className="relative">
-                <svg className={`h-6 w-6 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`h-6 w-6 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.badge > 0 && (
@@ -76,7 +203,7 @@ const MobileNav = () => {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] mt-0.5 ${isActive ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+              <span className={`text-[10px] mt-0.5 ${active ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
                 {item.label}
               </span>
             </Link>

@@ -25,6 +25,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
   const [editInput, setEditInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [headerImgError, setHeaderImgError] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -83,6 +84,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
     setMessageInput('');
     setEditingMessage(null);
     setHasMore(false);
+    setHeaderImgError(false);
 
     // Join the private socket room
     joinPrivate(chat.id).catch(() => {});
@@ -377,11 +379,12 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             </button>
           )}
           <div className="relative">
-            {chat.profilePhoto ? (
+            {chat.profilePhoto && !headerImgError ? (
               <img
                 src={getMediaUrl(chat.profilePhoto)}
                 alt={chat.name}
                 className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                onError={() => setHeaderImgError(true)}
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">

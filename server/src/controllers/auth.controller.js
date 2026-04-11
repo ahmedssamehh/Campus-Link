@@ -13,6 +13,7 @@ const Announcement = require('../models/Announcement');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const ChatMembership = require('../models/ChatMembership');
+const sendEmail = require('../utils/sendEmail');
 
 const profileStorage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -192,9 +193,19 @@ exports.forgotPassword = async(req, res) => {
             expiresAt: Date.now() + (10 * 60 * 1000)
         });
 
-        // TODO: Integrate email provider (SendGrid/SMTP). For now, log in development.
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`Password reset code for ${user.email}: ${code}`);
+        try {
+            await sendEmail(
+                user.email,
+                'Campus Link - Password Reset Code',
+                `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:12px">
+                    <h2 style="color:#1e293b;margin-bottom:8px">Password Reset</h2>
+                    <p style="color:#475569;font-size:14px">You requested a password reset for your Campus Link account. Use the code below to reset your password. This code expires in 10 minutes.</p>
+                    <div style="background:#4f46e5;color:#fff;font-size:32px;letter-spacing:8px;text-align:center;padding:16px;border-radius:8px;margin:24px 0;font-weight:bold">${code}</div>
+                    <p style="color:#64748b;font-size:12px">If you didn't request this, you can safely ignore this email.</p>
+                </div>`
+            );
+        } catch (emailErr) {
+            console.error('Failed to send reset email:', emailErr.message);
         }
 
         return res.status(200).json({

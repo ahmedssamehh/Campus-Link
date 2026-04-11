@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getMediaUrl } from '../../utils/media';
 
 const sizeClasses = {
@@ -37,17 +37,19 @@ const UserAvatar = ({
   className = '',
   border = true,
 }) => {
+  const [imgError, setImgError] = useState(false);
   const sizeClass = sizeClasses[size] || sizeClasses.md;
   const borderClass = border ? 'border border-gray-300 dark:border-gray-600' : '';
   const initial = (name || '?').charAt(0).toUpperCase();
   const gradient = getGradient(name);
 
-  if (profilePhoto) {
+  if (profilePhoto && !imgError) {
     return (
       <img
         src={getMediaUrl(profilePhoto)}
         alt={name}
         className={`${sizeClass} rounded-full object-cover flex-shrink-0 ${borderClass} ${className}`}
+        onError={() => setImgError(true)}
       />
     );
   }

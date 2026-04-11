@@ -12,14 +12,16 @@ const MessageBubble = ({
 }) => {
   const [showActions, setShowActions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   const senderName = typeof message.sender === 'object'
     ? message.sender?.name || 'Unknown'
     : message.sender || 'Unknown';
 
-  const senderPhoto = typeof message.sender === 'object'
-    ? getMediaUrl(message.sender?.profilePhoto || '')
+  const rawSenderPhoto = typeof message.sender === 'object'
+    ? (message.sender?.profilePhoto || '')
     : '';
+  const senderPhoto = rawSenderPhoto ? getMediaUrl(rawSenderPhoto) : '';
 
   const messageText = message.text || message.content || '';
   const hasAttachments = message.attachments && message.attachments.length > 0;
@@ -76,6 +78,7 @@ const MessageBubble = ({
                   src={fileUrl}
                   alt={att.filename}
                   className="max-w-full max-h-48 rounded-lg cursor-pointer"
+                  onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </a>
             );
@@ -140,8 +143,8 @@ const MessageBubble = ({
       <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
         <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
           {!isSent && (
-            senderPhoto ? (
-              <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+            (senderPhoto && !avatarError) ? (
+              <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs font-semibold">{senderName.charAt(0).toUpperCase()}</span>
@@ -193,8 +196,8 @@ const MessageBubble = ({
       <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isSent ? 'flex-row-reverse space-x-reverse' : ''}`}>
         {/* Avatar */}
         {!isSent && (
-          senderPhoto ? (
-            <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+          (senderPhoto && !avatarError) ? (
+            <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" onError={() => setAvatarError(true)} />
           ) : (
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-semibold">
