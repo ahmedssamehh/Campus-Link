@@ -41,11 +41,11 @@ Replace these placeholders with real captures when publishing the portfolio.
 
 | Area | Placeholder |
 |------|-------------|
-| Login / auth | `docs/screenshots/login.png` |
-| Home dashboard | `docs/screenshots/home.png` |
-| Group chat | `docs/screenshots/chat.png` |
-| Study groups | `docs/screenshots/groups.png` |
-| Admin panel | `docs/screenshots/admin.png` |
+| Login / auth | `client/ScreenShoots/Login.png` |
+| Home dashboard | `client/ScreenShoots/home.png` |
+| Group chat | `client/ScreenShoots/chat.png` |
+| Study groups | `client/ScreenShoots/groups.png` |
+| Admin panel | `client\ScreenShoots\admin.png` |
 
 ```text
 <!-- Example markdown once images exist:
