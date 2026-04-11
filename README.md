@@ -37,7 +37,6 @@ Campus Link brings together real-time messaging, study group management, academi
 
 ## Screenshots
 
-Images are in [`client/ScreenShoots/`](client/ScreenShoots/). GitHub only **embeds** images when you use Markdown image syntax `![description](path)` — **not** backticks around a path. Use **forward slashes** in paths (backslashes do not work on GitHub).
 
 | Login | Home dashboard |
 | :---: | :---: |
@@ -51,7 +50,6 @@ Images are in [`client/ScreenShoots/`](client/ScreenShoots/). GitHub only **embe
 | :---: |
 | ![Admin panel](client/ScreenShoots/admin.png) |
 
-**If images still don’t show:** ensure the PNG files are **committed and pushed**, and filenames match exactly (e.g. `Login.png` with capital **L**).
 
 ---
 
