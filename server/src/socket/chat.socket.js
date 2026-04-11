@@ -7,7 +7,7 @@ const ChatMembership = require('../models/ChatMembership');
 const { publishMessage } = require('../services/redisPublisher');
 const { checkRateLimit, resetRateLimit } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
-const { isWithinEditWindow } = require('../constants/messaging');
+const { isWithinEditWindow, isTextMessageEditable } = require('../constants/messaging');
 
 // Track connected users: Map<userId, Set<socketId>>
 const onlineUsers = new Map();
@@ -47,9 +47,9 @@ function initSocketServer(httpServer) {
 
     const allowedOrigins = [
         ...(process.env.CLIENT_URL || '')
-            .split(',')
-            .map((o) => o.trim())
-            .filter(Boolean),
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean),
         'http://localhost:3000',
         'http://localhost:3001',
     ];
@@ -428,6 +428,11 @@ function initSocketServer(httpServer) {
                     return;
                 }
 
+                if (!isTextMessageEditable(message)) {
+                    if (callback) callback({ error: 'Only text messages can be edited' });
+                    return;
+                }
+
                 // Sanitize
                 const sanitized = content
                     .replace(/</g, '&lt;')
@@ -522,13 +527,13 @@ function initSocketServer(httpServer) {
             };
 
             if (group) {
-                const gid = typeof group === 'object' && group?.toString ? group.toString() : String(group);
-                socket.to(gid).emit('userTyping', { ...typingData, group: gid });
+                const gid = typeof group === 'object' && group ? .toString ? group.toString() : String(group);
+                socket.to(gid).emit('userTyping', {...typingData, group: gid });
             } else if (receiver) {
                 // Notify the peer via their personal room (userId) so typing works even before
                 // they join the DM room — e.g. conversation list view.
-                const recv = typeof receiver === 'object' && receiver?.toString ? receiver.toString() : String(receiver);
-                socket.to(recv).emit('userTyping', { ...typingData, receiver: recv });
+                const recv = typeof receiver === 'object' && receiver ? .toString ? receiver.toString() : String(receiver);
+                socket.to(recv).emit('userTyping', {...typingData, receiver: recv });
             }
         });
 
@@ -536,11 +541,11 @@ function initSocketServer(httpServer) {
             const typingData = { userId };
 
             if (group) {
-                const gid = typeof group === 'object' && group?.toString ? group.toString() : String(group);
-                socket.to(gid).emit('userStopTyping', { ...typingData, group: gid });
+                const gid = typeof group === 'object' && group ? .toString ? group.toString() : String(group);
+                socket.to(gid).emit('userStopTyping', {...typingData, group: gid });
             } else if (receiver) {
-                const recv = typeof receiver === 'object' && receiver?.toString ? receiver.toString() : String(receiver);
-                socket.to(recv).emit('userStopTyping', { ...typingData, receiver: recv });
+                const recv = typeof receiver === 'object' && receiver ? .toString ? receiver.toString() : String(receiver);
+                socket.to(recv).emit('userStopTyping', {...typingData, receiver: recv });
             }
         });
 

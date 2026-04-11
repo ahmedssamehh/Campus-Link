@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { getMediaUrl } from '../../utils/media';
-import { isWithinEditWindow } from '../../utils/messageEdit';
+import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
@@ -36,7 +36,8 @@ const MessageBubble = ({
     : '');
 
   const isDeleted = message.deleted;
-  const canEditOwnMessage = isSent && isWithinEditWindow(message.createdAt);
+  const canEditOwnMessage =
+    isSent && isWithinEditWindow(message.createdAt) && isTextMessageEditable(message);
 
   // Delivery status for sent messages (private chat)
   const getDeliveryStatus = () => {

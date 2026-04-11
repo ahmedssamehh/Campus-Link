@@ -365,11 +365,18 @@ exports.editMessage = async(req, res) => {
             return res.status(400).json({ success: false, message: 'Cannot edit a deleted message' });
         }
 
-        const { isWithinEditWindow } = require('../constants/messaging');
+        const { isWithinEditWindow, isTextMessageEditable } = require('../constants/messaging');
         if (!isWithinEditWindow(message.createdAt)) {
             return res.status(400).json({
                 success: false,
                 message: 'This message can no longer be edited (10 minute limit)',
+            });
+        }
+
+        if (!isTextMessageEditable(message)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Only text messages can be edited',
             });
         }
 

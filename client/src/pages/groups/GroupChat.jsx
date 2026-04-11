@@ -6,7 +6,7 @@ import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import MessageBubble from '../../components/chat/MessageBubble';
 import { getMediaUrl } from '../../utils/media';
-import { isWithinEditWindow } from '../../utils/messageEdit';
+import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const colorClasses = {
   blue: 'from-blue-500 to-blue-600',
@@ -325,7 +325,7 @@ const GroupChat = () => {
 
   // Edit handlers
   const handleStartEdit = (message) => {
-    if (!isWithinEditWindow(message.createdAt)) return;
+    if (!isWithinEditWindow(message.createdAt) || !isTextMessageEditable(message)) return;
     setEditingMessage(message._id);
     setEditInput(message.content || message.text || '');
   };

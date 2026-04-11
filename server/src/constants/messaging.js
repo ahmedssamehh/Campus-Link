@@ -6,7 +6,17 @@ function isWithinEditWindow(createdAt) {
     return Date.now() - new Date(createdAt).getTime() <= MESSAGE_EDIT_WINDOW_MS;
 }
 
+/** Only plain text messages may be edited (not files, images, or system messages). */
+function isTextMessageEditable(message) {
+    if (!message) return false;
+    const type = message.type || 'text';
+    if (type !== 'text') return false;
+    if (message.attachments && message.attachments.length > 0) return false;
+    return true;
+}
+
 module.exports = {
     MESSAGE_EDIT_WINDOW_MS,
     isWithinEditWindow,
+    isTextMessageEditable,
 };

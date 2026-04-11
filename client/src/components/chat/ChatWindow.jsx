@@ -4,7 +4,7 @@ import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 import MessageBubble from './MessageBubble';
 import { getMediaUrl } from '../../utils/media';
-import { isWithinEditWindow } from '../../utils/messageEdit';
+import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const ChatWindow = ({ chat, currentUserId, onBack }) => {
   const { showError: notifyError } = useNotification();
@@ -290,7 +290,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
 
   // Handle edit (only within server-enforced window; UI hides edit after 10 min)
   const handleStartEdit = (message) => {
-    if (!isWithinEditWindow(message.createdAt)) return;
+    if (!isWithinEditWindow(message.createdAt) || !isTextMessageEditable(message)) return;
     setEditingMessage(message._id);
     setEditInput(message.content || message.text || '');
   };
