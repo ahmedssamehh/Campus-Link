@@ -7,7 +7,7 @@ import { getMediaUrl } from '../../utils/media';
 import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const ChatWindow = ({ chat, currentUserId, onBack }) => {
-  const { showError: notifyError } = useNotification();
+  const { showError: notifyError, showSuccess: notifySuccess } = useNotification();
   const {
     joinPrivate, sendMessage, onNewMessage, connected,
     emitTyping, emitStopTyping, onUserTyping, onUserStopTyping,
@@ -29,11 +29,21 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [headerImgError, setHeaderImgError] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
+  const headerMenuRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    const handleDoc = (e) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target)) setHeaderMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleDoc);
+    return () => document.removeEventListener('mousedown', handleDoc);
+  }, []);
 
   // Auto-scroll to bottom only for new messages at bottom
   const scrollToBottom = useCallback((behavior = 'smooth') => {
@@ -88,6 +98,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
     setEditingMessage(null);
     setHasMore(false);
     setHeaderImgError(false);
+    setHeaderMenuOpen(false);
 
     // Join the private socket room
     joinPrivate(chat.id).catch(() => {});
@@ -335,6 +346,17 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
   };
 
   // Handle typing indicator
+  const handleCopyPeerEmail = async () => {
+    if (!chat?.email) return;
+    try {
+      await navigator.clipboard.writeText(chat.email);
+      notifySuccess('Email copied to clipboard');
+      setHeaderMenuOpen(false);
+    } catch {
+      notifyError('Could not copy email');
+    }
+  };
+
   const handleInputChange = (e) => {
     setMessageInput(e.target.value);
 
@@ -414,23 +436,67 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full mr-2 ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150">
-            <svg
-              className="h-6 w-6 text-gray-600 dark:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="flex items-center space-x-2" ref={headerMenuRef}>
+          <div
+            className={`w-2 h-2 rounded-full mr-1 ${connected ? 'bg-green-500' : 'bg-red-500'}`}
+            title={connected ? 'Connected' : 'Disconnected'}
+          />
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setHeaderMenuOpen((o) => !o)}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150"
+              aria-expanded={headerMenuOpen}
+              aria-haspopup="menu"
+              aria-label="Conversation options"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-              />
-            </svg>
-          </button>
+              <svg
+                className="h-6 w-6 text-gray-600 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                />
+              </svg>
+            </button>
+            {headerMenuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-gray-200 bg-white py-2 text-left shadow-lg dark:border-gray-700 dark:bg-gray-800 z-50"
+                role="menu"
+              >
+                <div className="px-4 pb-2 border-b border-gray-100 dark:border-gray-700">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Contact</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate mt-0.5">{chat.name}</p>
+                  {chat.email && (
+                    <div className="mt-2 flex items-start gap-2 min-w-0">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 break-all flex-1">{chat.email}</p>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={handleCopyPeerEmail}
+                        className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  )}
+                  {chat.role && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 capitalize">Role: {chat.role}</p>
+                  )}
+                </div>
+                <div className="px-4 pt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {chat.isOnline ? 'Active now' : 'Offline'}
+                  <span className="mx-1.5">·</span>
+                  {connected ? 'Live connection' : 'Reconnecting…'}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

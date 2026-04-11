@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { getMediaUrl } from '../../utils/media';
 
 const roleMeta = {
@@ -26,6 +26,8 @@ const ChatList = ({
   unreadMessages,
   lastSeenMap,
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
   const formatLastSeen = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -39,20 +41,40 @@ const ChatList = ({
     return d.toLocaleDateString();
   };
 
+  const filteredChats = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return chats;
+    return chats.filter((c) => {
+      const name = (c.name || '').toLowerCase();
+      const email = (c.email || '').toLowerCase();
+      const preview = (c.lastMessage || '').toLowerCase();
+      return name.includes(q) || email.includes(q) || preview.includes(q);
+    });
+  }, [chats, searchQuery]);
+
   return (
     <div className="h-full flex flex-col">
       {/* Search Bar */}
       <div className="p-4 border-b dark:border-gray-700">
         <input
-          type="text"
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search conversations..."
+          autoComplete="off"
+          aria-label="Search conversations"
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         />
       </div>
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {chats.map((chat) => {
+        {filteredChats.length === 0 && chats.length > 0 && (
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-10 px-4">
+            No conversations match your search.
+          </p>
+        )}
+        {filteredChats.map((chat) => {
           const chatId = String(chat.id);
           const unreadCount = unreadMessages?.[chat.id] || unreadMessages?.[chatId] || 0;
           const previewMsg = chat.lastMessage;
