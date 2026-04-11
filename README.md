@@ -37,21 +37,21 @@ Campus Link brings together real-time messaging, study group management, academi
 
 ## Screenshots
 
-Replace these placeholders with real captures when publishing the portfolio.
+Images are in [`client/ScreenShoots/`](client/ScreenShoots/). GitHub only **embeds** images when you use Markdown image syntax `![description](path)` — **not** backticks around a path. Use **forward slashes** in paths (backslashes do not work on GitHub).
 
-| Area | Placeholder |
-|------|-------------|
-| Login / auth | `client/ScreenShoots/Login.png` |
-| Home dashboard | `client/ScreenShoots/home.png` |
-| Group chat | `client/ScreenShoots/chat.png` |
-| Study groups | `client/ScreenShoots/groups.png` |
-| Admin panel | `client\ScreenShoots\admin.png` |
+| Login | Home dashboard |
+| :---: | :---: |
+| ![Login / auth](client/ScreenShoots/Login.png) | ![Home dashboard](client/ScreenShoots/home.png) |
 
-```text
-<!-- Example markdown once images exist:
-![Home](docs/screenshots/home.png)
--->
-```
+| Group chat | Study groups |
+| :---: | :---: |
+| ![Group chat](client/ScreenShoots/chat.png) | ![Study groups](client/ScreenShoots/groups.png) |
+
+| Admin panel |
+| :---: |
+| ![Admin panel](client/ScreenShoots/admin.png) |
+
+**If images still don’t show:** ensure the PNG files are **committed and pushed**, and filenames match exactly (e.g. `Login.png` with capital **L**).
 
 ---
 
