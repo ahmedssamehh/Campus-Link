@@ -169,30 +169,69 @@ const TopNavbar = () => {
 
 const MobileNav = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { totalUnreadChat, totalUnreadGroups } = useSocket();
+  const [newDiscussionCount, setNewDiscussionCount] = useState(0);
 
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+  const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id || 'guest'}`;
+
+  useEffect(() => {
+    if (!user) {
+      setNewDiscussionCount(0);
+      return;
+    }
+    if (location.pathname.startsWith('/discussion')) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+    const storedLastSeen = localStorage.getItem(discussionLastSeenKey);
+    if (!storedLastSeen) {
+      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
+      setNewDiscussionCount(0);
+      return;
+    }
+    let isMounted = true;
+    const fetchCount = async () => {
+      try {
+        const response = await axios.get('/discussion/questions');
+        if (!isMounted || !response.data.success) return;
+        const lastSeenTime = new Date(localStorage.getItem(discussionLastSeenKey) || storedLastSeen).getTime();
+        const count = (response.data.questions || []).filter((q) => {
+          const t = q.createdAt ? new Date(q.createdAt).getTime() : 0;
+          return t > lastSeenTime;
+        }).length;
+        setNewDiscussionCount(count);
+      } catch {
+        if (isMounted) setNewDiscussionCount(0);
+      }
+    };
+    fetchCount();
+    const id = setInterval(fetchCount, 60000);
+    return () => {
+      isMounted = false;
+      clearInterval(id);
+    };
+  }, [location.pathname, user, discussionLastSeenKey]);
 
   const hiddenOnPaths = ['/groups/'];
   const isHidden = hiddenOnPaths.some((p) => location.pathname.startsWith(p) && location.pathname !== '/groups');
   if (isHidden) return null;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const items = [
     { path: '/home', label: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { path: '/chat', label: 'Chat', badge: totalUnreadChat, icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
     { path: '/groups', label: 'Groups', badge: totalUnreadGroups, icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+    {
+      path: '/discussion',
+      label: 'Discussion',
+      badge: newDiscussionCount,
+      icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
+    },
     ...(isAdminOrOwner ? [{ path: '/admin', label: 'Admin', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }] : []),
     { path: '/profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ];
-
-  const logoutIcon = 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1';
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom">
@@ -217,16 +256,6 @@ const MobileNav = () => {
             </Link>
           );
         })}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center flex-1 min-w-0 py-1 text-red-600 dark:text-red-400"
-        >
-          <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={logoutIcon} />
-          </svg>
-          <span className="text-[9px] sm:text-[10px] mt-0.5 font-medium">Logout</span>
-        </button>
       </div>
     </nav>
   );
