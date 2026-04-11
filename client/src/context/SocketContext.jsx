@@ -155,7 +155,12 @@ export const SocketProvider = ({ children }) => {
             setConnected(false);
         });
 
-        // Track online users (skip state update if already in the correct state)
+        // Receive full online users list on connect
+        socket.on('onlineUsersList', (userIds) => {
+            setOnlineUsers(new Set(userIds));
+        });
+
+        // Track online users incrementally
         socket.on('userOnline', ({ userId }) => {
             setOnlineUsers((prev) => {
                 if (prev.has(userId)) return prev;

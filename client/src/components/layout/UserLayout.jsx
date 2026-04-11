@@ -9,7 +9,7 @@ const UserLayout = () => {
   return (
     <>
       <TopNavbar />
-      <div className="pt-16">
+      <div className="md:pt-16">
         <Outlet />
       </div>
       <MobileNav />

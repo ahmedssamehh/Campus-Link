@@ -132,7 +132,11 @@ function initSocketServer(httpServer) {
             logger.error('Auto-join groups error:', err.message);
         });
 
-        // Broadcast online status with lastSeen
+        // Send the full list of currently online users to the newly connected client
+        const onlineUserIds = Array.from(onlineUsers.keys());
+        socket.emit('onlineUsersList', onlineUserIds);
+
+        // Broadcast online status to everyone else
         io.emit('userOnline', { userId, name: socket.user.name });
 
         // Deliver pending messages (mark as delivered for user who just came online)
