@@ -1,4 +1,5 @@
 // src/controllers/auth.controller.js
+const logger = require('../utils/logger');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
@@ -45,9 +46,7 @@ exports.profileUploadMiddleware = profileUpload.single('profilePhoto');
 
 const getAuthUserId = (req) => (req.user && (req.user._id || req.user.id)) || null;
 
-// In-memory reset code store for lightweight password reset flow.
-// key: email, value: { code, expiresAt }
-const passwordResetCodes = new Map();
+const RESET_CODE_TTL_MS = 10 * 60 * 1000;
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -74,6 +73,7 @@ exports.register = async(req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
+            logger.warn('auth.register.duplicate_email');
             return res.status(400).json({
                 success: false,
                 message: 'User with this email already exists'
@@ -91,6 +91,8 @@ exports.register = async(req, res) => {
         // Save activity record
         Activity.create({ type: 'user', name: user.name, action: 'joined the platform', date: user.createdAt }).catch(() => {});
 
+        logger.info('auth.register.success', { userId: String(user._id) });
+
         res.status(201).json({
             success: true,
             message: 'User registered successfully',
@@ -103,7 +105,7 @@ exports.register = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Register error:', error);
+        logger.error('auth.register.error', { message: error.message });
         res.status(500).json({
             success: false,
             message: 'Error registering user',
@@ -130,6 +132,7 @@ exports.login = async(req, res) => {
         // Find user and include password
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
+            logger.warn('auth.login.failed', { reason: 'invalid_credentials' });
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -139,6 +142,7 @@ exports.login = async(req, res) => {
         // Check password
         const isPasswordValid = await user.comparePassword(password);
         if (!isPasswordValid) {
+            logger.warn('auth.login.failed', { reason: 'invalid_credentials' });
             return res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -147,6 +151,8 @@ exports.login = async(req, res) => {
 
         // Generate token
         const token = generateToken(user._id);
+
+        logger.info('auth.login.success', { userId: String(user._id) });
 
         res.status(200).json({
             success: true,
@@ -161,7 +167,7 @@ exports.login = async(req, res) => {
             }
         });
     } catch (error) {
-        console.error('Login error:', error);
+        logger.error('auth.login.error', { message: error.message });
         res.status(500).json({
             success: false,
             message: 'Error logging in',
@@ -188,10 +194,9 @@ exports.forgotPassword = async(req, res) => {
         }
 
         const code = crypto.randomInt(100000, 1000000).toString();
-        passwordResetCodes.set(user.email, {
-            code,
-            expiresAt: Date.now() + (10 * 60 * 1000)
-        });
+        user.resetCode = code;
+        user.resetCodeExpires = new Date(Date.now() + RESET_CODE_TTL_MS);
+        await user.save();
 
         try {
             await sendEmail(
@@ -205,7 +210,10 @@ exports.forgotPassword = async(req, res) => {
                 </div>`
             );
         } catch (emailErr) {
-            console.error('Failed to send reset email:', emailErr.message);
+            logger.error('auth.forgot_password.email_failed', { message: emailErr.message });
+            await User.findByIdAndUpdate(user._id, {
+                $unset: { resetCode: 1, resetCodeExpires: 1 },
+            });
         }
 
         return res.status(200).json({
@@ -213,7 +221,7 @@ exports.forgotPassword = async(req, res) => {
             message: 'If this email exists, a reset code has been sent.'
         });
     } catch (error) {
-        console.error('Forgot password error:', error);
+        logger.error('auth.forgot_password.error', { message: error.message });
         return res.status(500).json({
             success: false,
             message: 'Error requesting password reset',
@@ -230,32 +238,40 @@ exports.resetPassword = async(req, res) => {
         const { email, code, newPassword } = req.body;
         const normalizedEmail = String(email).toLowerCase().trim();
 
-        const record = passwordResetCodes.get(normalizedEmail);
-        if (!record || record.expiresAt < Date.now() || record.code !== String(code)) {
+        const user = await User.findOne({ email: normalizedEmail }).select(
+            '+password +resetCode +resetCodeExpires'
+        );
+        if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid or expired reset code'
+                message: 'Invalid or expired reset code',
             });
         }
 
-        const user = await User.findOne({ email: normalizedEmail }).select('+password');
-        if (!user) {
-            return res.status(404).json({
+        const submitted = String(code).trim();
+        const expired =
+            !user.resetCodeExpires || user.resetCodeExpires.getTime() < Date.now();
+        const mismatch = !user.resetCode || user.resetCode !== submitted;
+
+        if (expired || mismatch) {
+            return res.status(400).json({
                 success: false,
-                message: 'User not found'
+                message: 'Invalid or expired reset code',
             });
         }
 
         user.password = newPassword;
         await user.save();
-        passwordResetCodes.delete(normalizedEmail);
+        await User.updateOne({ _id: user._id }, { $unset: { resetCode: 1, resetCodeExpires: 1 } });
+
+        logger.info('auth.password_reset.success', { userId: String(user._id) });
 
         return res.status(200).json({
             success: true,
-            message: 'Password reset successfully'
+            message: 'Password reset successfully',
         });
     } catch (error) {
-        console.error('Reset password error:', error);
+        logger.error('auth.password_reset.error', { message: error.message });
         return res.status(500).json({
             success: false,
             message: 'Error resetting password',

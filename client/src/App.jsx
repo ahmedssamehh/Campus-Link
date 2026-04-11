@@ -7,6 +7,7 @@ import MessageToast from './components/common/MessageToast';
 import UserLayout from './components/layout/UserLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
+import PageLoader from './components/ui/PageLoader';
 
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
@@ -28,14 +29,7 @@ const JoinRequests = lazy(() => import('./pages/admin/JoinRequests'));
 const ActivityPage = lazy(() => import('./pages/admin/ActivityPage'));
 
 function LoadingFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading...</p>
-      </div>
-    </div>
-  );
+  return <PageLoader message="Loading Campus Link…" />;
 }
 
 function AppContent() {

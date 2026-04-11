@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import EmptyState from '../ui/EmptyState';
+import { SkeletonAnnouncementCard } from '../ui/Skeleton';
 
 const Announcements = ({ announcements, loading, unreadCount }) => {
   // Format relative time
@@ -17,10 +19,11 @@ const Announcements = ({ announcements, loading, unreadCount }) => {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Latest Announcements</h2>
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-shadow duration-200">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">Latest Announcements</h2>
+        <div className="space-y-3" aria-busy="true" aria-label="Loading announcements">
+          <SkeletonAnnouncementCard />
+          <SkeletonAnnouncementCard />
         </div>
       </div>
     );
@@ -28,12 +31,12 @@ const Announcements = ({ announcements, loading, unreadCount }) => {
 
   if (!announcements || announcements.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Latest Announcements</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Latest Announcements</h2>
           <Link
             to="/announcements"
-            className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium flex items-center gap-1"
+            className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium inline-flex items-center gap-1 transition-colors duration-150 self-start sm:self-auto"
           >
             See All
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,14 +44,26 @@ const Announcements = ({ announcements, loading, unreadCount }) => {
             </svg>
           </Link>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No announcements yet</p>
+        <EmptyState
+          title="No announcements yet"
+          description="When your groups post updates, they will appear here. You can also open the full announcements page anytime."
+          icon="📣"
+          action={
+            <Link
+              to="/announcements"
+              className="inline-flex items-center justify-center rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2.5 transition-colors duration-200 w-full sm:w-auto"
+            >
+              Browse announcements
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-shadow duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Latest Announcements</h2>
           {unreadCount > 0 && (

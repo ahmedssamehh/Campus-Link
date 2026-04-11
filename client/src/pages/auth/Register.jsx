@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AlertBanner from '../../components/ui/AlertBanner';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -102,8 +103,8 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 py-10 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-md transition-shadow duration-300 hover:shadow-2xl">
         <div className="text-center mb-8">
           <img
             src="/logo.png"
@@ -136,8 +137,8 @@ const Register = () => {
           <>
             {/* API Error Message */}
             {apiError && (
-              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md mb-4">
-                {apiError}
+              <div className="mb-4">
+                <AlertBanner variant="error">{apiError}</AlertBanner>
               </div>
             )}
 

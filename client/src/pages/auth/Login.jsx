@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AlertBanner from '../../components/ui/AlertBanner';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -81,8 +82,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-10 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-md transition-shadow duration-300 hover:shadow-2xl">
         <div className="text-center mb-8">
           <img
             src="/logo.png"
@@ -99,8 +100,8 @@ const Login = () => {
 
         {/* API Error Message */}
         {apiError && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md mb-4">
-            {apiError}
+          <div className="mb-4">
+            <AlertBanner variant="error">{apiError}</AlertBanner>
           </div>
         )}
 
@@ -116,9 +117,11 @@ const Login = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
+              aria-invalid={errors.email ? 'true' : 'false'}
               className={`w-full px-4 py-3 border ${
                 errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white min-h-[44px]`}
               placeholder="Enter your email"
               disabled={isLoading}
             />
@@ -138,9 +141,11 @@ const Login = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="current-password"
+              aria-invalid={errors.password ? 'true' : 'false'}
               className={`w-full px-4 py-3 border ${
                 errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white min-h-[44px]`}
               placeholder="Enter your password"
               disabled={isLoading}
             />
@@ -172,8 +177,9 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-semibold ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            aria-busy={isLoading}
+            className={`w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 active:scale-[0.99] transition duration-200 font-semibold min-h-[48px] ${
+              isLoading ? 'opacity-60 cursor-not-allowed' : ''
             }`}
           >
             {isLoading ? (

@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const logger = require('./utils/logger');
+const requestLogger = require('./middleware/requestLogger');
+const { captureException } = require('./instrumentation/sentry');
 
 // ─── Allowed Origins ─────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -71,6 +73,12 @@ app.use('/api', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Request logging (API routes only)
+app.use((req, res, next) => {
+    if (!req.originalUrl.startsWith('/api')) return next();
+    return requestLogger(req, res, next);
+});
+
 // ─── 5. Static files ────────────────────────────────────────────────────────
 app.use('/uploads', express.static(uploadsDir));
 
@@ -100,8 +108,11 @@ app.use((err, req, res, _next) => {
         return res.status(403).json({ success: false, message: err.message });
     }
 
-    logger.error(err.message, { stack: err.stack, url: req.originalUrl, method: req.method });
     const statusCode = err.statusCode || 500;
+    logger.error(err.message, { stack: err.stack, url: req.originalUrl, method: req.method, statusCode });
+    if (statusCode >= 500) {
+        captureException(err, { url: req.originalUrl, method: req.method });
+    }
     res.status(statusCode).json({
         success: false,
         message: process.env.NODE_ENV === 'production'

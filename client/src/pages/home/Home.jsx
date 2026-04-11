@@ -7,6 +7,8 @@ import WelcomeCard from '../../components/home/WelcomeCard';
 import StatsCard from '../../components/home/StatsCard';
 import Announcements from '../../components/home/Announcements';
 import QuickActions from '../../components/home/QuickActions';
+import AlertBanner from '../../components/ui/AlertBanner';
+import { SkeletonStatsCard } from '../../components/ui/Skeleton';
 
 const Home = () => {
   const { user } = useAuth();
@@ -19,12 +21,15 @@ const Home = () => {
     pendingRequests: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [announcementsError, setAnnouncementsError] = useState('');
 
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
+      setStatsError('');
       const userId = user?._id || user?.id;
 
       // Fetch groups to count user's memberships
@@ -48,6 +53,11 @@ const Home = () => {
         pendingRequests: pendingCount,
       });
     } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'We could not load your overview. Pull to refresh or try again shortly.';
+      setStatsError(typeof msg === 'string' ? msg : 'Something went wrong loading stats.');
     } finally {
       setStatsLoading(false);
     }
@@ -60,11 +70,17 @@ const Home = () => {
   const fetchAnnouncements = useCallback(async () => {
     try {
       setAnnouncementsLoading(true);
+      setAnnouncementsError('');
       const response = await axios.get('/announcements/latest');
       if (response.data.success) {
         setAnnouncements(response.data.announcements);
       }
     } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'Announcements could not be loaded. You can still browse from the menu.';
+      setAnnouncementsError(typeof msg === 'string' ? msg : 'Failed to load announcements.');
     } finally {
       setAnnouncementsLoading(false);
     }
@@ -129,10 +145,29 @@ const Home = () => {
         {/* Stats Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Overview</h2>
-          <div className={`grid grid-cols-1 md:grid-cols-${isAdminOrOwner ? '3' : '2'} gap-6`}>
+          {statsError && (
+            <div className="mb-4">
+              <AlertBanner variant="error">{statsError}</AlertBanner>
+            </div>
+          )}
+          <div
+            className={
+              isAdminOrOwner
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
+                : 'grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'
+            }
+          >
+            {statsLoading ? (
+              <>
+                <SkeletonStatsCard />
+                <SkeletonStatsCard />
+                {isAdminOrOwner && <SkeletonStatsCard />}
+              </>
+            ) : (
+              <>
             <StatsCard
               title="Study Groups"
-              value={statsLoading ? '…' : stats.studyGroups}
+              value={stats.studyGroups}
               subtitle="Active memberships"
               color="blue"
               icon={
@@ -148,7 +183,7 @@ const Home = () => {
             />
             <StatsCard
               title="Unread Messages"
-              value={statsLoading ? '…' : stats.unreadMessages}
+              value={stats.unreadMessages}
               subtitle="From all chats"
               color="green"
               icon={
@@ -165,7 +200,7 @@ const Home = () => {
             {isAdminOrOwner && (
               <StatsCard
                 title="Pending Requests"
-                value={statsLoading ? '…' : stats.pendingRequests}
+                value={stats.pendingRequests}
                 subtitle="Awaiting approval"
                 color="orange"
                 icon={
@@ -179,6 +214,8 @@ const Home = () => {
                   </svg>
                 }
               />
+            )}
+              </>
             )}
           </div>
         </div>
@@ -236,6 +273,11 @@ const Home = () => {
 
         {/* Announcements Section */}
         <div className="mb-8">
+          {announcementsError && (
+            <div className="mb-4">
+              <AlertBanner variant="error">{announcementsError}</AlertBanner>
+            </div>
+          )}
           <Announcements 
             announcements={announcements} 
             loading={announcementsLoading}

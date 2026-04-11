@@ -11,8 +11,12 @@ A real-time collaborative academic platform for university students to communica
 ## Table of Contents
 
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Challenges & Solutions](#challenges--solutions)
+- [Monitoring & Logging](#monitoring--logging)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
@@ -27,7 +31,27 @@ A real-time collaborative academic platform for university students to communica
 
 ## Overview
 
-Campus Link brings together real-time messaging, study group management, academic discussions, and announcements into a single platform built for university environments. It features role-based access control (user, admin, owner), real-time WebSocket communication, and a modern responsive UI.
+Campus Link brings together real-time messaging, study group management, academic discussions, and announcements into a single platform built for university environments. It features role-based access control (user, admin, owner), real-time WebSocket communication, and a responsive UI built with Tailwind CSS (mobile-first layouts with `sm` / `md` / `lg` / `xl` breakpoints).
+
+---
+
+## Screenshots
+
+Replace these placeholders with real captures when publishing the portfolio.
+
+| Area | Placeholder |
+|------|-------------|
+| Login / auth | `docs/screenshots/login.png` |
+| Home dashboard | `docs/screenshots/home.png` |
+| Group chat | `docs/screenshots/chat.png` |
+| Study groups | `docs/screenshots/groups.png` |
+| Admin panel | `docs/screenshots/admin.png` |
+
+```text
+<!-- Example markdown once images exist:
+![Home](docs/screenshots/home.png)
+-->
+```
 
 ---
 
@@ -90,6 +114,7 @@ Campus Link brings together real-time messaging, study group management, academi
 | express-rate-limit | API rate limiting |
 | Joi | Request validation |
 | Winston | Structured logging |
+| @sentry/node (optional) | Server error tracking when `SENTRY_DSN` is set |
 
 ### Frontend
 | Technology | Purpose |
@@ -99,6 +124,73 @@ Campus Link brings together real-time messaging, study group management, academi
 | TailwindCSS | Styling |
 | Axios | HTTP client |
 | Socket.io-client | Real-time events |
+| @sentry/react (optional) | Client error tracking when `REACT_APP_SENTRY_DSN` is set |
+
+---
+
+## Architecture
+
+The system splits **static UI** and **dynamic API + realtime** so each layer can scale and deploy independently.
+
+```mermaid
+flowchart LR
+  subgraph client [Vercel - React SPA]
+    UI[React 18 + React Router]
+    HTTP[Axios REST calls]
+    WS[Socket.io client]
+  end
+
+  subgraph railway [Railway - Node service]
+    API[Express REST API]
+    IO[Socket.io server]
+    Worker[Chat worker + Redis publisher]
+  end
+
+  subgraph data [Data layer]
+    DB[(MongoDB Atlas)]
+    Redis[(Redis)]
+  end
+
+  UI --> HTTP
+  UI --> WS
+  HTTP --> API
+  WS --> IO
+  API --> DB
+  IO --> Worker
+  Worker --> Redis
+  Worker --> DB
+```
+
+- **REST** handles CRUD, auth, uploads, and pagination. **Socket.io** handles low-latency chat, typing, presence, and announcement fan-out. **Redis** pub/sub lets multiple server instances share message processing when horizontally scaled.
+
+---
+
+## Challenges & Solutions
+
+### CORS (browser → API)
+
+Browsers enforce the Same-Origin Policy. The React app (e.g. `*.vercel.app`) must be explicitly allowed on the Express `cors` middleware and on the Socket.io server. The backend accepts a comma-separated `CLIENT_URL` list and a pattern for Vercel preview URLs so previews and production both work without manual deploys per branch.
+
+### Realtime at scale
+
+Single-server Socket.io is simple; multiple instances require a **shared adapter** or an **out-of-process message bus**. This project uses **Redis** to publish inbound chat payloads so any worker can persist and emit, with a **single-server fallback** when Redis is unavailable. Client-side **deduplication** (`clientMessageId`) and **rate limiting** reduce duplicate and abusive traffic.
+
+### Split deployments
+
+The frontend only needs a known API URL and socket URL at build/runtime; the backend needs matching **JWT secret**, **MongoDB URI**, and **allowed origins**. Keeping environment parity between Vercel and Railway avoids “works locally, fails in prod” issues.
+
+---
+
+## Monitoring & Logging
+
+| Layer | What runs |
+|-------|-----------|
+| **HTTP** | Per-request logging for `/api/*` (method, path, status, duration) via Winston |
+| **Errors** | Global Express handler logs stack traces; **Sentry** captures 5xx exceptions when `SENTRY_DSN` is set |
+| **Process** | `unhandledRejection` / `uncaughtException` forwarded to Sentry when configured |
+| **Auth** | Structured events: registration success, login success, failed login (no PII) |
+| **Chat** | Structured `chat.message.sent` after successful send (scope + user id only) |
+| **Client** | Optional `@sentry/react` when `REACT_APP_SENTRY_DSN` is set in Vercel |
 
 ---
 
@@ -115,7 +207,7 @@ Campus-Link/
 │       │   ├── discussion/     # QuestionCard, AnswerCard
 │       │   ├── home/           # Dashboard widgets
 │       │   ├── layout/         # Navbar, Sidebar, AdminSidebar
-│       │   └── ui/             # ConfirmModal
+│       │   └── ui/             # ConfirmModal, PageLoader, EmptyState, Skeleton, AlertBanner
 │       ├── context/            # Auth, Socket, Notification, Theme
 │       ├── pages/              # 18 page components
 │       └── App.jsx             # Root with React.lazy routing
@@ -187,6 +279,15 @@ Create a `.env` file in the `server/` directory. See `.env.example` for the temp
 | `REDIS_URL` | Redis connection string (optional, falls back to single-server mode) |
 | `EMAIL_USER` | Gmail address for sending emails |
 | `EMAIL_PASS` | Gmail App Password |
+| `SENTRY_DSN` | (Optional) Sentry DSN for the Node server |
+| `SENTRY_RELEASE` | (Optional) Release string, e.g. `campus-link-server@1.0.0` |
+
+**Client (Vercel)** — see `client/.env.example`:
+
+| Variable | Description |
+|---|---|
+| `REACT_APP_SENTRY_DSN` | (Optional) Browser SDK DSN |
+| `REACT_APP_SENTRY_RELEASE` | (Optional) Release string for the SPA build |
 
 ---
 
@@ -286,15 +387,18 @@ Create a `.env` file in the `server/` directory. See `.env.example` for the temp
 
 ## Deployment
 
-Campus Link is configured for deployment on **Render.com**:
+Typical production layout (also adaptable to Render or other hosts):
 
-- **Frontend** — Static Site (React build) with `/*` rewrite for client-side routing
-- **Backend** — Web Service (Node.js) with environment variables
-- **Redis** — Render Key Value store
-- **Database** — MongoDB Atlas with `0.0.0.0/0` whitelist for dynamic IPs
-- **SSL** — Free automatic HTTPS via Render
+| Service | Platform | Role |
+|---------|----------|------|
+| **Frontend** | **Vercel** | Build `client` with `npm run build`; set env vars; SPA rewrites for client routing |
+| **API + WebSockets** | **Railway** (or similar) | Run `server` with `PORT` from the host, `CLIENT_URL` pointing at the Vercel domain(s) |
+| **Database** | **MongoDB Atlas** | Network access rules for Railway (and dev IPs as needed) |
+| **Redis** | Managed Redis URL | Optional but recommended for multi-instance realtime |
 
-See the deployment plan in `.cursor/plans/` for detailed setup instructions.
+**Checklist:** `CLIENT_URL` matches the live frontend origin(s); JWT and Mongo URIs are production-only; upload directory or object storage matches your hosting model; Sentry DSNs added if you use error tracking.
+
+See `server/.env.example` and `client/.env.example` for variable names.
 
 ---
 

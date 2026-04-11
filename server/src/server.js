@@ -1,4 +1,7 @@
 require('dotenv').config();
+const { initSentry, captureException } = require('./instrumentation/sentry');
+initSentry();
+
 const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
@@ -10,10 +13,12 @@ const PORT = process.env.PORT || 5000;
 
 process.on('unhandledRejection', (err) => {
     logger.error('Unhandled Rejection: %s', err.message);
+    captureException(err, { source: 'unhandledRejection' });
 });
 
 process.on('uncaughtException', (err) => {
     logger.error('Uncaught Exception: %s', err.message);
+    captureException(err, { source: 'uncaughtException' });
 });
 
 // Start the HTTP server immediately so Railway health checks pass

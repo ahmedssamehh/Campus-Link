@@ -257,6 +257,10 @@ function initSocketServer(httpServer) {
                 }
 
                 if (callback) callback({ success: true });
+                logger.info('chat.message.sent', {
+                    scope: group ? 'group' : 'private',
+                    userId: String(userId),
+                });
             } catch (err) {
                 logger.error('sendMessage error:', err.message);
                 if (callback) callback({ error: 'Failed to send message' });
