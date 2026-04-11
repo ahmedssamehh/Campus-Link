@@ -22,6 +22,11 @@ const MessageBubble = ({
     : '';
 
   const messageText = message.text || message.content || '';
+  const hasAttachments = message.attachments && message.attachments.length > 0;
+  const allAttachmentsAreImages = hasAttachments && message.attachments.every(
+    (att) => att.mimetype && att.mimetype.startsWith('image/')
+  );
+  const isImageOnlyMessage = allAttachmentsAreImages && (message.type === 'file' || !messageText || messageText === message.attachments[0]?.filename || /^\d+ files?$/.test(messageText));
 
   const messageTime = message.time || (message.createdAt
     ? new Date(message.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
@@ -205,13 +210,15 @@ const MessageBubble = ({
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1">{senderName}</p>
           )}
           <div
-            className={`px-4 py-2 rounded-lg ${
-              isSent
-                ? 'bg-blue-600 text-white rounded-br-none'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'
+            className={`rounded-lg ${
+              isImageOnlyMessage
+                ? 'overflow-hidden'
+                : `px-4 py-2 ${isSent ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap break-words">{messageText}</p>
+            {!isImageOnlyMessage && messageText && (
+              <p className="text-sm whitespace-pre-wrap break-words">{messageText}</p>
+            )}
             {renderAttachments()}
           </div>
 

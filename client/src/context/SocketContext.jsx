@@ -155,13 +155,17 @@ export const SocketProvider = ({ children }) => {
             setConnected(false);
         });
 
-        // Track online users
+        // Track online users (skip state update if already in the correct state)
         socket.on('userOnline', ({ userId }) => {
-            setOnlineUsers((prev) => new Set([...prev, userId]));
+            setOnlineUsers((prev) => {
+                if (prev.has(userId)) return prev;
+                return new Set([...prev, userId]);
+            });
         });
 
         socket.on('userOffline', ({ userId, lastSeen }) => {
             setOnlineUsers((prev) => {
+                if (!prev.has(userId)) return prev;
                 const next = new Set(prev);
                 next.delete(userId);
                 return next;
