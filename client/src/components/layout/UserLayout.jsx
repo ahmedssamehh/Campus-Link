@@ -169,9 +169,12 @@ const TopNavbar = () => {
 
 const MobileNav = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { totalUnreadChat, totalUnreadGroups } = useSocket();
   const [newDiscussionCount, setNewDiscussionCount] = useState(0);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
   const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id || 'guest'}`;
@@ -215,6 +218,14 @@ const MobileNav = () => {
     };
   }, [location.pathname, user, discussionLastSeenKey]);
 
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) setProfileMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   const hiddenOnPaths = ['/groups/'];
   const isHidden = hiddenOnPaths.some((p) => location.pathname.startsWith(p) && location.pathname !== '/groups');
   if (isHidden) return null;
@@ -230,12 +241,19 @@ const MobileNav = () => {
       icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
     },
     ...(isAdminOrOwner ? [{ path: '/admin', label: 'Admin', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }] : []),
-    { path: '/profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ];
 
+  const profileActive = location.pathname.startsWith('/profile');
+
+  const handleMobileLogout = () => {
+    setProfileMenuOpen(false);
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom">
-      <div className="flex justify-around items-center min-h-14 py-1">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom overflow-visible">
+      <div className="flex justify-around items-center min-h-14 py-1 overflow-visible">
         {items.map((item) => {
           const active = location.pathname.startsWith(item.path);
           return (
@@ -256,6 +274,51 @@ const MobileNav = () => {
             </Link>
           );
         })}
+        <div className="flex flex-col items-center justify-center flex-1 min-w-0 py-1 relative" ref={profileMenuRef}>
+          {profileMenuOpen && (
+            <div
+              className="absolute bottom-full left-1/2 z-50 mb-2 w-[min(12rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+              role="menu"
+            >
+              <Link
+                to="/profile"
+                role="menuitem"
+                onClick={() => setProfileMenuOpen(false)}
+                className="flex w-full items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                Profile
+              </Link>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleMobileLogout}
+                className="flex w-full items-center justify-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setProfileMenuOpen((o) => !o)}
+            className="flex items-center justify-center w-full min-w-0 py-1"
+            aria-expanded={profileMenuOpen}
+            aria-haspopup="menu"
+            aria-label="Account menu"
+          >
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-gray-100 dark:bg-gray-700 ${
+                profileActive ? 'border-blue-600 dark:border-blue-400' : 'border-gray-300 dark:border-gray-600'
+              }`}
+            >
+              {user?.profilePhoto ? (
+                <img src={getMediaUrl(user.profilePhoto)} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{user?.name?.charAt(0).toUpperCase() || '?'}</span>
+              )}
+            </span>
+          </button>
+        </div>
       </div>
     </nav>
   );
