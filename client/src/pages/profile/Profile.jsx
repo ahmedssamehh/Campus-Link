@@ -396,6 +396,26 @@ const Profile = () => {
           </form>
         </div>
 
+        {/* Sign out */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            Sign out
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            End your session on this device. You can sign in again anytime.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className="w-full sm:w-auto px-6 py-3 rounded-md font-medium border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+          >
+            Log out
+          </button>
+        </div>
+
         {/* Danger Zone */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 border-2 border-red-200 dark:border-red-900">
           <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">

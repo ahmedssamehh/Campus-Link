@@ -169,7 +169,8 @@ const TopNavbar = () => {
 
 const MobileNav = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { totalUnreadChat, totalUnreadGroups } = useSocket();
 
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
@@ -177,6 +178,11 @@ const MobileNav = () => {
   const hiddenOnPaths = ['/groups/'];
   const isHidden = hiddenOnPaths.some((p) => location.pathname.startsWith(p) && location.pathname !== '/groups');
   if (isHidden) return null;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const items = [
     { path: '/home', label: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -186,15 +192,17 @@ const MobileNav = () => {
     { path: '/profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
   ];
 
+  const logoutIcon = 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1';
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom">
-      <div className="flex justify-around items-center h-14">
+      <div className="flex justify-around items-center min-h-14 py-1">
         {items.map((item) => {
           const active = location.pathname.startsWith(item.path);
           return (
-            <Link key={item.path} to={item.path} className="flex flex-col items-center justify-center flex-1 py-1 relative">
+            <Link key={item.path} to={item.path} className="flex flex-col items-center justify-center flex-1 min-w-0 py-1 relative">
               <div className="relative">
-                <svg className={`h-6 w-6 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`h-5 w-5 sm:h-6 sm:w-6 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.badge > 0 && (
@@ -203,12 +211,22 @@ const MobileNav = () => {
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] mt-0.5 ${active ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+              <span className={`text-[9px] sm:text-[10px] mt-0.5 truncate max-w-full px-0.5 ${active ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
                 {item.label}
               </span>
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center flex-1 min-w-0 py-1 text-red-600 dark:text-red-400"
+        >
+          <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={logoutIcon} />
+          </svg>
+          <span className="text-[9px] sm:text-[10px] mt-0.5 font-medium">Logout</span>
+        </button>
       </div>
     </nav>
   );
