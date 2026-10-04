@@ -130,7 +130,7 @@ const UsersManagement = () => {
   const getRoleBadgeColor = (role) => {
     switch (role) {
       case 'owner':
-        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case 'admin':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       default:
@@ -153,23 +153,23 @@ const UsersManagement = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6">
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Total Users</p>
             <p className="text-3xl font-bold text-gray-900 dark:text-white">{users.length}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6">
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Admins</p>
             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {users.filter(u => u.role === 'admin').length}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6">
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Owners</p>
-            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {users.filter(u => u.role === 'owner').length}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6">
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Regular Users</p>
             <p className="text-3xl font-bold text-gray-600 dark:text-gray-400">
               {users.filter(u => u.role === 'user').length}
@@ -178,7 +178,7 @@ const UsersManagement = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
             <div>
@@ -190,7 +190,7 @@ const UsersManagement = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name or email..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
             </div>
 
@@ -202,7 +202,7 @@ const UsersManagement = () => {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">All Roles</option>
                 <option value="user">Users</option>
@@ -214,10 +214,10 @@ const UsersManagement = () => {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 overflow-hidden">
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : error ? (
             <div className="p-8 text-center">
@@ -252,7 +252,7 @@ const UsersManagement = () => {
                             {user.profilePhoto ? (
                               <img src={getMediaUrl(user.profilePhoto)} alt={user.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
                             ) : (
-                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-semibold text-sm">
                                   {user.name.charAt(0)}
                                 </span>
@@ -345,7 +345,7 @@ const UsersManagement = () => {
 
       {/* Delete Confirmation Modal */}
       {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">

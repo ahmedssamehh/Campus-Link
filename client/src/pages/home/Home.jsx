@@ -1,27 +1,32 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
 import WelcomeCard from '../../components/home/WelcomeCard';
 import StatsCard from '../../components/home/StatsCard';
 import Announcements from '../../components/home/Announcements';
-import QuickActions from '../../components/home/QuickActions';
+import YourGroups from '../../components/home/YourGroups';
+import TrendingDiscussions from '../../components/home/TrendingDiscussions';
+import PageHeader from '../../components/layout/PageHeader';
 import AlertBanner from '../../components/ui/AlertBanner';
 import { SkeletonStatsCard } from '../../components/ui/Skeleton';
+import { ChatIcon, ClockIcon, MegaphoneIcon, UsersIcon } from '../../components/ui/Icons';
+
+const todayLabel = () =>
+  new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
 const Home = () => {
   const { user } = useAuth();
-  const { unreadAnnouncements, onNewAnnouncement } = useSocket();
+  const { unreadAnnouncements, onNewAnnouncement, totalUnread, unreadMessages, onlineUsers } = useSocket();
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+  const userId = user?._id || user?.id;
 
-  const [stats, setStats] = useState({
-    studyGroups: 0,
-    unreadMessages: 0,
-    pendingRequests: 0,
-  });
+  const [myGroups, setMyGroups] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState(0);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState('');
+  const [questions, setQuestions] = useState([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
   const [announcements, setAnnouncements] = useState([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [announcementsError, setAnnouncementsError] = useState('');
@@ -30,28 +35,17 @@ const Home = () => {
     try {
       setStatsLoading(true);
       setStatsError('');
-      const userId = user?._id || user?.id;
 
-      // Fetch groups to count user's memberships
       const groupsRes = await axios.get('/groups');
       const allGroups = groupsRes.data.success ? groupsRes.data.groups : [];
-      const joinedCount = allGroups.filter(g =>
-        g.members?.some(m => (m._id || m) === userId)
-      ).length;
+      setMyGroups(allGroups.filter((g) => g.members?.some((m) => (m._id || m) === userId)));
 
-      let pendingCount = 0;
       if (isAdminOrOwner) {
         const reqRes = await axios.get('/groups/requests/all');
         if (reqRes.data.success) {
-          pendingCount = (reqRes.data.requests || []).filter(r => r.status === 'pending').length;
+          setPendingRequests((reqRes.data.requests || []).filter((r) => r.status === 'pending').length);
         }
       }
-
-      setStats({
-        studyGroups: joinedCount,
-        unreadMessages: 0,
-        pendingRequests: pendingCount,
-      });
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -61,11 +55,31 @@ const Home = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, [user, isAdminOrOwner]);
+  }, [userId, isAdminOrOwner]);
 
   useEffect(() => {
     if (user) fetchStats();
   }, [user, fetchStats]);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    setQuestionsLoading(true);
+    axios
+      .get('/discussion/questions')
+      .then((res) => {
+        if (!alive || !res.data.success) return;
+        const ranked = [...(res.data.questions || [])].sort(
+          (a, b) => (b.votes || 0) - (a.votes || 0) || (b.answersCount || 0) - (a.answersCount || 0)
+        );
+        setQuestions(ranked);
+      })
+      .catch(() => {})
+      .finally(() => alive && setQuestionsLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [user]);
 
   const fetchAnnouncements = useCallback(async () => {
     try {
@@ -93,8 +107,8 @@ const Home = () => {
   // Realtime: prepend new announcements when received via socket
   useEffect(() => {
     const unsub = onNewAnnouncement((newAnn) => {
-      setAnnouncements(prev => {
-        if (prev.some(a => a._id === newAnn._id)) return prev;
+      setAnnouncements((prev) => {
+        if (prev.some((a) => a._id === newAnn._id)) return prev;
         // Keep only 5 latest (same as /latest endpoint)
         return [{ ...newAnn, isRead: false }, ...prev].slice(0, 5);
       });
@@ -102,192 +116,118 @@ const Home = () => {
     return unsub;
   }, [onNewAnnouncement]);
 
+  // Classmates from my groups who are online right now (excluding me)
+  const onlineClassmates = useMemo(() => {
+    const seen = new Map();
+    myGroups.forEach((g) =>
+      (g.members || []).forEach((m) => {
+        const id = m?._id || m;
+        if (id && id !== userId && typeof m === 'object' && onlineUsers?.has(id) && !seen.has(id)) seen.set(id, m);
+      })
+    );
+    return [...seen.values()];
+  }, [myGroups, onlineUsers, userId]);
+
+  const activeGroups = useMemo(
+    () =>
+      myGroups.filter((g) => (g.members || []).some((m) => (m._id || m) !== userId && onlineUsers?.has(m._id || m)))
+        .length,
+    [myGroups, onlineUsers, userId]
+  );
+
+  const unreadToday = totalUnread || 0;
+
   return (
-    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
-        {/* Mobile Announcements Banner */}
-        <Link
-          to="/announcements"
-          className="md:hidden flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl shadow-md px-4 py-3 mb-4 active:opacity-80 transition"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm">Announcements</p>
-              {unreadAnnouncements > 0 ? (
-                <p className="text-orange-100 text-xs">{unreadAnnouncements} new</p>
-              ) : (
-                <p className="text-orange-100 text-xs">View latest news</p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            {unreadAnnouncements > 0 && (
-              <span className="bg-white text-orange-600 text-xs font-bold px-2 py-0.5 rounded-full">
-                {unreadAnnouncements > 99 ? '99+' : unreadAnnouncements}
-              </span>
-            )}
-            <svg className="h-5 w-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
+    <div className="bg-grid-soft min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 pb-24 pt-6 transition-colors duration-200 dark:bg-gray-900 md:pb-10 md:pt-8">
+      <div className="mx-auto min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <PageHeader title="Home" subtitle={todayLabel()} />
 
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <WelcomeCard userName={user?.name || 'User'} />
-        </div>
+        <WelcomeCard
+          userName={user?.name || 'User'}
+          unreadMessages={unreadToday}
+          unreadAnnouncements={unreadAnnouncements}
+          pendingRequests={pendingRequests}
+          onlineClassmates={onlineClassmates}
+        />
 
-        {/* Stats Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Overview</h2>
-          {statsError && (
-            <div className="mb-4">
-              <AlertBanner variant="error">{statsError}</AlertBanner>
-            </div>
-          )}
-          <div
-            className={
-              isAdminOrOwner
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
-                : 'grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'
-            }
-          >
-            {statsLoading ? (
-              <>
-                <SkeletonStatsCard />
-                <SkeletonStatsCard />
-                {isAdminOrOwner && <SkeletonStatsCard />}
-              </>
-            ) : (
-              <>
-            <StatsCard
-              title="Study Groups"
-              value={stats.studyGroups}
-              subtitle="Active memberships"
-              color="blue"
-              icon={
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              }
-            />
-            <StatsCard
-              title="Unread Messages"
-              value={stats.unreadMessages}
-              subtitle="From all chats"
-              color="green"
-              icon={
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-              }
-            />
-            {isAdminOrOwner && (
+        {statsError && (
+          <div className="mt-6">
+            <AlertBanner variant="error">{statsError}</AlertBanner>
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+          {statsLoading ? (
+            <>
+              <SkeletonStatsCard />
+              <SkeletonStatsCard />
+              <SkeletonStatsCard />
+            </>
+          ) : (
+            <>
               <StatsCard
-                title="Pending Requests"
-                value={stats.pendingRequests}
-                subtitle="Awaiting approval"
-                color="orange"
-                icon={
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                }
+                title="Unread messages"
+                value={unreadToday}
+                tone="blue"
+                to="/chat"
+                pill={unreadToday > 0 ? 'New' : 'All read'}
+                icon={<ChatIcon className="h-[22px] w-[22px]" />}
               />
-            )}
-              </>
-            )}
-          </div>
+              <StatsCard
+                title="Study groups"
+                value={myGroups.length}
+                tone="navy"
+                to="/groups"
+                delay={60}
+                pill={activeGroups > 0 ? `${activeGroups} active now` : undefined}
+                icon={<UsersIcon className="h-[22px] w-[22px]" />}
+              />
+              {isAdminOrOwner ? (
+                <StatsCard
+                  title="Pending requests"
+                  value={pendingRequests}
+                  tone="sky"
+                  to="/admin/requests"
+                  delay={120}
+                  pill={pendingRequests > 0 ? 'To review' : undefined}
+                  icon={<ClockIcon className="h-[22px] w-[22px]" />}
+                />
+              ) : (
+                <StatsCard
+                  title="New announcements"
+                  value={unreadAnnouncements || 0}
+                  tone="sky"
+                  to="/announcements"
+                  delay={120}
+                  pill={unreadAnnouncements > 0 ? 'Read now' : undefined}
+                  icon={<MegaphoneIcon className="h-[22px] w-[22px]" />}
+                />
+              )}
+            </>
+          )}
         </div>
 
-        {/* Unread Announcements Badge */}
-        {unreadAnnouncements > 0 && (
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg shadow-md p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-lg">
-                    {unreadAnnouncements} New Announcement{unreadAnnouncements !== 1 ? 's' : ''}
-                  </p>
-                  <p className="text-orange-100 text-sm">
-                    You have unread announcements from your groups
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <YourGroups
+            groups={myGroups}
+            loading={statsLoading}
+            unreadByGroup={unreadMessages?.groups}
+            onlineUsers={onlineUsers}
+          />
+          <TrendingDiscussions questions={questions} loading={questionsLoading} />
+        </div>
 
-        {/* Admin/Owner Role Badge */}
-        {isAdminOrOwner && (
-          <div className="mb-8">
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-md p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-lg">
-                    {user?.role === 'owner' ? 'Owner Account' : 'Admin Account'}
-                  </p>
-                  <p className="text-purple-100 text-sm">
-                    You have full access to manage groups and users
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Announcements Section */}
-        <div className="mb-8">
+        <div className="mt-6">
           {announcementsError && (
             <div className="mb-4">
               <AlertBanner variant="error">{announcementsError}</AlertBanner>
             </div>
           )}
-          <Announcements 
-            announcements={announcements} 
+          <Announcements
+            announcements={announcements}
             loading={announcementsLoading}
             unreadCount={unreadAnnouncements}
           />
-        </div>
-
-        {/* Quick Actions Section */}
-        <div>
-          <QuickActions />
         </div>
       </div>
     </div>

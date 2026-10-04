@@ -31,7 +31,7 @@ const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
   const isDownvoted = answer.userVote === 'down';
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 ${isAccepted ? 'border-2 border-green-500' : ''}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 ${isAccepted ? 'border-2 border-green-500' : ''}`}>
       {isAccepted && (
         <div className="mb-3 flex items-center text-green-600 dark:text-green-400">
           <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">

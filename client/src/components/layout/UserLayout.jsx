@@ -2,197 +2,44 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getMediaUrl } from '../../utils/media';
 import axios from '../../api/axios';
+import { CommandPaletteProvider } from './CommandPalette';
+import {
+  CapIcon,
+  ChatIcon,
+  HelpIcon,
+  HomeIcon,
+  LogoutIcon,
+  MegaphoneIcon,
+  MoonIcon,
+  ShieldIcon,
+  SunIcon,
+  UserIcon,
+  UsersIcon,
+} from '../ui/Icons';
 
-const UserLayout = () => {
-  return (
-    <>
-      <TopNavbar />
-      <div className="md:pt-16 w-full min-w-0 max-w-[100vw] overflow-x-hidden">
-        <Outlet />
-      </div>
-      <MobileNav />
-    </>
-  );
-};
-
-const TopNavbar = () => {
+const useNewDiscussionCount = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { totalUnreadChat, totalUnreadGroups, connected, unreadAnnouncements } = useSocket();
-  const [newDiscussionCount, setNewDiscussionCount] = useState(0);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const profileRef = useRef(null);
-
-  const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
-  const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id || 'guest'}`;
-
-  useEffect(() => {
-    if (!user) { setNewDiscussionCount(0); return; }
-    if (location.pathname.startsWith('/discussion')) {
-      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
-      setNewDiscussionCount(0);
-      return;
-    }
-    const storedLastSeen = localStorage.getItem(discussionLastSeenKey);
-    if (!storedLastSeen) {
-      localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
-      setNewDiscussionCount(0);
-      return;
-    }
-    let isMounted = true;
-    const fetchCount = async () => {
-      try {
-        const response = await axios.get('/discussion/questions');
-        if (!isMounted || !response.data.success) return;
-        const lastSeenTime = new Date(localStorage.getItem(discussionLastSeenKey) || storedLastSeen).getTime();
-        const count = (response.data.questions || []).filter((q) => {
-          const t = q.createdAt ? new Date(q.createdAt).getTime() : 0;
-          return t > lastSeenTime;
-        }).length;
-        setNewDiscussionCount(count);
-      } catch { if (isMounted) setNewDiscussionCount(0); }
-    };
-    fetchCount();
-    const id = setInterval(fetchCount, 60000);
-    return () => { isMounted = false; clearInterval(id); };
-  }, [location.pathname, user, discussionLastSeenKey]);
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  const handleLogout = () => { logout(); navigate('/login'); };
-
-  const navItems = [
-    { name: 'Home', path: '/home' },
-    { name: 'Chat', path: '/chat', badge: totalUnreadChat },
-    { name: 'Groups', path: '/groups', badge: totalUnreadGroups },
-    { name: 'Discussion', path: '/discussion', badge: newDiscussionCount },
-    { name: 'News', path: '/announcements', badge: unreadAnnouncements },
-    ...(isAdminOrOwner ? [{ name: 'Admin', path: '/admin' }] : []),
-  ];
-
-  const isActive = (path) => {
-    if (path === '/home') return location.pathname === '/home';
-    return location.pathname.startsWith(path);
-  };
-
-  return (
-    <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-      <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/home" className="flex items-center space-x-2.5 flex-shrink-0">
-            <img src="/logo.png" alt="Campus Link" className="w-9 h-9 rounded-lg object-cover border border-gray-200 dark:border-gray-600" />
-            <span className="text-lg font-bold text-gray-900 dark:text-white hidden lg:inline">Campus Link</span>
-          </Link>
-
-          {/* Nav links */}
-          <div className="flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {item.name}
-                {item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right side: connection + profile */}
-          <div className="flex items-center space-x-3" ref={profileRef}>
-            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} title={connected ? 'Connected' : 'Disconnected'} />
-
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              {user?.profilePhoto ? (
-                <img src={getMediaUrl(user.profilePhoto)} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600" />
-              ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">{user?.name?.charAt(0).toUpperCase()}</span>
-                </div>
-              )}
-              <svg className={`w-4 h-4 text-gray-500 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Profile dropdown */}
-            {profileOpen && (
-              <div className="absolute right-4 top-14 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-                </div>
-                <Link
-                  to="/profile"
-                  onClick={() => setProfileOpen(false)}
-                  className="flex items-center space-x-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  <span>Profile</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                  <span>Logout</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-const MobileNav = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { totalUnreadChat, totalUnreadGroups } = useSocket();
-  const [newDiscussionCount, setNewDiscussionCount] = useState(0);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const profileMenuRef = useRef(null);
-
-  const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+  const { user } = useAuth();
+  const [count, setCount] = useState(0);
   const discussionLastSeenKey = `campusLinkDiscussionLastSeen:${user?._id || user?.id || 'guest'}`;
 
   useEffect(() => {
     if (!user) {
-      setNewDiscussionCount(0);
+      setCount(0);
       return;
     }
     if (location.pathname.startsWith('/discussion')) {
       localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
-      setNewDiscussionCount(0);
+      setCount(0);
       return;
     }
     const storedLastSeen = localStorage.getItem(discussionLastSeenKey);
     if (!storedLastSeen) {
       localStorage.setItem(discussionLastSeenKey, new Date().toISOString());
-      setNewDiscussionCount(0);
+      setCount(0);
       return;
     }
     let isMounted = true;
@@ -201,13 +48,13 @@ const MobileNav = () => {
         const response = await axios.get('/discussion/questions');
         if (!isMounted || !response.data.success) return;
         const lastSeenTime = new Date(localStorage.getItem(discussionLastSeenKey) || storedLastSeen).getTime();
-        const count = (response.data.questions || []).filter((q) => {
+        const next = (response.data.questions || []).filter((q) => {
           const t = q.createdAt ? new Date(q.createdAt).getTime() : 0;
           return t > lastSeenTime;
         }).length;
-        setNewDiscussionCount(count);
+        setCount(next);
       } catch {
-        if (isMounted) setNewDiscussionCount(0);
+        if (isMounted) setCount(0);
       }
     };
     fetchCount();
@@ -218,29 +65,206 @@ const MobileNav = () => {
     };
   }, [location.pathname, user, discussionLastSeenKey]);
 
+  return count;
+};
+
+const useClickOutside = (ref, onOutside) => {
+  const callbackRef = useRef(onOutside);
+  callbackRef.current = onOutside;
   useEffect(() => {
     const handleClick = (e) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) setProfileMenuOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) callbackRef.current();
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  }, [ref]);
+};
+
+const UserLayout = () => {
+  const newDiscussionCount = useNewDiscussionCount();
+  return (
+    <CommandPaletteProvider>
+      <SideRail newDiscussionCount={newDiscussionCount} />
+      <div className="md:pl-[88px] w-full min-w-0 max-w-[100vw] overflow-x-hidden">
+        <Outlet />
+      </div>
+      <MobileNav newDiscussionCount={newDiscussionCount} />
+    </CommandPaletteProvider>
+  );
+};
+
+const Badge = ({ count, className = '' }) =>
+  count > 0 ? (
+    <span
+      className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white dark:ring-gray-900 ${className}`}
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  ) : null;
+
+const Avatar = ({ user, className = 'h-10 w-10' }) => (
+  <span
+    className={`flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-blue-700 ${className}`}
+  >
+    {user?.profilePhoto ? (
+      <img src={getMediaUrl(user.profilePhoto)} alt="" className="h-full w-full object-cover" />
+    ) : (
+      <span className="text-sm font-semibold text-white">{user?.name?.charAt(0).toUpperCase() || '?'}</span>
+    )}
+  </span>
+);
+
+const Tooltip = ({ children }) => (
+  <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-gray-700">
+    {children}
+  </span>
+);
+
+const SideRail = ({ newDiscussionCount }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { totalUnreadChat, totalUnreadGroups, connected, unreadAnnouncements } = useSocket();
+  const { isDark, toggleTheme } = useTheme();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  useClickOutside(profileRef, () => setProfileOpen(false));
+
+  const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
+
+  const navItems = [
+    { name: 'Home', path: '/home', Icon: HomeIcon },
+    { name: 'Chat', path: '/chat', Icon: ChatIcon, badge: totalUnreadChat },
+    { name: 'Study groups', path: '/groups', Icon: UsersIcon, badge: totalUnreadGroups },
+    { name: 'Q&A board', path: '/discussion', Icon: HelpIcon, badge: newDiscussionCount },
+    { name: 'Announcements', path: '/announcements', Icon: MegaphoneIcon, badge: unreadAnnouncements },
+    ...(isAdminOrOwner ? [{ name: 'Admin panel', path: '/admin', Icon: ShieldIcon }] : []),
+  ];
+
+  const isActive = (path) => (path === '/home' ? location.pathname === '/home' : location.pathname.startsWith(path));
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <aside className="fixed inset-y-0 left-0 z-50 hidden w-[88px] flex-col items-center border-r border-gray-200/70 bg-white/85 py-5 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/85 md:flex">
+      <Link
+        to="/home"
+        aria-label="Campus Link home"
+        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-glow transition hover:scale-105"
+      >
+        <CapIcon className="h-6 w-6" />
+      </Link>
+
+      <nav className="mt-8 flex flex-1 flex-col items-center gap-2">
+        {navItems.map(({ name, path, Icon, badge }) => {
+          const active = isActive(path);
+          return (
+            <Link
+              key={path}
+              to={path}
+              aria-label={name}
+              className={`group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200 ${
+                active
+                  ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-500/20'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+              }`}
+            >
+              <Icon className="h-[22px] w-[22px]" />
+              <Badge count={badge} className="absolute -right-1 -top-1" />
+              <Tooltip>{name}</Tooltip>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="group relative flex h-11 w-11 items-center justify-center rounded-2xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+        >
+          {isDark ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+          <Tooltip>{isDark ? 'Light mode' : 'Dark mode'}</Tooltip>
+        </button>
+
+        <div className="relative" ref={profileRef}>
+          <button
+            type="button"
+            onClick={() => setProfileOpen((o) => !o)}
+            aria-label="Account menu"
+            aria-expanded={profileOpen}
+            className={`relative rounded-full ring-2 ring-offset-2 ring-offset-white transition dark:ring-offset-gray-900 ${
+              profileOpen || location.pathname.startsWith('/profile') ? 'ring-blue-500' : 'ring-transparent hover:ring-blue-200'
+            }`}
+          >
+            <Avatar user={user} />
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-gray-900 ${
+                connected ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'
+              }`}
+              title={connected ? 'Connected' : 'Disconnected'}
+            />
+          </button>
+
+          {profileOpen && (
+            <div className="absolute bottom-0 left-full z-50 ml-4 w-60 overflow-hidden rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl animate-scale-in dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+                <Avatar user={user} className="h-9 w-9" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+                </div>
+              </div>
+              <Link
+                to="/profile"
+                onClick={() => setProfileOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
+              >
+                <UserIcon className="h-4 w-4" />
+                Profile
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
+              >
+                <LogoutIcon className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+const MobileNav = ({ newDiscussionCount }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { totalUnreadChat, totalUnreadGroups } = useSocket();
+  const { isDark, toggleTheme } = useTheme();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+  useClickOutside(profileMenuRef, () => setProfileMenuOpen(false));
+
+  const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
   const hiddenOnPaths = ['/groups/'];
   const isHidden = hiddenOnPaths.some((p) => location.pathname.startsWith(p) && location.pathname !== '/groups');
   if (isHidden) return null;
 
   const items = [
-    { path: '/home', label: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-    { path: '/chat', label: 'Chat', badge: totalUnreadChat, icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
-    { path: '/groups', label: 'Groups', badge: totalUnreadGroups, icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-    {
-      path: '/discussion',
-      label: 'Discussion',
-      badge: newDiscussionCount,
-      icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
-    },
-    ...(isAdminOrOwner ? [{ path: '/admin', label: 'Admin', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }] : []),
+    { path: '/home', label: 'Home', Icon: HomeIcon },
+    { path: '/chat', label: 'Chat', badge: totalUnreadChat, Icon: ChatIcon },
+    { path: '/groups', label: 'Groups', badge: totalUnreadGroups, Icon: UsersIcon },
+    { path: '/discussion', label: 'Q&A', badge: newDiscussionCount, Icon: HelpIcon },
+    ...(isAdminOrOwner ? [{ path: '/admin', label: 'Admin', Icon: ShieldIcon }] : []),
   ];
 
   const profileActive = location.pathname.startsWith('/profile');
@@ -251,49 +275,63 @@ const MobileNav = () => {
     navigate('/login');
   };
 
+  const menuItemCls =
+    'flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700';
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-40 safe-area-bottom overflow-visible">
-      <div className="flex justify-around items-center min-h-14 py-1 overflow-visible">
-        {items.map((item) => {
-          const active = location.pathname.startsWith(item.path);
+    <nav className="safe-area-bottom fixed bottom-0 left-0 right-0 z-40 overflow-visible border-t border-gray-200/70 bg-white/90 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/90 md:hidden">
+      <div className="flex min-h-[60px] items-center justify-around overflow-visible px-1 py-1.5">
+        {items.map(({ path, label, badge, Icon }) => {
+          const active = location.pathname.startsWith(path);
           return (
-            <Link key={item.path} to={item.path} className="flex flex-col items-center justify-center flex-1 min-w-0 py-1 relative">
-              <div className="relative">
-                <svg className={`h-5 w-5 sm:h-6 sm:w-6 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
-                {item.badge > 0 && (
-                  <span className="absolute -top-1 -right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
-              </div>
-              <span className={`text-[9px] sm:text-[10px] mt-0.5 truncate max-w-full px-0.5 ${active ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
-                {item.label}
+            <Link key={path} to={path} className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-0.5">
+              <span
+                className={`relative flex h-8 w-12 items-center justify-center rounded-full transition-colors ${
+                  active ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300' : 'text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                <Icon className="h-[21px] w-[21px]" />
+                <Badge count={badge} className="absolute -top-1 right-0.5" />
+              </span>
+              <span
+                className={`mt-0.5 max-w-full truncate px-0.5 text-[10px] ${
+                  active ? 'font-semibold text-blue-600 dark:text-blue-300' : 'font-medium text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {label}
               </span>
             </Link>
           );
         })}
-        <div className="flex flex-col items-center justify-center flex-1 min-w-0 py-1 relative" ref={profileMenuRef}>
+        <div className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-0.5" ref={profileMenuRef}>
           {profileMenuOpen && (
             <div
-              className="absolute bottom-full left-1/2 z-50 mb-2 w-[min(12rem,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+              className="absolute bottom-full right-1 z-50 mb-3 w-52 overflow-hidden rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl animate-scale-in dark:border-gray-700 dark:bg-gray-800"
               role="menu"
             >
-              <Link
-                to="/profile"
-                role="menuitem"
-                onClick={() => setProfileMenuOpen(false)}
-                className="flex w-full items-center justify-center px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
+              <div className="border-b border-gray-100 px-4 py-2.5 dark:border-gray-700">
+                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+                <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+              </div>
+              <Link to="/profile" role="menuitem" onClick={() => setProfileMenuOpen(false)} className={menuItemCls}>
+                <UserIcon className="h-4 w-4" />
                 Profile
               </Link>
+              <Link to="/announcements" role="menuitem" onClick={() => setProfileMenuOpen(false)} className={menuItemCls}>
+                <MegaphoneIcon className="h-4 w-4" />
+                Announcements
+              </Link>
+              <button type="button" role="menuitem" onClick={toggleTheme} className={menuItemCls}>
+                {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
+                {isDark ? 'Light mode' : 'Dark mode'}
+              </button>
               <button
                 type="button"
                 role="menuitem"
                 onClick={handleMobileLogout}
-                className="flex w-full items-center justify-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
               >
+                <LogoutIcon className="h-4 w-4" />
                 Logout
               </button>
             </div>
@@ -301,22 +339,19 @@ const MobileNav = () => {
           <button
             type="button"
             onClick={() => setProfileMenuOpen((o) => !o)}
-            className="flex items-center justify-center w-full min-w-0 py-1"
+            className="flex w-full min-w-0 flex-col items-center justify-center"
             aria-expanded={profileMenuOpen}
             aria-haspopup="menu"
             aria-label="Account menu"
           >
             <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-gray-100 dark:bg-gray-700 ${
-                profileActive ? 'border-blue-600 dark:border-blue-400' : 'border-gray-300 dark:border-gray-600'
+              className={`rounded-full ring-2 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 ${
+                profileActive || profileMenuOpen ? 'ring-blue-500' : 'ring-transparent'
               }`}
             >
-              {user?.profilePhoto ? (
-                <img src={getMediaUrl(user.profilePhoto)} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{user?.name?.charAt(0).toUpperCase() || '?'}</span>
-              )}
+              <Avatar user={user} className="h-8 w-8" />
             </span>
+            <span className="mt-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">You</span>
           </button>
         </div>
       </div>

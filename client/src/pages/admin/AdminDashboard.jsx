@@ -50,7 +50,7 @@ const AdminDashboard = () => {
           />
         </svg>
       ),
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-blue-500 to-blue-700',
       link: '/admin/users',
     },
     {
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
           />
         </svg>
       ),
-      color: 'from-green-500 to-green-600',
+      color: 'from-sky-400 to-blue-600',
       link: '/admin/groups',
     },
     {
@@ -82,7 +82,7 @@ const AdminDashboard = () => {
           />
         </svg>
       ),
-      color: 'from-orange-500 to-orange-600',
+      color: 'from-blue-600 to-blue-900',
       link: '/admin/requests',
     },
     {
@@ -98,7 +98,7 @@ const AdminDashboard = () => {
           />
         </svg>
       ),
-      color: 'from-purple-500 to-purple-600',
+      color: 'from-blue-500 to-blue-700',
       link: '/admin/users',
     },
   ];
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
             <Link
               key={index}
               to={stat.link}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-lg flex items-center justify-center text-white shadow-lg`}>
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Recent Activity
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
               </button>
               <Link
                 to="/admin/activity"
-                className="text-sm text-purple-600 dark:text-purple-400 font-semibold hover:underline"
+                className="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:underline"
               >
                 See All →
               </Link>
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
                   key={i}
                   className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-semibold text-sm">
                       {item.name ? item.name.charAt(0).toUpperCase() : '?'}
                     </span>
@@ -228,7 +228,7 @@ const AdminDashboard = () => {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link
             to="/admin/users"
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Manage Users</h3>
@@ -246,7 +246,7 @@ const AdminDashboard = () => {
 
           <Link
             to="/admin/groups"
-            className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-br from-sky-400 to-blue-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Manage Groups</h3>
@@ -259,12 +259,12 @@ const AdminDashboard = () => {
                 />
               </svg>
             </div>
-            <p className="text-green-100">Create and manage study groups</p>
+            <p className="text-blue-100">Create and manage study groups</p>
           </Link>
 
           <Link
             to="/admin/requests"
-            className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="bg-gradient-to-br from-blue-600 to-blue-900 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Review Requests</h3>
@@ -277,7 +277,7 @@ const AdminDashboard = () => {
                 />
               </svg>
             </div>
-            <p className="text-orange-100">Review pending join requests</p>
+            <p className="text-blue-100">Review pending join requests</p>
           </Link>
         </div>
       </div>

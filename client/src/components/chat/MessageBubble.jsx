@@ -218,10 +218,10 @@ const MessageBubble = ({
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1 break-words">{senderName}</p>
           )}
           <div
-            className={`max-w-full min-w-0 rounded-lg ${
+            className={`max-w-full min-w-0 rounded-2xl ${
               isImageOnlyMessage
                 ? 'overflow-hidden'
-                : `px-4 py-2 ${isSent ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'}`
+                : `px-4 py-2.5 ${isSent ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-br-md shadow-glow' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-md border border-gray-100 dark:border-gray-600/60 shadow-sm'}`
             }`}
           >
             {!isImageOnlyMessage && messageText && (
@@ -289,7 +289,7 @@ const MessageBubble = ({
 
           {/* Emoji Picker Popup */}
           {showEmojiPicker && (
-            <div className={`absolute ${isSent ? 'right-0' : 'left-0'} -top-10 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg p-1.5 flex space-x-1 z-10`}>
+            <div className={`absolute ${isSent ? 'right-0' : 'left-0'} -top-11 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full shadow-xl p-1.5 flex space-x-1 z-10`}>
               {QUICK_EMOJIS.map((emoji) => (
                 <button
                   key={emoji}

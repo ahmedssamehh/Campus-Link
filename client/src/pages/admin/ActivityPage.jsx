@@ -89,7 +89,7 @@ const ActivityPage = () => {
             <div className="flex items-center gap-2 mb-1">
               <Link
                 to="/admin"
-                className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
                 ← Dashboard
               </Link>
@@ -133,7 +133,7 @@ const ActivityPage = () => {
               ref={(el) => { if (el) el.indeterminate = someSelected; }}
               onChange={toggleSelectAll}
               disabled={loading || activities.length === 0}
-              className="w-4 h-4 rounded accent-purple-600 cursor-pointer"
+              className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
             />
             <span className="text-sm text-gray-500 dark:text-gray-400">
               {selected.length > 0 ? `${selected.length} selected` : 'Select all'}
@@ -185,7 +185,7 @@ const ActivityPage = () => {
                   onClick={() => toggleSelect(item._id)}
                   className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-colors ${
                     isChecked
-                      ? 'bg-purple-50 dark:bg-purple-900/20'
+                      ? 'bg-blue-50 dark:bg-blue-900/20'
                       : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
@@ -195,14 +195,14 @@ const ActivityPage = () => {
                     checked={isChecked}
                     onChange={() => toggleSelect(item._id)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded accent-purple-600 cursor-pointer flex-shrink-0"
+                    className="w-4 h-4 rounded accent-blue-600 cursor-pointer flex-shrink-0"
                   />
 
                   {/* Avatar */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm ${
                     item.type === 'group'
-                      ? 'bg-gradient-to-br from-green-500 to-emerald-600'
-                      : 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                      ? 'bg-gradient-to-br from-sky-400 to-blue-600'
+                      : 'bg-gradient-to-br from-blue-500 to-blue-700'
                   }`}>
                     {item.name ? item.name.charAt(0).toUpperCase() : '?'}
                   </div>
@@ -241,7 +241,7 @@ const ActivityPage = () => {
 
       {/* Confirm Delete All Modal */}
       {confirmDeleteAll && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete All Activities?</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">

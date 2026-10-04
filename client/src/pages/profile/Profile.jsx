@@ -211,7 +211,7 @@ const Profile = () => {
         )}
 
         {/* Profile Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-8 mb-6 min-w-0 max-w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-8 mb-6 min-w-0 max-w-full">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
               Account Information
@@ -237,7 +237,7 @@ const Profile = () => {
                   className="w-20 h-20 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                 />
               ) : (
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold text-2xl">
                     {formData.name.charAt(0).toUpperCase()}
                   </span>
@@ -292,7 +292,7 @@ const Profile = () => {
                 name="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-700 dark:text-white"
+                className="w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 dark:text-white"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed.</p>
             </div>
@@ -381,7 +381,7 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
                 >
                   Cancel
                 </button>
@@ -398,7 +398,7 @@ const Profile = () => {
         </div>
 
         {/* Sign out */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-6 border border-gray-200 dark:border-gray-700 min-w-0">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-6 mb-6 border border-gray-200 dark:border-gray-700 min-w-0">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             Sign out
           </h2>
@@ -418,7 +418,7 @@ const Profile = () => {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-8 border-2 border-red-200 dark:border-red-900 min-w-0">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-8 border-2 border-red-200 dark:border-red-900 min-w-0">
           <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">
             Danger Zone
           </h2>

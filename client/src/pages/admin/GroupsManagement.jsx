@@ -172,7 +172,7 @@ const GroupsManagement = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowAnnouncementModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition duration-200 shadow-lg flex items-center space-x-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-900 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition duration-200 shadow-lg flex items-center space-x-2"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -181,7 +181,7 @@ const GroupsManagement = () => {
             </button>
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition duration-200 shadow-lg flex items-center space-x-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-800 transition duration-200 shadow-lg flex items-center space-x-2"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -207,7 +207,7 @@ const GroupsManagement = () => {
 
         {/* Create Form */}
         {showCreateForm && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 mb-8">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               Create New Study Group
             </h2>
@@ -224,7 +224,7 @@ const GroupsManagement = () => {
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
                   placeholder="e.g., Advanced Algorithms Study Group"
                 />
                 {formErrors.name && <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>}
@@ -242,7 +242,7 @@ const GroupsManagement = () => {
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border ${
                     formErrors.subject ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
                   placeholder="e.g., Computer Science"
                 />
                 {formErrors.subject && <p className="mt-1 text-sm text-red-600">{formErrors.subject}</p>}
@@ -260,7 +260,7 @@ const GroupsManagement = () => {
                   rows="4"
                   className={`w-full px-4 py-2 border ${
                     formErrors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+                  } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
                   placeholder="Describe the purpose and goals of this study group..."
                 />
                 {formErrors.description && <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>}
@@ -281,14 +281,14 @@ const GroupsManagement = () => {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+                  className="px-6 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Creating...' : 'Create Group'}
                 </button>
@@ -300,7 +300,7 @@ const GroupsManagement = () => {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         )}
 
@@ -308,7 +308,7 @@ const GroupsManagement = () => {
         {!loading && (
           <>
             {groups.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-12 text-center">
                 <svg className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -320,7 +320,7 @@ const GroupsManagement = () => {
                 </p>
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition duration-200"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition duration-200"
                 >
                   Create Group
                 </button>
@@ -330,15 +330,15 @@ const GroupsManagement = () => {
                 {groups.map((group) => (
                   <div
                     key={group._id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
                         <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
                       </div>
-                      <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs font-semibold rounded-full">
+                      <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-semibold rounded-full">
                         {group.members?.length ?? 0} members
                       </span>
                     </div>
@@ -347,7 +347,7 @@ const GroupsManagement = () => {
                       {group.name}
                     </h3>
 
-                    <p className="text-sm text-purple-600 dark:text-purple-400 font-medium mb-2">
+                    <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mb-2">
                       {group.subject}
                     </p>
 
@@ -385,7 +385,7 @@ const GroupsManagement = () => {
 
     {/* Confirm Delete Modal */}
     {confirmDeleteId && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
@@ -420,7 +420,7 @@ const GroupsManagement = () => {
 
     {/* Create Announcement Modal */}
     {showAnnouncementModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Create Announcement</h3>
@@ -445,7 +445,7 @@ const GroupsManagement = () => {
                 name="groupId"
                 value={announcementData.groupId}
                 onChange={handleAnnouncementChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 required
               >
                 <option value="">Choose a group...</option>
@@ -467,7 +467,7 @@ const GroupsManagement = () => {
                 type="text"
                 value={announcementData.title}
                 onChange={handleAnnouncementChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 placeholder="Enter announcement title"
                 required
               />
@@ -483,7 +483,7 @@ const GroupsManagement = () => {
                 value={announcementData.content}
                 onChange={handleAnnouncementChange}
                 rows="5"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 placeholder="Write your announcement message"
                 required
               />
@@ -493,7 +493,7 @@ const GroupsManagement = () => {
               <button
                 type="button"
                 onClick={() => setShowAnnouncementModal(false)}
-                className="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-5 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>

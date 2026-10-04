@@ -7,13 +7,13 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-gray-950/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       ></div>
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/60 max-w-md w-full p-6">
           {/* Icon */}
           <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${
             isDestructive ? 'bg-red-100 dark:bg-red-900/20' : 'bg-blue-100 dark:bg-blue-900/20'
@@ -63,7 +63,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
           <div className="flex space-x-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+              className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
             >
               {cancelText}
             </button>

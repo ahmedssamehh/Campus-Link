@@ -119,7 +119,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
           value={formData.tags}
           onChange={handleChange}
           placeholder="e.g., programming, math, physics (comma-separated)"
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white dark:bg-gray-700 dark:text-white"
+          className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white dark:bg-gray-700 dark:text-white"
           disabled={isLoading}
         />
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Separate tags with commas</p>
@@ -130,7 +130,7 @@ const QuestionForm = ({ onSubmit, isLoading }) => {
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+          className="px-6 py-3 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
           disabled={isLoading}
         >
           Cancel

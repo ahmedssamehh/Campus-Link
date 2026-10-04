@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import QuestionCard from '../../components/discussion/QuestionCard';
+import PageHeader from '../../components/layout/PageHeader';
+import { CheckIcon, ClockIcon, HelpIcon, PlusIcon, SearchIcon } from '../../components/ui/Icons';
 
 const Discussion = () => {
   const navigate = useNavigate();
@@ -61,221 +63,104 @@ const Discussion = () => {
   const solvedCount = questions.filter((q) => Boolean(q.isSolved)).length;
   const unsolvedCount = questions.length - solvedCount;
 
+  const filters = [
+    { key: 'all', label: 'All' },
+    { key: 'solved', label: 'Solved' },
+    { key: 'unsolved', label: 'Unsolved' },
+    { key: 'mine', label: `Mine (${myQuestionsCount})` },
+  ];
+
+  const stats = [
+    { label: 'Total questions', value: questions.length, Icon: HelpIcon, tone: 'from-blue-400 to-blue-600' },
+    { label: 'Solved', value: solvedCount, Icon: CheckIcon, tone: 'from-emerald-400 to-emerald-600' },
+    { label: 'Open', value: unsolvedCount, Icon: ClockIcon, tone: 'from-sky-400 to-blue-500' },
+  ];
+
   return (
-    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-4 pb-20 sm:py-6 md:py-8 md:pb-8">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
-        {/* Header — stack on mobile to avoid horizontal overflow */}
-        <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Discussion Board</h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 break-words">
-              Ask questions and help your classmates
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/discussion/ask')}
-            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 sm:px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm sm:text-base font-medium hover:bg-blue-700 transition duration-200"
-          >
-            <svg
-              className="h-5 w-5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden
+    <div className="bg-grid-soft min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 pb-24 pt-6 dark:bg-gray-900 md:pb-10 md:pt-8">
+      <div className="mx-auto min-w-0 max-w-5xl px-4 sm:px-6 lg:px-8">
+        <PageHeader
+          title="Q&A board"
+          subtitle="Ask questions and help your classmates"
+          actions={
+            <button
+              type="button"
+              onClick={() => navigate('/discussion/ask')}
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 px-4 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Ask Question
-          </button>
-        </div>
+              <PlusIcon className="h-4 w-4" />
+              Ask a question
+            </button>
+          }
+        />
 
-        {/* Search and Filter */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-6 min-w-0 overflow-hidden">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 min-w-0">
-            {/* Search Bar */}
-            <div className="flex-1 min-w-0 lg:mr-4">
-              <div className="relative">
-                <input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search questions or tags..."
-                  className="w-full min-w-0 px-4 py-2.5 pl-10 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white"
-                />
-                <svg
-                  className="absolute left-3 top-3 h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+        {/* Stats */}
+        <div className="mb-5 grid min-w-0 grid-cols-3 gap-3 sm:gap-4">
+          {stats.map(({ label, value, Icon, tone }) => (
+            <div
+              key={label}
+              className="flex min-w-0 items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-card dark:border-gray-700/60 dark:bg-gray-800 sm:p-4"
+            >
+              <span className={`hidden h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${tone} text-white shadow-sm sm:flex`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xl font-bold tabular-nums text-gray-900 dark:text-white sm:text-2xl">{value}</p>
+                <p className="truncate text-xs text-gray-500 dark:text-gray-400 sm:text-sm">{label}</p>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2 min-w-0">
+        {/* Search and filter */}
+        <div className="mb-5 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1">
+            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search questions or tags…"
+              className="h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-base shadow-sm transition placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+            />
+          </div>
+          <div className="inline-flex max-w-full overflow-x-auto rounded-2xl border border-gray-200/80 bg-white p-1 shadow-sm no-scrollbar dark:border-gray-700 dark:bg-gray-800">
+            {filters.map((f) => (
               <button
+                key={f.key}
                 type="button"
-                onClick={() => setFilter('all')}
-                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
-                  filter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                onClick={() => setFilter(f.key)}
+                className={`flex-shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
+                  filter === f.key
+                    ? 'bg-blue-600 text-white shadow-glow'
+                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                 }`}
               >
-                All
+                {f.label}
               </button>
-              <button
-                type="button"
-                onClick={() => setFilter('solved')}
-                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
-                  filter === 'solved'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                Solved
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('unsolved')}
-                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
-                  filter === 'unsolved'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                Unsolved
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('mine')}
-                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition duration-200 min-h-[40px] ${
-                  filter === 'mine'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                My Questions ({myQuestionsCount})
-              </button>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Stats — 3-up on small screens to save vertical space */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 min-w-0">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 min-w-0">
-            <div className="flex items-center min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                <svg
-                  className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{questions.length}</p>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-tight">Total</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 min-w-0">
-            <div className="flex items-center min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-green-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{solvedCount}</p>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-tight">Solved</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 min-w-0">
-            <div className="flex items-center min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-900/40 rounded-lg flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{unsolvedCount}</p>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-tight">Unsolved</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Questions List */}
-        <div className="space-y-4">
+        {/* Questions list */}
+        <div className="space-y-3">
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-            </div>
+            [0, 1, 2].map((i) => (
+              <div key={i} className="h-36 animate-pulse rounded-2xl border border-gray-100 bg-white dark:border-gray-700/60 dark:bg-gray-800" />
+            ))
           ) : error ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
               {error}
             </div>
           ) : filteredQuestions.length > 0 ? (
-            filteredQuestions.map((question) => (
-              <QuestionCard key={question._id} question={question} />
-            ))
+            filteredQuestions.map((question) => <QuestionCard key={question._id} question={question} />)
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
-              <svg
-                className="h-16 w-16 text-gray-400 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">No questions found</p>
-              <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-white/60 px-6 py-16 text-center dark:border-gray-700 dark:bg-gray-800/40">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                <HelpIcon className="h-7 w-7" />
+              </span>
+              <p className="mt-4 text-base font-semibold text-gray-900 dark:text-white">No questions found</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {searchTerm
                   ? 'Try adjusting your search'
                   : (filter === 'mine' ? 'You have not asked any questions yet.' : 'Be the first to ask a question!')}

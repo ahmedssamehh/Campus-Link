@@ -9,12 +9,51 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+html {
+    -webkit-text-size-adjust: 100%;
 }
 
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #F5F8FC;
+    color: #0F1B2D;
+}
+
+.dark body {
+    background-color: #0F1B2D;
+    color: #EDF2F9;
+}
+
+::selection {
+    background-color: rgba(36, 88, 230, 0.18);
+}
+
+/* Premium thin scrollbars */
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 116, 143, 0.35);
+    border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100, 116, 143, 0.55);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 143, 0.35) transparent;
+}
 
 /* Notification Animations */
 
@@ -64,7 +103,22 @@ body {
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
+
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+/* Soft dotted-grid page backdrop (hero reference style) */
+.bg-grid-soft {
+    background-image:
+        linear-gradient(rgba(36, 88, 230, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(36, 88, 230, 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+}
+
+.dark .bg-grid-soft {
+    background-image:
+        linear-gradient(rgba(91, 142, 252, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91, 142, 252, 0.05) 1px, transparent 1px);
 }

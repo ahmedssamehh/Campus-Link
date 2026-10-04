@@ -80,7 +80,7 @@ const AskQuestion = () => {
         </div>
 
         {/* Question Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8">
           <QuestionForm onSubmit={handleSubmit} isLoading={isLoading} />
         </div>
 

@@ -163,15 +163,15 @@ const AnnouncementsPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-4 pb-20 sm:py-6 md:py-8 md:pb-8 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
+    <div className="bg-grid-soft min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 pb-24 pt-6 md:pb-10 md:pt-8 transition-colors duration-200">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
         {/* Header — stack on narrow screens so the CTA never forces horizontal overflow */}
         <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
+            <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-gray-900 dark:text-white mb-1">
               Announcements
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 break-words">
+            <p className="text-sm text-gray-500 dark:text-gray-400 break-words">
               Stay updated with announcements from your groups
             </p>
           </div>
@@ -179,7 +179,7 @@ const AnnouncementsPage = () => {
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
-              className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg text-sm sm:text-base font-medium hover:from-purple-700 hover:to-indigo-700 transition duration-200 shadow-lg"
+              className="w-full sm:w-auto shrink-0 inline-flex h-11 items-center justify-center gap-2 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5"
             >
               <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -191,30 +191,30 @@ const AnnouncementsPage = () => {
 
         {/* Stats — compact 3-up on mobile, roomier from sm+ */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-4 sm:mb-6 min-w-0">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-6 min-w-0">
-            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Total</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-3 sm:p-6 min-w-0">
+            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Total</p>
             <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{announcements.length}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-6 min-w-0">
-            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Unread</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 tabular-nums">{unreadCount}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-3 sm:p-6 min-w-0">
+            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Unread</p>
+            <p className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 tabular-nums">{unreadCount}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-6 min-w-0">
-            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Read</p>
-            <p className="text-xl sm:text-3xl font-bold text-green-600 dark:text-green-400 tabular-nums">{readCount}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-3 sm:p-6 min-w-0">
+            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Read</p>
+            <p className="text-xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{readCount}</p>
           </div>
         </div>
 
         {/* Filter tabs — wrap + scroll safety on very small screens */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6 min-w-0 overflow-hidden">
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter announcements">
+        <div className="mb-5 inline-flex max-w-full rounded-2xl border border-gray-200/80 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Filter announcements">
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-0 ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition min-w-0 ${
                 filter === 'all'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-blue-600 text-white shadow-glow'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               All ({announcements.length})
@@ -222,10 +222,10 @@ const AnnouncementsPage = () => {
             <button
               type="button"
               onClick={() => setFilter('unread')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-0 ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition min-w-0 ${
                 filter === 'unread'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-blue-600 text-white shadow-glow'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Unread ({unreadCount})
@@ -233,10 +233,10 @@ const AnnouncementsPage = () => {
             <button
               type="button"
               onClick={() => setFilter('read')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-0 ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition min-w-0 ${
                 filter === 'read'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-blue-600 text-white shadow-glow'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Read ({readCount})
@@ -247,13 +247,13 @@ const AnnouncementsPage = () => {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm mb-4 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-300">
             {error}
           </div>
         )}
@@ -262,8 +262,8 @@ const AnnouncementsPage = () => {
         {!loading && !error && (
           <div className="space-y-4">
             {filteredAnnouncements.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 sm:p-12 text-center min-w-0">
-                <svg className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 sm:p-12 text-center min-w-0">
+                <svg className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 p-3.5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9 " />
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -277,8 +277,8 @@ const AnnouncementsPage = () => {
               filteredAnnouncements.map((announcement) => (
                 <div
                   key={announcement._id}
-                  className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-all duration-200 min-w-0 max-w-full ${
-                    !announcement.isRead ? 'border-l-4 border-l-orange-500' : ''
+                  className={`bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-6 hover:shadow-lg transition-all duration-200 min-w-0 max-w-full ${
+                    !announcement.isRead ? 'ring-1 ring-blue-100 bg-gradient-to-br from-blue-50/70 to-white dark:ring-blue-500/20 dark:from-blue-500/5 dark:to-gray-800' : ''
                   }`}
                 >
                   <div className="flex flex-col gap-4 min-w-0">
@@ -289,7 +289,7 @@ const AnnouncementsPage = () => {
                             {announcement.title}
                           </h3>
                           {!announcement.isRead && (
-                            <span className="shrink-0 px-2 py-0.5 sm:py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold rounded-full">
+                            <span className="shrink-0 px-2 py-0.5 sm:py-1 bg-blue-600 text-white text-[10px] font-bold tracking-wide rounded-full shadow-glow">
                               NEW
                             </span>
                           )}
@@ -300,7 +300,7 @@ const AnnouncementsPage = () => {
                             <button
                               type="button"
                               onClick={() => handleMarkAsRead(announcement._id)}
-                              className="p-2.5 sm:px-3 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
+                              className="p-2.5 sm:px-3 sm:py-2 bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 rounded-xl hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
                               title="Mark as read"
                               aria-label="Mark as read"
                             >
@@ -313,7 +313,7 @@ const AnnouncementsPage = () => {
                             <button
                               type="button"
                               onClick={() => handleDelete(announcement._id)}
-                              className="p-2.5 sm:px-3 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
+                              className="p-2.5 sm:px-3 sm:py-2 bg-rose-50 text-rose-600 ring-1 ring-rose-100 rounded-xl hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/20 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
                               title="Delete"
                               aria-label="Delete announcement"
                             >
@@ -332,7 +332,7 @@ const AnnouncementsPage = () => {
                           <svg className="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
-                          <span className="font-medium text-purple-600 dark:text-purple-400 break-words min-w-0">
+                          <span className="font-medium text-blue-600 dark:text-blue-400 break-words min-w-0">
                             {announcement.group?.name}
                           </span>
                         </div>
@@ -362,7 +362,7 @@ const AnnouncementsPage = () => {
 
       {/* Create Announcement Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto overscroll-contain">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-gray-950/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto overscroll-contain">
           <div className="bg-white dark:bg-gray-800 rounded-t-xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[min(100dvh,100%)] sm:max-h-[90vh] overflow-y-auto my-0 sm:mx-4 min-w-0">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create Announcement</h2>
@@ -383,7 +383,7 @@ const AnnouncementsPage = () => {
                 <select
                   value={formData.groupId}
                   onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   required
                 >
                   <option value="">Choose a group...</option>
@@ -402,7 +402,7 @@ const AnnouncementsPage = () => {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Enter announcement title..."
                   required
                 />
@@ -415,7 +415,7 @@ const AnnouncementsPage = () => {
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   rows="5"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   placeholder="Write your announcement here..."
                   required
                 ></textarea>
@@ -424,14 +424,14 @@ const AnnouncementsPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="w-full sm:w-auto px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+                  className="w-full sm:w-auto px-6 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Creating...' : 'Create Announcement'}
                 </button>

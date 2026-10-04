@@ -130,7 +130,7 @@ const QuestionDetails = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -151,7 +151,7 @@ const QuestionDetails = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center text-gray-600 dark:text-gray-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 text-center text-gray-600 dark:text-gray-300">
             Question not found.
           </div>
         </div>
@@ -184,7 +184,7 @@ const QuestionDetails = () => {
         </button>
 
         {/* Question */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 mb-6">
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{question.title}</h1>
             <div className="ml-4 flex items-center gap-3">
@@ -221,7 +221,7 @@ const QuestionDetails = () => {
               {question.author?.profilePhoto ? (
                 <img src={getMediaUrl(question.author.profilePhoto)} alt={question.author?.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">
                     {(question.author?.name || 'U').charAt(0).toUpperCase()}
                   </span>
@@ -296,7 +296,7 @@ const QuestionDetails = () => {
           </h2>
           <div className="space-y-4">
             {answers.length === 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 text-center">
                 <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
@@ -316,7 +316,7 @@ const QuestionDetails = () => {
         </div>
 
         {/* Answer Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Your Answer</h3>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -329,7 +329,7 @@ const QuestionDetails = () => {
               onChange={(e) => setAnswerText(e.target.value)}
               placeholder="Write your answer here..."
               rows={8}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none bg-white dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none bg-white dark:bg-gray-700 dark:text-white"
               disabled={isSubmitting}
             />
             <div className="flex items-center justify-between mt-4">

@@ -11,14 +11,14 @@ const sizeClasses = {
 };
 
 const gradients = [
-  'from-blue-500 to-purple-500',
-  'from-green-500 to-teal-500',
-  'from-orange-500 to-red-500',
-  'from-pink-500 to-rose-500',
-  'from-indigo-500 to-blue-500',
-  'from-yellow-400 to-orange-500',
-  'from-cyan-500 to-blue-500',
-  'from-violet-500 to-purple-500',
+  'from-blue-500 to-blue-700',
+  'from-sky-400 to-blue-600',
+  'from-indigo-500 to-blue-800',
+  'from-blue-400 to-indigo-600',
+  'from-cyan-500 to-blue-600',
+  'from-slate-600 to-blue-900',
+  'from-blue-600 to-indigo-900',
+  'from-sky-500 to-indigo-600',
 ];
 
 function getGradient(name) {
@@ -39,7 +39,7 @@ const UserAvatar = ({
 }) => {
   const [imgError, setImgError] = useState(false);
   const sizeClass = sizeClasses[size] || sizeClasses.md;
-  const borderClass = border ? 'border border-gray-300 dark:border-gray-600' : '';
+  const borderClass = border ? 'ring-2 ring-white dark:ring-gray-800' : '';
   const initial = (name || '?').charAt(0).toUpperCase();
   const gradient = getGradient(name);
 
@@ -56,7 +56,7 @@ const UserAvatar = ({
 
   return (
     <div
-      className={`${sizeClass} bg-gradient-to-br ${gradient} rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`${sizeClass} bg-gradient-to-br ${gradient} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${className}`}
     >
       <span className="text-white font-semibold">{initial}</span>
     </div>

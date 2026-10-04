@@ -373,10 +373,10 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
 
   if (!chat) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
+      <div className="h-full flex items-center justify-center bg-gray-50/60 dark:bg-gray-900/40">
+        <div className="text-center px-6">
           <svg
-            className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+            className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white shadow-glow"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -388,7 +388,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Select a conversation</h3>
+          <h3 className="mt-5 text-lg font-bold text-gray-900 dark:text-white">Select a conversation</h3>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Choose a chat from the sidebar to start messaging
           </p>
@@ -398,9 +398,9 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800">
       {/* Chat Header */}
-      <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between">
+      <div className="bg-white/90 backdrop-blur dark:bg-gray-800/90 border-b border-gray-100 dark:border-gray-700/60 px-3 md:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           {onBack && (
@@ -419,7 +419,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
                 onError={() => setHeaderImgError(true)}
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
                 <span className="text-white font-semibold">
                   {chat.name.charAt(0).toUpperCase()}
                 </span>
@@ -430,7 +430,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{chat.name}</h2>
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">{chat.name}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {chat.isOnline ? 'Active now' : 'Offline'}
             </p>
@@ -466,7 +466,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             </button>
             {headerMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-lg border border-gray-200 bg-white py-2 text-left shadow-lg dark:border-gray-700 dark:bg-gray-800 z-50"
+                className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white py-2 text-left shadow-xl dark:border-gray-700 dark:bg-gray-800 z-50 animate-scale-in"
                 role="menu"
               >
                 <div className="px-4 pb-2 border-b border-gray-100 dark:border-gray-700">
@@ -504,7 +504,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900 p-3 sm:p-6"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/70 dark:bg-gray-900/40 p-3 sm:p-6"
       >
         {/* Load more indicator */}
         {loadingMore && (
@@ -594,7 +594,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
       )}
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-3 md:px-6 py-3 md:py-4 pb-[env(safe-area-inset-bottom,0.75rem)]">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700/60 px-3 md:px-5 py-3 pb-[env(safe-area-inset-bottom,0.75rem)]">
         <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleSaveEdit(); } : handleSendMessage} className="flex items-center space-x-3">
           {/* File upload button */}
           <input
@@ -635,12 +635,12 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             onChange={editingMessage ? (e) => setEditInput(e.target.value) : handleInputChange}
             placeholder={!connected ? 'Connecting...' : editingMessage ? 'Edit message...' : 'Type a message...'}
             disabled={!connected}
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 disabled:opacity-50"
+            className="flex-1 h-11 px-4 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition dark:bg-gray-700/60 dark:text-white dark:placeholder-gray-400 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={editingMessage ? !editInput.trim() : (!messageInput.trim() || sending || !connected)}
-            className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-2.5 rounded-full shadow-glow hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
           >
             {sending ? (
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

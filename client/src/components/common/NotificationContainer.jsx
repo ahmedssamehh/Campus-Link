@@ -54,7 +54,7 @@ const Toast = ({ notification, onClose }) => {
 
 const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
         <div className="flex items-start gap-4 mb-6">
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
@@ -70,7 +70,7 @@ const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
         <div className="flex items-center justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+            className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
           >
             Cancel
           </button>

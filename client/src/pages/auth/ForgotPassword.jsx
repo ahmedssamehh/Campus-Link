@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../api/axios';
+import AuthShell, { authButtonClass, authInputClass, Spinner } from '../../components/layout/AuthShell';
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -81,32 +82,24 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-10 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-md min-w-0">
-        <div className="text-center mb-8">
-          <img
-            src="/logo.png"
-            alt="Campus Link logo"
-            className="w-20 h-20 rounded-xl object-cover mx-auto mb-4 border border-gray-200 dark:border-gray-700"
-          />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {step === 3 ? 'All Done!' : 'Reset Password'}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {step === 1 && 'Enter your email to receive a reset code'}
-            {step === 2 && 'Enter the code sent to your email'}
-            {step === 3 && 'Your password has been reset'}
-          </p>
-        </div>
-
+    <AuthShell
+      title={step === 3 ? 'All done!' : 'Reset password'}
+      subtitle={
+        step === 1
+          ? 'Enter your email to receive a reset code'
+          : step === 2
+            ? 'Enter the code sent to your email'
+            : 'Your password has been reset'
+      }
+    >
         {error && (
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-md mb-4">
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm mb-4 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-300">
             {error}
           </div>
         )}
 
         {info && !error && step === 2 && (
-          <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded-md mb-4">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm mb-4 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300">
             {info}
           </div>
         )}
@@ -115,7 +108,7 @@ const ForgotPassword = () => {
         {step === 1 && (
           <form onSubmit={handleSendCode} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Email Address
               </label>
               <input
@@ -123,7 +116,7 @@ const ForgotPassword = () => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white"
+                className={authInputClass(false)}
                 placeholder="Enter your email"
                 disabled={isLoading}
               />
@@ -132,16 +125,11 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-semibold ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={authButtonClass}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <Spinner />
                   Sending...
                 </span>
               ) : (
@@ -161,7 +149,7 @@ const ForgotPassword = () => {
         {step === 2 && (
           <form onSubmit={handleResetPassword} className="space-y-6">
             <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="code" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 6-Digit Code
               </label>
               <input
@@ -169,7 +157,7 @@ const ForgotPassword = () => {
                 id="code"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white text-center text-2xl tracking-widest"
+                className={`${authInputClass(false)} text-center text-2xl tracking-widest`}
                 placeholder="------"
                 maxLength={6}
                 disabled={isLoading}
@@ -177,7 +165,7 @@ const ForgotPassword = () => {
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="newPassword" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 New Password
               </label>
               <input
@@ -185,14 +173,14 @@ const ForgotPassword = () => {
                 id="newPassword"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white"
+                className={authInputClass(false)}
                 placeholder="At least 6 characters"
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Confirm Password
               </label>
               <input
@@ -200,7 +188,7 @@ const ForgotPassword = () => {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white"
+                className={authInputClass(false)}
                 placeholder="Re-enter new password"
                 disabled={isLoading}
               />
@@ -209,16 +197,11 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-semibold ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={authButtonClass}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <Spinner />
                   Resetting...
                 </span>
               ) : (
@@ -245,8 +228,8 @@ const ForgotPassword = () => {
         {step === 3 && (
           <div className="text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -256,14 +239,13 @@ const ForgotPassword = () => {
             </p>
             <Link
               to="/login"
-              className="inline-block w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-semibold text-center"
+              className={`inline-block text-center ${authButtonClass}`}
             >
               Go to Sign In
             </Link>
           </div>
         )}
-      </div>
-    </div>
+    </AuthShell>
   );
 };
 

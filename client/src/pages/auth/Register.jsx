@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AlertBanner from '../../components/ui/AlertBanner';
+import AuthShell, { authButtonClass, authInputClass, Spinner } from '../../components/layout/AuthShell';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -103,32 +104,17 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 py-10 sm:py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
-      <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-xl w-full max-w-md transition-shadow duration-300 hover:shadow-2xl">
-        <div className="text-center mb-8">
-          <img
-            src="/logo.png"
-            alt="Campus Link logo"
-            className="w-20 h-20 rounded-xl object-cover mx-auto mb-4 border border-gray-200 dark:border-gray-700"
-          />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Join Campus Link
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Create your account to get started
-          </p>
-        </div>
-
+    <AuthShell title="Create your account" subtitle="Join your classmates on Campus Link">
         {showSuccess ? (
-          <div className="bg-green-50 border border-green-200 p-4 rounded-md">
+          <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-2xl dark:bg-emerald-500/10 dark:border-emerald-500/20">
             <div className="flex items-center justify-center flex-col">
-              <svg className="w-12 h-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-emerald-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <p className="text-center text-green-800 font-semibold">
+              <p className="text-center text-emerald-800 dark:text-emerald-300 font-semibold">
                 Account created successfully!
               </p>
-              <p className="text-center text-green-700 text-sm mt-2">
+              <p className="text-center text-emerald-700 text-sm mt-2">
                 Redirecting to login...
               </p>
             </div>
@@ -145,7 +131,7 @@ const Register = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Full Name
               </label>
               <input
@@ -154,20 +140,18 @@ const Register = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${
-                  errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                className={authInputClass(errors.name)}
                 placeholder="Enter your full name"
                 disabled={isLoading}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                <p className="mt-1.5 text-sm text-rose-600">{errors.name}</p>
               )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Email Address
               </label>
               <input
@@ -176,20 +160,18 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                className={authInputClass(errors.email)}
                 placeholder="Enter your email"
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-1.5 text-sm text-rose-600">{errors.email}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="password" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Password
               </label>
               <input
@@ -198,20 +180,18 @@ const Register = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${
-                  errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                className={authInputClass(errors.password)}
                 placeholder="Create a password"
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                <p className="mt-1.5 text-sm text-rose-600">{errors.password}</p>
               )}
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Confirm Password
               </label>
               <input
@@ -220,14 +200,12 @@ const Register = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                className={authInputClass(errors.confirmPassword)}
                 placeholder="Confirm your password"
                 disabled={isLoading}
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-1.5 text-sm text-rose-600">{errors.confirmPassword}</p>
               )}
             </div>
 
@@ -236,12 +214,12 @@ const Register = () => {
               <input
                 id="terms"
                 type="checkbox"
-                className="h-4 w-4 mt-1 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 required
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                 I agree to the{' '}
-                <button type="button" onClick={() => setShowTerms(true)} className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline cursor-pointer bg-transparent border-none p-0">
+                <button type="button" onClick={() => setShowTerms(true)} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium underline cursor-pointer bg-transparent border-none p-0">
                   Terms and Conditions
                 </button>
               </label>
@@ -251,16 +229,11 @@ const Register = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition duration-200 font-semibold ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={authButtonClass}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <Spinner />
                   Creating Account...
                 </span>
               ) : (
@@ -276,18 +249,17 @@ const Register = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
-              <Link to="/login" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold">
+              <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
                 Sign In
               </Link>
             </p>
           </div>
         )}
-      </div>
 
       {/* Terms and Conditions Modal */}
       {showTerms && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowTerms(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/50 backdrop-blur-sm" onClick={() => setShowTerms(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Terms and Conditions</h2>
               <button onClick={() => setShowTerms(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
@@ -336,7 +308,7 @@ const Register = () => {
             <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => setShowTerms(false)}
-                className="w-full bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 transition font-semibold"
+                className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-semibold"
               >
                 I Understand
               </button>
@@ -344,7 +316,7 @@ const Register = () => {
           </div>
         </div>
       )}
-    </div>
+    </AuthShell>
   );
 };
 

@@ -265,7 +265,7 @@ const Sidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
                   className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600"
                 />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-semibold text-sm">
                     {user?.name?.charAt(0).toUpperCase()}
                   </span>

@@ -146,35 +146,32 @@ const Chat = () => {
   }, [setActiveView]);
 
   return (
-    <div className={`${showChatWindow ? 'h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-[calc(100vh-4rem)]' : 'h-[calc(100dvh-3.5rem)]'} md:h-[calc(100vh-4rem)] flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200`}>
+    <div className={`${showChatWindow ? 'h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-screen' : 'h-[calc(100dvh-60px)]'} md:h-screen flex flex-col bg-gray-50 dark:bg-gray-900 md:p-5 lg:p-6 transition-colors duration-200`}>
       {/* Page Header — compact; hidden on mobile when viewing a conversation */}
-      <div className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-3 md:px-6 py-2 md:py-2.5 ${showChatWindow ? 'hidden md:block' : ''}`}>
+      <div className={`bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700/60 px-4 py-3 md:mb-4 md:border-0 md:bg-transparent md:p-0 md:dark:bg-transparent ${showChatWindow ? 'hidden md:block' : ''}`}>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-base md:text-lg font-bold text-gray-900 dark:text-white leading-tight">
+            <h1 className="text-lg md:text-[28px] font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
               Messages
-              <span className="font-normal text-gray-500 dark:text-gray-400 hidden sm:inline">
-                {' '}
-                · Chat with your classmates
-              </span>
+              
             </h1>
-            <p className="text-[11px] sm:hidden text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-tight mt-0.5 md:mt-1">
               Chat with your classmates
             </p>
           </div>
-          <div className="flex items-center space-x-1.5 flex-shrink-0">
-            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} title={connected ? 'Connected' : 'Disconnected'} />
-            <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
-              {connected ? 'Live' : 'Off'}
+          <div className={`flex items-center gap-1.5 flex-shrink-0 rounded-full px-2.5 py-1 ring-1 ${connected ? 'bg-emerald-50 ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/20' : 'bg-rose-50 ring-rose-100 dark:bg-rose-500/10 dark:ring-rose-500/20'}`}>
+            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-rose-500'}`} title={connected ? 'Connected' : 'Disconnected'} />
+            <span className={`text-xs font-semibold ${connected ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}>
+              {connected ? 'Live' : 'Offline'}
             </span>
           </div>
         </div>
       </div>
 
       {/* Chat Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden md:rounded-3xl md:border md:border-gray-200/70 md:bg-white md:shadow-card md:dark:border-gray-700/60 md:dark:bg-gray-800">
         {/* Left Sidebar - Chat List: hidden on mobile when a chat is open */}
-        <div className={`w-full md:w-96 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex-shrink-0 overflow-hidden flex flex-col ${showChatWindow ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-[340px] lg:w-[360px] bg-white dark:bg-gray-800 md:border-r border-gray-100 dark:border-gray-700/60 flex-shrink-0 overflow-hidden flex flex-col ${showChatWindow ? 'hidden md:flex' : 'flex'}`}>
           {loading && (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

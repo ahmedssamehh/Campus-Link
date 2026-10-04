@@ -9,17 +9,15 @@ import { getMediaUrl } from '../../utils/media';
 import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const colorClasses = {
-  blue: 'from-blue-500 to-blue-600',
-  green: 'from-green-500 to-green-600',
-  purple: 'from-purple-500 to-purple-600',
-  indigo: 'from-indigo-500 to-indigo-600',
-  pink: 'from-pink-500 to-pink-600',
-  teal: 'from-teal-500 to-teal-600',
+  blue: 'from-blue-500 via-blue-600 to-blue-800',
+  navy: 'from-blue-700 via-blue-800 to-slate-900',
+  sky: 'from-sky-500 via-blue-600 to-blue-700',
+  indigo: 'from-blue-600 via-indigo-600 to-indigo-800',
 };
 const colorKeys = Object.keys(colorClasses);
 
 const roleMeta = {
-  owner: { label: 'Owner', cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  owner: { label: 'Owner', cls: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' },
   admin: { label: 'Admin', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
   user:  { label: 'Member', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' },
 };
@@ -437,9 +435,9 @@ const GroupChat = () => {
   const memberCount = group.members?.length || 0;
 
   return (
-    <div className="h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-[calc(100vh-4rem)] flex flex-col">
+    <div className="h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-screen flex flex-col">
       {/* Group Header */}
-      <div className={`bg-gradient-to-r ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4`}>
+      <div className={`relative overflow-hidden bg-gradient-to-br ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4 shadow-glow`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
@@ -477,7 +475,7 @@ const GroupChat = () => {
                   className="fixed inset-0 z-10"
                   onClick={() => setShowActionsMenu(false)}
                 ></div>
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-20">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/60 overflow-hidden z-20">
                   <button
                     onClick={() => {
                       setShowMembers(!showMembers);
@@ -526,7 +524,7 @@ const GroupChat = () => {
           <div
             ref={messagesContainerRef}
             onScroll={handleScroll}
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900 p-3 sm:p-6"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/70 dark:bg-gray-900 p-3 sm:p-6"
           >
             {/* Load more indicator */}
             {loadingMore && (
@@ -647,12 +645,12 @@ const GroupChat = () => {
                 onChange={editingMessage ? (e) => setEditInput(e.target.value) : handleInputChange}
                 placeholder={!connected ? "Connecting..." : editingMessage ? "Edit message..." : "Type a message..."}
                 disabled={!connected}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-11 px-4 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition dark:bg-gray-700/60 dark:text-white dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
                 disabled={editingMessage ? !editInput.trim() : (!connected || sending || messageInput.trim() === '')}
-                className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-2.5 rounded-full shadow-glow hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 {sending ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -683,7 +681,7 @@ const GroupChat = () => {
                       {member.profilePhoto ? (
                         <img src={getMediaUrl(member.profilePhoto)} alt={member.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-semibold text-sm">
                             {member.name?.charAt(0).toUpperCase()}
                           </span>

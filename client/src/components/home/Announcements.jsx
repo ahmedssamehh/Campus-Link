@@ -1,132 +1,86 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import EmptyState from '../ui/EmptyState';
 import { SkeletonAnnouncementCard } from '../ui/Skeleton';
+import { CardShell } from './YourGroups';
+import { MegaphoneIcon } from '../ui/Icons';
 
-const Announcements = ({ announcements, loading, unreadCount }) => {
-  // Format relative time
-  const getRelativeTime = (dateString) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    return date.toLocaleDateString();
-  };
+const getRelativeTime = (dateString) => {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffInSeconds = Math.floor((now - date) / 1000);
 
-  if (loading) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-shadow duration-200">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">Latest Announcements</h2>
-        <div className="space-y-3" aria-busy="true" aria-label="Loading announcements">
-          <SkeletonAnnouncementCard />
-          <SkeletonAnnouncementCard />
-        </div>
+  if (diffInSeconds < 60) return 'now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  return date.toLocaleDateString();
+};
+
+const Announcements = ({ announcements, loading, unreadCount }) => (
+  <CardShell
+    title={
+      <span className="flex items-center gap-2">
+        Latest announcements
+        {unreadCount > 0 && (
+          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">
+            {unreadCount} new
+          </span>
+        )}
+      </span>
+    }
+    action={
+      <Link to="/announcements" className="text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">
+        See all
+      </Link>
+    }
+  >
+    {loading ? (
+      <div className="space-y-3" aria-busy="true" aria-label="Loading announcements">
+        <SkeletonAnnouncementCard />
+        <SkeletonAnnouncementCard />
       </div>
-    );
-  }
-
-  if (!announcements || announcements.length === 0) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Latest Announcements</h2>
-          <Link
-            to="/announcements"
-            className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium inline-flex items-center gap-1 transition-colors duration-150 self-start sm:self-auto"
-          >
-            See All
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-        <EmptyState
-          title="No announcements yet"
-          description="When your groups post updates, they will appear here. You can also open the full announcements page anytime."
-          icon="📣"
-          action={
+    ) : !announcements || announcements.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+          <MegaphoneIcon className="h-6 w-6" />
+        </span>
+        <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-white">No announcements yet</p>
+        <p className="mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
+          When your groups post updates, they will appear here.
+        </p>
+      </div>
+    ) : (
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {announcements.map((a) => (
+          <li key={a._id}>
             <Link
               to="/announcements"
-              className="inline-flex items-center justify-center rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2.5 transition-colors duration-200 w-full sm:w-auto"
+              className={`flex h-full items-start gap-3 rounded-xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${
+                a.isRead
+                  ? 'border-gray-100 bg-white dark:border-gray-700/60 dark:bg-gray-800'
+                  : 'border-blue-100 bg-blue-50/60 dark:border-blue-500/20 dark:bg-blue-500/5'
+              }`}
             >
-              Browse announcements
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-glow">
+                <MegaphoneIcon className="h-[18px] w-[18px]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-semibold text-gray-900 dark:text-white">{a.title}</span>
+                  <span className="flex-shrink-0 text-xs text-gray-400">{getRelativeTime(a.createdAt)}</span>
+                </span>
+                <span className="mt-0.5 line-clamp-2 block text-sm text-gray-500 dark:text-gray-400">{a.content}</span>
+                {a.group?.name && (
+                  <span className="mt-2 inline-block text-xs font-medium text-blue-600 dark:text-blue-400">{a.group.name}</span>
+                )}
+              </span>
+              {!a.isRead && <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />}
             </Link>
-          }
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-shadow duration-200">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Latest Announcements</h2>
-          {unreadCount > 0 && (
-            <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold rounded-full">
-              {unreadCount} new
-            </span>
-          )}
-        </div>
-        <Link
-          to="/announcements"
-          className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium flex items-center gap-1"
-        >
-          See All
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
-      </div>
-      <div className="space-y-3">
-        {announcements.map((announcement) => (
-          <div
-            key={announcement._id}
-            className={`border-l-4 ${
-              announcement.isRead 
-                ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/30' 
-                : 'border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-900/20'
-            } p-4 rounded-r-lg hover:shadow-md transition duration-200`}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    {announcement.title}
-                  </h3>
-                  {!announcement.isRead && (
-                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                  )}
-                </div>
-                <p className="text-gray-700 dark:text-gray-300 text-sm mb-2 line-clamp-2">
-                  {announcement.content}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center">
-                    <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span className="font-medium text-purple-600 dark:text-purple-400">{announcement.group?.name}</span>
-                  </div>
-                  <span>•</span>
-                  <div className="flex items-center">
-                    <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {getRelativeTime(announcement.createdAt)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </li>
         ))}
-      </div>
-    </div>
-  );
-};
+      </ul>
+    )}
+  </CardShell>
+);
 
 export default Announcements;
