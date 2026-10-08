@@ -129,7 +129,7 @@ const QuestionDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -137,7 +137,7 @@ const QuestionDetails = () => {
 
   if (error && !question) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}
@@ -149,9 +149,9 @@ const QuestionDetails = () => {
 
   if (!question) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 text-center text-gray-600 dark:text-gray-300">
+          <div className="bg-white rounded-2xl p-8 text-center text-gray-600">
             Question not found.
           </div>
         </div>
@@ -160,12 +160,12 @@ const QuestionDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
           onClick={() => navigate('/discussion')}
-          className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium mb-6 transition duration-200"
+          className="flex items-center text-blue-600 hover:text-blue-700 font-medium mb-6 transition duration-200"
         >
           <svg
             className="h-5 w-5 mr-2"
@@ -184,12 +184,12 @@ const QuestionDetails = () => {
         </button>
 
         {/* Question */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 mb-6">
+        <div className="bg-white rounded-2xl p-8 mb-6">
           <div className="flex items-start justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{question.title}</h1>
+            <h1 className="text-3xl font-semibold text-gray-900">{question.title}</h1>
             <div className="ml-4 flex items-center gap-3">
               {question.isSolved && (
-                <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-sm font-semibold px-4 py-2 rounded-full flex items-center">
+                <span className="bg-green-100 text-green-700 text-sm font-semibold px-4 py-2 rounded-full flex items-center">
                   <svg className="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -206,7 +206,7 @@ const QuestionDetails = () => {
                   disabled={solveLoading}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                     question.isSolved
-                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
                 >
@@ -221,25 +221,25 @@ const QuestionDetails = () => {
               {question.author?.profilePhoto ? (
                 <img src={getMediaUrl(question.author.profilePhoto)} alt={question.author?.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">
                     {(question.author?.name || 'U').charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{question.author?.name || 'Unknown User'}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Asked {getRelativeTime(question.createdAt)}</p>
+                <p className="text-sm font-medium text-gray-900">{question.author?.name || 'Unknown User'}</p>
+                <p className="text-xs text-gray-500">Asked {getRelativeTime(question.createdAt)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 ml-auto">
+            <div className="flex items-center gap-2 text-gray-600 ml-auto">
               <button
                 onClick={() => handleQuestionVote('up')}
                 disabled={questionVoteLoading}
                 className={`p-2 rounded-md transition ${
                   question.userVote === 'up'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -257,7 +257,7 @@ const QuestionDetails = () => {
                 className={`p-2 rounded-md transition ${
                   question.userVote === 'down'
                     ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-gray-100 hover:bg-gray-200'
                 }`}
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -272,7 +272,7 @@ const QuestionDetails = () => {
           </div>
 
           <div className="prose max-w-none mb-6">
-            <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line">{question.content}</p>
+            <p className="text-gray-800 whitespace-pre-line">{question.content}</p>
           </div>
 
           {question.tags && question.tags.length > 0 && (
@@ -280,7 +280,7 @@ const QuestionDetails = () => {
               {question.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-medium px-3 py-1 rounded-full"
+                  className="bg-blue-100 text-blue-700 text-sm font-medium px-3 py-1 rounded-full"
                 >
                   {tag}
                 </span>
@@ -291,16 +291,16 @@ const QuestionDetails = () => {
 
         {/* Answers Section */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
             {answers.length} {answers.length === 1 ? 'Answer' : 'Answers'}
           </h2>
           <div className="space-y-4">
             {answers.length === 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 text-center">
-                <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white rounded-2xl p-8 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                <p className="text-gray-500 dark:text-gray-400">No answers yet. Be the first to answer!</p>
+                <p className="text-gray-500">No answers yet. Be the first to answer!</p>
               </div>
             )}
             {answers.map((answer) => (
@@ -316,8 +316,8 @@ const QuestionDetails = () => {
         </div>
 
         {/* Answer Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Your Answer</h3>
+        <div className="bg-white rounded-2xl p-8">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Answer</h3>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
               {error}
@@ -329,11 +329,11 @@ const QuestionDetails = () => {
               onChange={(e) => setAnswerText(e.target.value)}
               placeholder="Write your answer here..."
               rows={8}
-              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none bg-white dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none bg-white"
               disabled={isSubmitting}
             />
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 Please be respectful and provide helpful answers
               </p>
               <button

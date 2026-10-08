@@ -13,14 +13,14 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/60 max-w-md w-full p-6">
+        <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md w-full p-6">
           {/* Icon */}
           <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${
-            isDestructive ? 'bg-red-100 dark:bg-red-900/20' : 'bg-blue-100 dark:bg-blue-900/20'
+            isDestructive ? 'bg-red-100' : 'bg-blue-100'
           } mb-4`}>
             {isDestructive ? (
               <svg
-                className="h-6 w-6 text-red-600 dark:text-red-400"
+                className="h-6 w-6 text-red-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -34,7 +34,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
               </svg>
             ) : (
               <svg
-                className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                className="h-6 w-6 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -50,12 +50,12 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-center mb-2">
+          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
             {title}
           </h3>
 
           {/* Message */}
-          <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-6">
+          <p className="text-sm text-gray-600 text-center mb-6">
             {message}
           </p>
 
@@ -63,7 +63,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
           <div className="flex space-x-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+              className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition duration-200"
             >
               {cancelText}
             </button>

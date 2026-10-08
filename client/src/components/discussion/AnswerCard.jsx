@@ -31,9 +31,9 @@ const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
   const isDownvoted = answer.userVote === 'down';
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 ${isAccepted ? 'border-2 border-green-500' : ''}`}>
+    <div className={`bg-white rounded-2xl p-6 ${isAccepted ? 'border-2 border-green-500' : ''}`}>
       {isAccepted && (
-        <div className="mb-3 flex items-center text-green-600 dark:text-green-400">
+        <div className="mb-3 flex items-center text-green-600">
           <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -54,7 +54,7 @@ const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
             className={`p-2 rounded-full transition duration-200 ${
               isUpvoted
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -65,14 +65,14 @@ const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
               />
             </svg>
           </button>
-          <span className="font-bold text-lg text-gray-900 dark:text-white">{answer.votes || 0}</span>
+          <span className="font-semibold text-lg text-gray-900">{answer.votes || 0}</span>
           <button
             onClick={() => handleVote('down')}
             disabled={isVoting}
             className={`p-2 rounded-full transition duration-200 ${
               isDownvoted
                 ? 'bg-red-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -87,22 +87,22 @@ const AnswerCard = ({ answer, isAccepted, onVote, isVoting }) => {
 
         {/* Answer Content */}
         <div className="flex-1">
-          <p className="text-gray-800 dark:text-gray-200 mb-4 whitespace-pre-line">{answer.content}</p>
+          <p className="text-gray-800 mb-4 whitespace-pre-line">{answer.content}</p>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {answer.author?.profilePhoto ? (
                 <img src={getMediaUrl(answer.author.profilePhoto)} alt={authorName} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">
                     {authorName.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{authorName}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Answered {getRelativeTime(answer.createdAt)}</p>
+                <p className="text-sm font-medium text-gray-900">{authorName}</p>
+                <p className="text-xs text-gray-500">Answered {getRelativeTime(answer.createdAt)}</p>
               </div>
             </div>
           </div>

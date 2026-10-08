@@ -92,7 +92,7 @@ const Login = () => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700">
             Email address
           </label>
           <input
@@ -112,10 +112,10 @@ const Login = () => {
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
               Password
             </label>
-            <Link to="/forgot-password" className="text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">
+            <Link to="/forgot-password" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
               Forgot password?
             </Link>
           </div>
@@ -134,7 +134,7 @@ const Login = () => {
           {errors.password && <p className="mt-1.5 text-sm text-rose-600">{errors.password}</p>}
         </div>
 
-        <label htmlFor="remember" className="flex cursor-pointer items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <label htmlFor="remember" className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
           <input
             id="remember"
             type="checkbox"
@@ -155,9 +155,9 @@ const Login = () => {
         </button>
       </form>
 
-      <p className="mt-7 text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="mt-7 text-center text-sm text-gray-600">
         Don't have an account?{' '}
-        <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">
+        <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700">
           Create account
         </Link>
       </p>

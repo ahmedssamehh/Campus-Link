@@ -153,16 +153,16 @@ const Palette = ({ onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-start justify-center bg-gray-950/40 backdrop-blur-sm px-4 pt-[12vh] animate-fade-in"
+      className="fixed inset-0 z-[70] flex items-start justify-center bg-black/25 px-4 pt-[12vh] animate-fade-in"
       onMouseDown={onClose}
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 animate-scale-in"
+        className="w-full max-w-xl origin-top overflow-hidden rounded-2xl border border-black/[0.06] bg-white/95 shadow-2xl backdrop-blur-xl animate-scale-in"
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-label="Search Campus Link"
       >
-        <div className="flex items-center gap-3 border-b border-gray-100 px-4 dark:border-gray-700">
+        <div className="flex items-center gap-3 border-b border-gray-100 px-4">
           <SearchIcon className="h-5 w-5 text-gray-400" />
           <input
             ref={inputRef}
@@ -170,16 +170,16 @@ const Palette = ({ onClose }) => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Search groups, discussions, pages…"
-            className="h-14 flex-1 bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-white"
+            className="h-14 flex-1 bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none"
           />
-          <kbd className="rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] font-semibold text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+          <kbd className="rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] font-semibold text-gray-500">
             Esc
           </kbd>
         </div>
 
         <div className="max-h-[55vh] overflow-y-auto p-2">
           {items.length === 0 && (
-            <p className="px-3 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p className="px-3 py-10 text-center text-sm text-gray-500">
               No results for “{query}”
             </p>
           )}
@@ -199,31 +199,31 @@ const Palette = ({ onClose }) => {
                   onMouseEnter={() => setActiveIndex(idx)}
                   onClick={() => go(item)}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
-                    active ? 'bg-blue-50 dark:bg-blue-500/10' : ''
+                    active ? 'bg-blue-50' : ''
                   }`}
                 >
                   {item.badge ? (
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-[11px] font-bold text-white shadow-sm">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-[11px] font-semibold text-white shadow-sm">
                       {item.badge}
                     </span>
                   ) : (
                     <span
                       className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${
                         active
-                          ? 'bg-blue-600 text-white shadow-glow'
-                          : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-500'
                       }`}
                     >
                       <item.Icon className="h-[18px] w-[18px]" />
                     </span>
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-gray-900 dark:text-white">
+                    <span className="block truncate text-sm font-semibold text-gray-900">
                       {item.label}
                     </span>
-                    <span className="block truncate text-xs text-gray-500 dark:text-gray-400">{item.hint}</span>
+                    <span className="block truncate text-xs text-gray-500">{item.hint}</span>
                   </span>
-                  {active && <span className="text-xs font-medium text-blue-600 dark:text-blue-400">↵</span>}
+                  {active && <span className="text-xs font-medium text-blue-600">↵</span>}
                 </button>
               </React.Fragment>
             );

@@ -54,23 +54,23 @@ const Toast = ({ notification, onClose }) => {
 
 const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
+    <div className="modal-scrim-in fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
+      <div className="modal-panel-in bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
         <div className="flex items-start gap-4 mb-6">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-            <svg className="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+            <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirmation</h3>
-            <p className="text-gray-600 dark:text-gray-400">{message}</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirmation</h3>
+            <p className="text-gray-600">{message}</p>
           </div>
         </div>
         <div className="flex items-center justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+            className="px-4 py-2 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition duration-200"
           >
             Cancel
           </button>

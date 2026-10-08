@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { useSocket } from '../../context/SocketContext';
 import axios from '../../api/axios';
+import { SegmentedControl } from '../../components/ui/motion';
 
 const AnnouncementsPage = () => {
   const { user } = useAuth();
@@ -163,15 +164,15 @@ const AnnouncementsPage = () => {
   };
 
   return (
-    <div className="bg-grid-soft min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 pb-24 pt-6 md:pb-10 md:pt-8 transition-colors duration-200">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 pb-24 pt-6 md:pb-10 md:pt-8 transition-colors duration-200">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
         {/* Header — stack on narrow screens so the CTA never forces horizontal overflow */}
         <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-gray-900 dark:text-white mb-1">
+            <h1 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-gray-900 mb-1">
               Announcements
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 break-words">
+            <p className="text-sm text-gray-500 break-words">
               Stay updated with announcements from your groups
             </p>
           </div>
@@ -179,7 +180,7 @@ const AnnouncementsPage = () => {
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
-              className="w-full sm:w-auto shrink-0 inline-flex h-11 items-center justify-center gap-2 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5"
+              className="w-full sm:w-auto shrink-0 press inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-4 bg-blue-600 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
             >
               <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -191,58 +192,31 @@ const AnnouncementsPage = () => {
 
         {/* Stats — compact 3-up on mobile, roomier from sm+ */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-4 sm:mb-6 min-w-0">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-3 sm:p-6 min-w-0">
-            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Total</p>
-            <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white tabular-nums">{announcements.length}</p>
+          <div className="bg-white rounded-2xl p-3 sm:p-6 min-w-0">
+            <p className="text-gray-500 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Total</p>
+            <p className="text-xl sm:text-3xl font-semibold text-gray-900 tabular-nums">{announcements.length}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-3 sm:p-6 min-w-0">
-            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Unread</p>
-            <p className="text-xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 tabular-nums">{unreadCount}</p>
+          <div className="bg-white rounded-2xl p-3 sm:p-6 min-w-0">
+            <p className="text-gray-500 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Unread</p>
+            <p className="text-xl sm:text-3xl font-semibold text-blue-600 tabular-nums">{unreadCount}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-3 sm:p-6 min-w-0">
-            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Read</p>
-            <p className="text-xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{readCount}</p>
+          <div className="bg-white rounded-2xl p-3 sm:p-6 min-w-0">
+            <p className="text-gray-500 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1 truncate">Read</p>
+            <p className="text-xl sm:text-3xl font-semibold text-emerald-600 tabular-nums">{readCount}</p>
           </div>
         </div>
 
-        {/* Filter tabs — wrap + scroll safety on very small screens */}
-        <div className="mb-5 inline-flex max-w-full rounded-2xl border border-gray-200/80 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Filter announcements">
-            <button
-              type="button"
-              onClick={() => setFilter('all')}
-              className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition min-w-0 ${
-                filter === 'all'
-                  ? 'bg-blue-600 text-white shadow-glow'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              All ({announcements.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('unread')}
-              className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition min-w-0 ${
-                filter === 'unread'
-                  ? 'bg-blue-600 text-white shadow-glow'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Unread ({unreadCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('read')}
-              className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition min-w-0 ${
-                filter === 'read'
-                  ? 'bg-blue-600 text-white shadow-glow'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Read ({readCount})
-            </button>
-          </div>
-        </div>
+        <SegmentedControl
+          className="mb-5"
+          ariaLabel="Filter announcements"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'All', count: announcements.length },
+            { value: 'unread', label: 'Unread', count: unreadCount },
+            { value: 'read', label: 'Read', count: readCount },
+          ]}
+        />
 
         {/* Loading State */}
         {loading && (
@@ -253,7 +227,7 @@ const AnnouncementsPage = () => {
 
         {/* Error State */}
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm mb-4 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-300">
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm mb-4">
             {error}
           </div>
         )}
@@ -262,34 +236,35 @@ const AnnouncementsPage = () => {
         {!loading && !error && (
           <div className="space-y-4">
             {filteredAnnouncements.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8 sm:p-12 text-center min-w-0">
-                <svg className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 p-3.5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white rounded-2xl p-8 sm:p-12 text-center min-w-0">
+                <svg className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 p-3.5 text-blue-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9 " />
                 </svg>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No announcements found
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   {filter === 'unread' ? 'All caught up!' : 'Check back later for updates'}
                 </p>
               </div>
             ) : (
-              filteredAnnouncements.map((announcement) => (
+              filteredAnnouncements.map((announcement, idx) => (
                 <div
                   key={announcement._id}
-                  className={`bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-6 hover:shadow-lg transition-all duration-200 min-w-0 max-w-full ${
-                    !announcement.isRead ? 'ring-1 ring-blue-100 bg-gradient-to-br from-blue-50/70 to-white dark:ring-blue-500/20 dark:from-blue-500/5 dark:to-gray-800' : ''
+                  style={{ '--reveal-delay': `${Math.min(idx, 10) * 45}ms` }}
+                  className={`reveal bg-white rounded-2xl p-4 sm:p-6 hover:border-gray-200 transition-all duration-200 min-w-0 max-w-full ${
+                    !announcement.isRead ? 'bg-blue-50/50 border-blue-100' : ''
                   }`}
                 >
                   <div className="flex flex-col gap-4 min-w-0">
                     <div className="min-w-0 flex-1 space-y-2 sm:space-y-3">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                         <div className="flex flex-wrap items-center gap-2 min-w-0">
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white break-words [overflow-wrap:anywhere]">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words [overflow-wrap:anywhere]">
                             {announcement.title}
                           </h3>
                           {!announcement.isRead && (
-                            <span className="shrink-0 px-2 py-0.5 sm:py-1 bg-blue-600 text-white text-[10px] font-bold tracking-wide rounded-full shadow-glow">
+                            <span className="shrink-0 px-2 py-0.5 sm:py-1 bg-blue-600 text-white text-[10px] font-semibold tracking-wide rounded-full shadow-glow">
                               NEW
                             </span>
                           )}
@@ -300,7 +275,7 @@ const AnnouncementsPage = () => {
                             <button
                               type="button"
                               onClick={() => handleMarkAsRead(announcement._id)}
-                              className="p-2.5 sm:px-3 sm:py-2 bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 rounded-xl hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
+                              className="p-2.5 sm:px-3 sm:py-2 bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 rounded-xl hover:bg-emerald-100 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
                               title="Mark as read"
                               aria-label="Mark as read"
                             >
@@ -313,7 +288,7 @@ const AnnouncementsPage = () => {
                             <button
                               type="button"
                               onClick={() => handleDelete(announcement._id)}
-                              className="p-2.5 sm:px-3 sm:py-2 bg-rose-50 text-rose-600 ring-1 ring-rose-100 rounded-xl hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/20 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
+                              className="p-2.5 sm:px-3 sm:py-2 bg-rose-50 text-rose-600 ring-1 ring-rose-100 rounded-xl hover:bg-rose-100 transition duration-200 text-sm font-medium inline-flex items-center justify-center"
                               title="Delete"
                               aria-label="Delete announcement"
                             >
@@ -324,15 +299,15 @@ const AnnouncementsPage = () => {
                           )}
                         </div>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap [overflow-wrap:anywhere] [word-break:break-word]">
+                      <p className="text-sm sm:text-base text-gray-700 break-words whitespace-pre-wrap [overflow-wrap:anywhere] [word-break:break-word]">
                         {announcement.content}
                       </p>
-                      <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center text-xs sm:text-sm text-gray-500">
                         <div className="flex items-start gap-1 min-w-0">
                           <svg className="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
-                          <span className="font-medium text-blue-600 dark:text-blue-400 break-words min-w-0">
+                          <span className="font-medium text-blue-600 break-words min-w-0">
                             {announcement.group?.name}
                           </span>
                         </div>
@@ -362,13 +337,13 @@ const AnnouncementsPage = () => {
 
       {/* Create Announcement Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-gray-950/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto overscroll-contain">
-          <div className="bg-white dark:bg-gray-800 rounded-t-xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[min(100dvh,100%)] sm:max-h-[90vh] overflow-y-auto my-0 sm:mx-4 min-w-0">
+        <div className="modal-scrim-in fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-gray-950/50 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto overscroll-contain">
+          <div className="modal-panel-in bg-white rounded-t-xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[min(100dvh,100%)] sm:max-h-[90vh] overflow-y-auto my-0 sm:mx-4 min-w-0">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create Announcement</h2>
+              <h2 className="text-2xl font-semibold text-gray-900">Create Announcement</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-gray-500 hover:text-gray-700"
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -377,13 +352,13 @@ const AnnouncementsPage = () => {
             </div>
             <form onSubmit={handleCreateAnnouncement} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Group *
                 </label>
                 <select
                   value={formData.groupId}
                   onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
                   <option value="">Choose a group...</option>
@@ -395,27 +370,27 @@ const AnnouncementsPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter announcement title..."
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Content *
                 </label>
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   rows="5"
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Write your announcement here..."
                   required
                 ></textarea>
@@ -424,7 +399,7 @@ const AnnouncementsPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="w-full sm:w-auto px-6 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+                  className="w-full sm:w-auto px-6 py-2.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition duration-200"
                 >
                   Cancel
                 </button>

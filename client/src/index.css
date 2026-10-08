@@ -11,27 +11,45 @@
 
 html {
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-optical-sizing: auto;
+    line-height: 1.5;
+    letter-spacing: -0.003em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #F5F8FC;
-    color: #0F1B2D;
+    background-color: #F5F5F7;
+    color: #1C1C1E;
 }
 
-.dark body {
-    background-color: #0F1B2D;
-    color: #EDF2F9;
+/* Tracking is size-specific: large type tightens, small type stays open. */
+h1 {
+    letter-spacing: -0.022em;
+    line-height: 1.15;
+}
+
+h2 {
+    letter-spacing: -0.017em;
+    line-height: 1.2;
+}
+
+h3 {
+    letter-spacing: -0.01em;
 }
 
 ::selection {
-    background-color: rgba(36, 88, 230, 0.18);
+    background-color: rgba(0, 113, 227, 0.2);
 }
 
-/* Premium thin scrollbars */
+:focus-visible {
+    outline: 2px solid #0071E3;
+    outline-offset: 2px;
+}
+
+/* Thin, quiet scrollbars */
 *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -42,20 +60,31 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: rgba(100, 116, 143, 0.35);
+    background-color: rgba(120, 120, 128, 0.32);
     border-radius: 9999px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(100, 116, 143, 0.55);
 }
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 143, 0.35) transparent;
+    scrollbar-color: rgba(120, 120, 128, 0.32) transparent;
 }
 
-/* Notification Animations */
+/* Press feedback: lives on pointer-down and is instant. */
+button:not(:disabled),
+a,
+[role='button'] {
+    touch-action: manipulation;
+}
+
+.press {
+    transition: transform 100ms ease-out;
+}
+
+.press:active {
+    transform: scale(0.97);
+}
+
+/* Entrance motion */
 
 @keyframes slide-in-right {
     from {
@@ -77,9 +106,10 @@ body {
     }
 }
 
+/* Popovers grow from their trigger: pair with an origin-* utility. */
 @keyframes scale-in {
     from {
-        transform: scale(0.9);
+        transform: scale(0.96);
         opacity: 0;
     }
     to {
@@ -89,15 +119,15 @@ body {
 }
 
 .animate-slide-in-right {
-    animation: slide-in-right 0.3s ease-out;
+    animation: slide-in-right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.18s ease-out;
 }
 
 .animate-scale-in {
-    animation: scale-in 0.2s ease-out;
+    animation: scale-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -109,16 +139,213 @@ body {
     scrollbar-width: none;
 }
 
-/* Soft dotted-grid page backdrop (hero reference style) */
-.bg-grid-soft {
-    background-image:
-        linear-gradient(rgba(36, 88, 230, 0.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(36, 88, 230, 0.045) 1px, transparent 1px);
-    background-size: 44px 44px;
+/* ---------- Motion system ----------
+   One rhythm everywhere: enter 280-420ms with an ease-out curve, exit ~60% of that.
+   Only transform and opacity animate, so nothing reflows. */
+
+:root {
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-.dark .bg-grid-soft {
-    background-image:
-        linear-gradient(rgba(91, 142, 252, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(91, 142, 252, 0.05) 1px, transparent 1px);
+/* Staggered entrance for cards and rows (index-driven delay set inline).
+   Fill mode is `backwards`: hidden during the delay, released afterwards, so finished
+   elements don't keep a transform (which would trap popovers in a stacking context). */
+@keyframes reveal-up {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.reveal {
+    animation: reveal-up 420ms var(--ease-out) backwards;
+    animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Route change: content settles in from slightly below. */
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.page-enter {
+    animation: page-enter 280ms var(--ease-out) backwards;
+}
+
+/* Sliding selection in segmented controls. */
+.segmented-pill {
+    transition: transform 320ms var(--ease-spring), width 320ms var(--ease-spring);
+}
+
+/* Modal: scrim fades, panel scales from 96%; exit is faster than enter. */
+@keyframes scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scrim-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes panel-out {
+    from {
+        opacity: 1;
+        transform: none;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+}
+
+.modal-scrim-in { animation: scrim-in 200ms ease-out both; }
+.modal-scrim-out { animation: scrim-out 160ms ease-in both; }
+.modal-panel-in { animation: panel-in 260ms var(--ease-spring) backwards; }
+.modal-panel-out { animation: panel-out 160ms ease-in both; }
+
+/* Rows that are being removed (approve/decline, delete). */
+@keyframes row-out {
+    to {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+}
+
+.row-leaving {
+    animation: row-out 220ms ease-in forwards;
+    pointer-events: none;
+}
+
+/* Brief highlight after a row changes (e.g. a role update); fades via transition-colors. */
+.row-flash {
+    background-color: rgb(0 113 227 / 0.08) !important;
+}
+
+/* Bars that grow from their baseline (charts). */
+@keyframes grow-up {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+}
+
+.grow-up {
+    transform-origin: bottom;
+    animation: grow-up 600ms var(--ease-out) backwards;
+    animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Shimmer placeholder. */
+@keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #EEEEF1 25%, #F7F7F9 37%, #EEEEF1 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+}
+
+/* Clickable surfaces: a quiet shadow rises on hover (no translate). */
+.lift {
+    transition: box-shadow 220ms var(--ease-out), background-color 180ms ease;
+}
+
+.lift:hover {
+    box-shadow: 0 8px 24px -12px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.06);
+}
+
+/* ---------- Brand ---------- */
+
+/* Logo strokes drawing themselves in (splash). */
+@keyframes brand-draw {
+    to { stroke-dashoffset: 0; }
+}
+
+.brand-draw {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: brand-draw 760ms var(--ease-out) forwards;
+}
+
+/* Hover: the two links ease apart along the chain, then settle back. */
+.brand-link-a,
+.brand-link-b {
+    transition: transform 380ms var(--ease-spring);
+}
+
+.brand-hover:hover .brand-link-a { transform: translateX(-0.9px); }
+.brand-hover:hover .brand-link-b { transform: translateX(0.9px); }
+
+/* Splash wordmark rises in after the mark has drawn. */
+@keyframes brand-rise {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.brand-rise {
+    animation: brand-rise 420ms var(--ease-out) 520ms backwards;
+}
+
+/* Accessibility: gentler, non-vestibular equivalents */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .press:active {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .material {
+        background-color: #FFFFFF !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .material {
+        background-color: #FFFFFF !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+        border-color: #3A3A3C !important;
+    }
 }

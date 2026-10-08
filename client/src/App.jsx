@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
 import { SocketProvider } from './context/SocketContext';
@@ -8,25 +8,27 @@ import UserLayout from './components/layout/UserLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 import PageLoader from './components/ui/PageLoader';
+import RouteTitle from './components/brand/RouteTitle';
+import lazyWithRetry from './utils/lazyWithRetry';
 
-const Login = lazy(() => import('./pages/auth/Login'));
-const Register = lazy(() => import('./pages/auth/Register'));
-const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
-const Home = lazy(() => import('./pages/home/Home'));
-const AnnouncementsPage = lazy(() => import('./pages/announcements/AnnouncementsPage'));
-const Chat = lazy(() => import('./pages/chat/Chat'));
-const Groups = lazy(() => import('./pages/groups/Groups'));
-const GroupChat = lazy(() => import('./pages/groups/GroupChat'));
-const Discussion = lazy(() => import('./pages/discussion/Discussion'));
-const QuestionDetails = lazy(() => import('./pages/discussion/QuestionDetails'));
-const AskQuestion = lazy(() => import('./pages/discussion/AskQuestion'));
-const Profile = lazy(() => import('./pages/profile/Profile'));
-const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const UsersManagement = lazy(() => import('./pages/admin/UsersManagement'));
-const GroupsManagement = lazy(() => import('./pages/admin/GroupsManagement'));
-const JoinRequests = lazy(() => import('./pages/admin/JoinRequests'));
-const ActivityPage = lazy(() => import('./pages/admin/ActivityPage'));
+const Login = lazyWithRetry(() => import('./pages/auth/Login'));
+const Register = lazyWithRetry(() => import('./pages/auth/Register'));
+const ForgotPassword = lazyWithRetry(() => import('./pages/auth/ForgotPassword'));
+const Home = lazyWithRetry(() => import('./pages/home/Home'));
+const AnnouncementsPage = lazyWithRetry(() => import('./pages/announcements/AnnouncementsPage'));
+const Chat = lazyWithRetry(() => import('./pages/chat/Chat'));
+const Groups = lazyWithRetry(() => import('./pages/groups/Groups'));
+const GroupChat = lazyWithRetry(() => import('./pages/groups/GroupChat'));
+const Discussion = lazyWithRetry(() => import('./pages/discussion/Discussion'));
+const QuestionDetails = lazyWithRetry(() => import('./pages/discussion/QuestionDetails'));
+const AskQuestion = lazyWithRetry(() => import('./pages/discussion/AskQuestion'));
+const Profile = lazyWithRetry(() => import('./pages/profile/Profile'));
+const AdminLayout = lazyWithRetry(() => import('./pages/admin/AdminLayout'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard'));
+const UsersManagement = lazyWithRetry(() => import('./pages/admin/UsersManagement'));
+const GroupsManagement = lazyWithRetry(() => import('./pages/admin/GroupsManagement'));
+const JoinRequests = lazyWithRetry(() => import('./pages/admin/JoinRequests'));
+const ActivityPage = lazyWithRetry(() => import('./pages/admin/ActivityPage'));
 
 function LoadingFallback() {
   return <PageLoader message="Loading Campus Link…" />;
@@ -57,22 +59,21 @@ function AppContent() {
           <Route path="/discussion/ask" element={<AskQuestion />} />
           <Route path="/discussion/:id" element={<QuestionDetails />} />
           <Route path="/profile" element={<Profile />} />
-        </Route>
 
-        <Route
-          element={
-            <AdminRoute>
-              <Suspense fallback={<LoadingFallback />}>
+          {/* Admin lives inside the main shell so navigation stays consistent */}
+          <Route
+            element={
+              <AdminRoute>
                 <AdminLayout />
-              </Suspense>
-            </AdminRoute>
-          }
-        >
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<UsersManagement />} />
-          <Route path="/admin/groups" element={<GroupsManagement />} />
-          <Route path="/admin/requests" element={<JoinRequests />} />
-          <Route path="/admin/activity" element={<ActivityPage />} />
+              </AdminRoute>
+            }
+          >
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UsersManagement />} />
+            <Route path="/admin/groups" element={<GroupsManagement />} />
+            <Route path="/admin/requests" element={<JoinRequests />} />
+            <Route path="/admin/activity" element={<ActivityPage />} />
+          </Route>
         </Route>
       </Routes>
     </Suspense>
@@ -84,6 +85,7 @@ function App() {
     <Router>
       <NotificationProvider>
         <SocketProvider>
+          <RouteTitle />
           <NotificationContainer />
           <MessageToast />
           <AppContent />

@@ -174,22 +174,22 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 dark:bg-gray-900 py-6 pb-20 md:py-8 md:pb-8">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gray-50 py-6 pb-20 md:py-8 md:pb-8">
       <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-8 min-w-0">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 break-words">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">Profile Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 break-words">
             Manage your account settings and preferences
           </p>
         </div>
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
               <svg
-                className="h-5 w-5 text-green-600 dark:text-green-400 mr-2"
+                className="h-5 w-5 text-green-600 mr-2"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -199,21 +199,21 @@ const Profile = () => {
                   clipRule="evenodd"
                 />
               </svg>
-              <p className="text-green-800 dark:text-green-200 font-medium">{successMessage}</p>
+              <p className="text-green-800 font-medium">{successMessage}</p>
             </div>
           </div>
         )}
 
         {apiError && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-800 dark:text-red-200 font-medium">{apiError}</p>
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800 font-medium">{apiError}</p>
           </div>
         )}
 
         {/* Profile Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-8 mb-6 min-w-0 max-w-full">
+        <div className="bg-white rounded-2xl p-4 sm:p-8 mb-6 min-w-0 max-w-full">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 min-w-0">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               Account Information
             </h2>
             {!isEditing && (
@@ -229,23 +229,23 @@ const Profile = () => {
 
           <form onSubmit={handleSave} className="space-y-6">
             {/* Profile Picture */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:space-x-4 pb-6 border-b border-gray-200 dark:border-gray-700 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:space-x-4 pb-6 border-b border-gray-200 min-w-0">
               {photoPreview ? (
                 <img
                   src={getMediaUrl(photoPreview)}
                   alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                  className="w-20 h-20 rounded-full object-cover border border-gray-300"
                 />
               ) : (
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">
+                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-2xl">
                     {formData.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{formData.name}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{user?.role || 'User'}</p>
+                <p className="text-sm font-medium text-gray-900">{formData.name}</p>
+                <p className="text-sm text-gray-500">{user?.role || 'User'}</p>
                 {isEditing && (
                   <div className="mt-2">
                     <label className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700 transition duration-200">
@@ -264,7 +264,7 @@ const Profile = () => {
 
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
               </label>
               <input
@@ -275,15 +275,15 @@ const Profile = () => {
                 onChange={handleChange}
                 disabled={!isEditing}
                 className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
-                  errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:bg-gray-700 dark:text-white`}
+                  errors.name ? 'border-red-500' : 'border-gray-300'
+                } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 disabled:bg-gray-100`}
               />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
 
             {/* Email Field (read-only) */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
               <input
@@ -292,15 +292,15 @@ const Profile = () => {
                 name="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-100 dark:bg-gray-700 dark:text-white"
+                className="w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border border-gray-200 rounded-xl bg-gray-100"
               />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed.</p>
+              <p className="mt-1 text-xs text-gray-500">Email cannot be changed.</p>
             </div>
 
             {/* Password Section - Only when editing */}
             {isEditing && (
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Change Password (Optional)
                 </h3>
 
@@ -308,7 +308,7 @@ const Profile = () => {
                 <div className="mb-4">
                   <label
                     htmlFor="currentPassword"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-gray-700 mb-2"
                   >
                     Current Password
                   </label>
@@ -319,8 +319,8 @@ const Profile = () => {
                     value={formData.currentPassword}
                     onChange={handleChange}
                     className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
-                      errors.currentPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                      errors.currentPassword ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                   />
                   {errors.currentPassword && (
                     <p className="mt-1 text-sm text-red-600">{errors.currentPassword}</p>
@@ -331,7 +331,7 @@ const Profile = () => {
                 <div className="mb-4">
                   <label
                     htmlFor="newPassword"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-gray-700 mb-2"
                   >
                     New Password
                   </label>
@@ -342,8 +342,8 @@ const Profile = () => {
                     value={formData.newPassword}
                     onChange={handleChange}
                     className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
-                      errors.newPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                      errors.newPassword ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                   />
                   {errors.newPassword && (
                     <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>
@@ -354,7 +354,7 @@ const Profile = () => {
                 <div>
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-gray-700 mb-2"
                   >
                     Confirm New Password
                   </label>
@@ -365,8 +365,8 @@ const Profile = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className={`w-full min-h-[44px] px-4 py-2.5 text-base sm:text-sm border ${
-                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 dark:bg-gray-700 dark:text-white`}
+                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                   />
                   {errors.confirmPassword && (
                     <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
@@ -377,11 +377,11 @@ const Profile = () => {
 
             {/* Action Buttons - Only when editing */}
             {isEditing && (
-              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 border border-gray-200 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 transition duration-200"
                 >
                   Cancel
                 </button>
@@ -398,11 +398,11 @@ const Profile = () => {
         </div>
 
         {/* Sign out */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-6 mb-6 border border-gray-200 dark:border-gray-700 min-w-0">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 mb-6 border border-gray-200 min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">
             Sign out
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             End your session on this device. You can sign in again anytime.
           </p>
           <button
@@ -411,18 +411,18 @@ const Profile = () => {
               logout();
               navigate('/login');
             }}
-            className="w-full sm:w-auto px-6 py-3 rounded-md font-medium border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
+            className="w-full sm:w-auto px-6 py-3 rounded-md font-medium border border-gray-300 text-gray-800 hover:bg-gray-50 transition duration-200"
           >
             Log out
           </button>
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-4 sm:p-8 border-2 border-red-200 dark:border-red-900 min-w-0">
-          <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">
+        <div className="bg-white rounded-2xl p-4 sm:p-8 border-2 border-red-200 min-w-0">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">
             Danger Zone
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-gray-600 mb-4">
             Once you delete your account, there is no going back. Please be certain.
           </p>
           <button

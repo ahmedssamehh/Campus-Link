@@ -16,6 +16,21 @@ export const AuthProvider = ({ children }) => {
     
     if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
+
+      // Refresh the profile in the background so role changes (e.g. promotion to admin)
+      // apply without signing out. A 401 is handled by the axios interceptor; other
+      // failures keep the stored session as-is.
+      axios
+        .get('/auth/me')
+        .then((response) => {
+          if (!response.data?.success || !response.data.user) return;
+          setUser((prev) => {
+            const merged = { ...(prev || {}), ...response.data.user };
+            localStorage.setItem('campusLinkUser', JSON.stringify(merged));
+            return merged;
+          });
+        })
+        .catch(() => {});
     }
     setLoading(false);
   }, []);

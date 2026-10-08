@@ -30,12 +30,12 @@ const AskQuestion = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Ask a Question</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Ask a Question</h1>
+          <p className="text-gray-600">
             Get help from your classmates and contribute to the learning community
           </p>
         </div>
@@ -47,7 +47,7 @@ const AskQuestion = () => {
         )}
 
         {/* Tips Card */}
-        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg p-6 mb-6">
+        <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
@@ -65,10 +65,10 @@ const AskQuestion = () => {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
+              <h3 className="text-sm font-semibold text-blue-900 mb-2">
                 Tips for asking a good question:
               </h3>
-              <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+              <ul className="text-sm text-blue-800 space-y-1">
                 <li>• Be specific and clear in your title</li>
                 <li>• Provide context and explain what you've tried</li>
                 <li>• Include relevant code or examples if applicable</li>
@@ -80,14 +80,14 @@ const AskQuestion = () => {
         </div>
 
         {/* Question Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-8">
+        <div className="bg-white rounded-2xl p-8">
           <QuestionForm onSubmit={handleSubmit} isLoading={isLoading} />
         </div>
 
         {/* Guidelines Card */}
-        <div className="mt-6 bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Community Guidelines</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
+        <div className="mt-6 bg-gray-100 rounded-lg p-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Community Guidelines</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
             <div className="flex items-start">
               <svg
                 className="h-5 w-5 text-green-600 mr-2 flex-shrink-0"

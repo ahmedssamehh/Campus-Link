@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
-import { useTheme } from '../../context/ThemeContext';
 import { getMediaUrl } from '../../utils/media';
 import axios from '../../api/axios';
 import { CommandPaletteProvider } from './CommandPalette';
+import { BrandMark } from '../brand/Brand';
 import {
-  CapIcon,
   ChatIcon,
   HelpIcon,
   HomeIcon,
   LogoutIcon,
   MegaphoneIcon,
-  MoonIcon,
   ShieldIcon,
-  SunIcon,
   UserIcon,
   UsersIcon,
 } from '../ui/Icons';
@@ -80,14 +77,28 @@ const useClickOutside = (ref, onOutside) => {
   }, [ref]);
 };
 
+const ContentLoader = () => (
+  <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-label="Loading">
+    <span className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+  </div>
+);
+
 const UserLayout = () => {
   const newDiscussionCount = useNewDiscussionCount();
+  const location = useLocation();
+  // Admin sub-pages animate inside AdminLayout, so the shell treats /admin/* as one route.
+  const routeKey = location.pathname.startsWith('/admin') ? '/admin' : location.pathname;
+
   return (
     <CommandPaletteProvider>
       <SideRail newDiscussionCount={newDiscussionCount} />
-      <div className="md:pl-[88px] w-full min-w-0 max-w-[100vw] overflow-x-hidden">
-        <Outlet />
-      </div>
+      <main className="md:pl-[88px] w-full min-w-0 max-w-[100vw] overflow-x-hidden">
+        <Suspense fallback={<ContentLoader />}>
+          <div key={routeKey} className="page-enter">
+            <Outlet />
+          </div>
+        </Suspense>
+      </main>
       <MobileNav newDiscussionCount={newDiscussionCount} />
     </CommandPaletteProvider>
   );
@@ -96,7 +107,7 @@ const UserLayout = () => {
 const Badge = ({ count, className = '' }) =>
   count > 0 ? (
     <span
-      className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white dark:ring-gray-900 ${className}`}
+      className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white ${className}`}
     >
       {count > 99 ? '99+' : count}
     </span>
@@ -104,7 +115,7 @@ const Badge = ({ count, className = '' }) =>
 
 const Avatar = ({ user, className = 'h-10 w-10' }) => (
   <span
-    className={`flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-blue-700 ${className}`}
+    className={`flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 ${className}`}
   >
     {user?.profilePhoto ? (
       <img src={getMediaUrl(user.profilePhoto)} alt="" className="h-full w-full object-cover" />
@@ -114,10 +125,26 @@ const Avatar = ({ user, className = 'h-10 w-10' }) => (
   </span>
 );
 
-const Tooltip = ({ children }) => (
-  <span className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-gray-700">
-    {children}
-  </span>
+const RailItem = ({ to, label, Icon, badge, active }) => (
+  <Link
+    to={to}
+    aria-current={active ? 'page' : undefined}
+    className="press group flex w-[72px] flex-col items-center gap-1 py-1"
+  >
+    <span
+      className={`relative flex h-9 w-12 items-center justify-center rounded-xl transition-colors ${
+        active ? 'bg-blue-600/10 text-blue-600' : 'text-gray-500 group-hover:bg-black/[0.05] group-hover:text-gray-900'
+      }`}
+    >
+      <Icon className="h-[21px] w-[21px]" />
+      <Badge count={badge} className="absolute -right-1.5 -top-1" />
+    </span>
+    <span
+      className={`text-[11px] leading-none ${active ? 'font-semibold text-blue-600' : 'font-medium text-gray-500 group-hover:text-gray-900'}`}
+    >
+      {label}
+    </span>
+  </Link>
 );
 
 const SideRail = ({ newDiscussionCount }) => {
@@ -125,7 +152,6 @@ const SideRail = ({ newDiscussionCount }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { totalUnreadChat, totalUnreadGroups, connected, unreadAnnouncements } = useSocket();
-  const { isDark, toggleTheme } = useTheme();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
   useClickOutside(profileRef, () => setProfileOpen(false));
@@ -133,12 +159,11 @@ const SideRail = ({ newDiscussionCount }) => {
   const isAdminOrOwner = user?.role === 'admin' || user?.role === 'owner';
 
   const navItems = [
-    { name: 'Home', path: '/home', Icon: HomeIcon },
-    { name: 'Chat', path: '/chat', Icon: ChatIcon, badge: totalUnreadChat },
-    { name: 'Study groups', path: '/groups', Icon: UsersIcon, badge: totalUnreadGroups },
-    { name: 'Q&A board', path: '/discussion', Icon: HelpIcon, badge: newDiscussionCount },
-    { name: 'Announcements', path: '/announcements', Icon: MegaphoneIcon, badge: unreadAnnouncements },
-    ...(isAdminOrOwner ? [{ name: 'Admin panel', path: '/admin', Icon: ShieldIcon }] : []),
+    { label: 'Home', path: '/home', Icon: HomeIcon },
+    { label: 'Chat', path: '/chat', Icon: ChatIcon, badge: totalUnreadChat },
+    { label: 'Groups', path: '/groups', Icon: UsersIcon, badge: totalUnreadGroups },
+    { label: 'Q&A', path: '/discussion', Icon: HelpIcon, badge: newDiscussionCount },
+    { label: 'News', path: '/announcements', Icon: MegaphoneIcon, badge: unreadAnnouncements },
   ];
 
   const isActive = (path) => (path === '/home' ? location.pathname === '/home' : location.pathname.startsWith(path));
@@ -149,61 +174,38 @@ const SideRail = ({ newDiscussionCount }) => {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 hidden w-[88px] flex-col items-center border-r border-gray-200/70 bg-white/85 py-5 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/85 md:flex">
-      <Link
-        to="/home"
-        aria-label="Campus Link home"
-        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-glow transition hover:scale-105"
-      >
-        <CapIcon className="h-6 w-6" />
+    <aside className="material fixed inset-y-0 left-0 z-50 hidden w-[88px] flex-col items-center border-r border-black/[0.06] bg-white/70 py-5 backdrop-blur-2xl backdrop-saturate-150 md:flex">
+      <Link to="/home" aria-label="Campus Link home" className="press brand-hover rounded-[12px] focus-visible:outline-offset-4">
+        <BrandMark size={44} />
       </Link>
 
-      <nav className="mt-8 flex flex-1 flex-col items-center gap-2">
-        {navItems.map(({ name, path, Icon, badge }) => {
-          const active = isActive(path);
-          return (
-            <Link
-              key={path}
-              to={path}
-              aria-label={name}
-              className={`group relative flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200 ${
-                active
-                  ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-500/20'
-                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              <Icon className="h-[22px] w-[22px]" />
-              <Badge count={badge} className="absolute -right-1 -top-1" />
-              <Tooltip>{name}</Tooltip>
-            </Link>
-          );
-        })}
+      <nav className="mt-6 flex flex-1 flex-col items-center gap-2" aria-label="Main">
+        {navItems.map(({ label, path, Icon, badge }) => (
+          <RailItem key={path} to={path} label={label} Icon={Icon} badge={badge} active={isActive(path)} />
+        ))}
+
+        {isAdminOrOwner && (
+          <>
+            <span className="my-2 h-px w-10 bg-black/[0.08]" aria-hidden />
+            <RailItem to="/admin" label="Admin" Icon={ShieldIcon} active={isActive('/admin')} />
+          </>
+        )}
       </nav>
 
       <div className="flex flex-col items-center gap-3">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="group relative flex h-11 w-11 items-center justify-center rounded-2xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-        >
-          {isDark ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          <Tooltip>{isDark ? 'Light mode' : 'Dark mode'}</Tooltip>
-        </button>
-
         <div className="relative" ref={profileRef}>
           <button
             type="button"
             onClick={() => setProfileOpen((o) => !o)}
             aria-label="Account menu"
             aria-expanded={profileOpen}
-            className={`relative rounded-full ring-2 ring-offset-2 ring-offset-white transition dark:ring-offset-gray-900 ${
+            className={`relative rounded-full ring-2 ring-offset-2 ring-offset-white transition ${
               profileOpen || location.pathname.startsWith('/profile') ? 'ring-blue-500' : 'ring-transparent hover:ring-blue-200'
             }`}
           >
             <Avatar user={user} />
             <span
-              className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-gray-900 ${
+              className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white ${
                 connected ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'
               }`}
               title={connected ? 'Connected' : 'Disconnected'}
@@ -211,18 +213,18 @@ const SideRail = ({ newDiscussionCount }) => {
           </button>
 
           {profileOpen && (
-            <div className="absolute bottom-0 left-full z-50 ml-4 w-60 overflow-hidden rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl animate-scale-in dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+            <div className="absolute bottom-0 left-full z-50 ml-3 w-60 origin-bottom-left overflow-hidden rounded-xl border border-black/[0.06] bg-white/95 py-1.5 shadow-xl backdrop-blur-xl animate-scale-in">
+              <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
                 <Avatar user={user} className="h-9 w-9" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+                  <p className="truncate text-sm font-semibold text-gray-900">{user?.name}</p>
+                  <p className="truncate text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
               <Link
                 to="/profile"
                 onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 <UserIcon className="h-4 w-4" />
                 Profile
@@ -230,7 +232,7 @@ const SideRail = ({ newDiscussionCount }) => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50"
               >
                 <LogoutIcon className="h-4 w-4" />
                 Logout
@@ -248,7 +250,6 @@ const MobileNav = ({ newDiscussionCount }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { totalUnreadChat, totalUnreadGroups } = useSocket();
-  const { isDark, toggleTheme } = useTheme();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   useClickOutside(profileMenuRef, () => setProfileMenuOpen(false));
@@ -276,10 +277,10 @@ const MobileNav = ({ newDiscussionCount }) => {
   };
 
   const menuItemCls =
-    'flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700';
+    'flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50';
 
   return (
-    <nav className="safe-area-bottom fixed bottom-0 left-0 right-0 z-40 overflow-visible border-t border-gray-200/70 bg-white/90 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-900/90 md:hidden">
+    <nav className="material safe-area-bottom fixed bottom-0 left-0 right-0 z-40 overflow-visible border-t border-black/[0.06] bg-white/75 backdrop-blur-2xl backdrop-saturate-150 md:hidden">
       <div className="flex min-h-[60px] items-center justify-around overflow-visible px-1 py-1.5">
         {items.map(({ path, label, badge, Icon }) => {
           const active = location.pathname.startsWith(path);
@@ -287,7 +288,7 @@ const MobileNav = ({ newDiscussionCount }) => {
             <Link key={path} to={path} className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-0.5">
               <span
                 className={`relative flex h-8 w-12 items-center justify-center rounded-full transition-colors ${
-                  active ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300' : 'text-gray-400 dark:text-gray-500'
+                  active ? 'text-blue-600' : 'text-gray-400'
                 }`}
               >
                 <Icon className="h-[21px] w-[21px]" />
@@ -295,7 +296,7 @@ const MobileNav = ({ newDiscussionCount }) => {
               </span>
               <span
                 className={`mt-0.5 max-w-full truncate px-0.5 text-[10px] ${
-                  active ? 'font-semibold text-blue-600 dark:text-blue-300' : 'font-medium text-gray-500 dark:text-gray-400'
+                  active ? 'font-semibold text-blue-600' : 'font-medium text-gray-500'
                 }`}
               >
                 {label}
@@ -306,12 +307,12 @@ const MobileNav = ({ newDiscussionCount }) => {
         <div className="relative flex min-w-0 flex-1 flex-col items-center justify-center py-0.5" ref={profileMenuRef}>
           {profileMenuOpen && (
             <div
-              className="absolute bottom-full right-1 z-50 mb-3 w-52 overflow-hidden rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl animate-scale-in dark:border-gray-700 dark:bg-gray-800"
+              className="absolute bottom-full right-1 z-50 mb-3 w-52 origin-bottom-right overflow-hidden rounded-xl border border-black/[0.06] bg-white/95 py-1.5 shadow-xl backdrop-blur-xl animate-scale-in"
               role="menu"
             >
-              <div className="border-b border-gray-100 px-4 py-2.5 dark:border-gray-700">
-                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
-                <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+              <div className="border-b border-gray-100 px-4 py-2.5">
+                <p className="truncate text-sm font-semibold text-gray-900">{user?.name}</p>
+                <p className="truncate text-xs text-gray-500">{user?.email}</p>
               </div>
               <Link to="/profile" role="menuitem" onClick={() => setProfileMenuOpen(false)} className={menuItemCls}>
                 <UserIcon className="h-4 w-4" />
@@ -321,15 +322,11 @@ const MobileNav = ({ newDiscussionCount }) => {
                 <MegaphoneIcon className="h-4 w-4" />
                 Announcements
               </Link>
-              <button type="button" role="menuitem" onClick={toggleTheme} className={menuItemCls}>
-                {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
-                {isDark ? 'Light mode' : 'Dark mode'}
-              </button>
               <button
                 type="button"
                 role="menuitem"
                 onClick={handleMobileLogout}
-                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50"
               >
                 <LogoutIcon className="h-4 w-4" />
                 Logout
@@ -345,13 +342,13 @@ const MobileNav = ({ newDiscussionCount }) => {
             aria-label="Account menu"
           >
             <span
-              className={`rounded-full ring-2 ring-offset-1 ring-offset-white dark:ring-offset-gray-900 ${
+              className={`rounded-full ring-2 ring-offset-1 ring-offset-white ${
                 profileActive || profileMenuOpen ? 'ring-blue-500' : 'ring-transparent'
               }`}
             >
               <Avatar user={user} className="h-8 w-8" />
             </span>
-            <span className="mt-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">You</span>
+            <span className="mt-0.5 text-[10px] font-medium text-gray-500">You</span>
           </button>
         </div>
       </div>

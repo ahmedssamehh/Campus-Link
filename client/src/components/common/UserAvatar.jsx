@@ -11,14 +11,14 @@ const sizeClasses = {
 };
 
 const gradients = [
-  'from-blue-500 to-blue-700',
-  'from-sky-400 to-blue-600',
-  'from-indigo-500 to-blue-800',
-  'from-blue-400 to-indigo-600',
-  'from-cyan-500 to-blue-600',
-  'from-slate-600 to-blue-900',
-  'from-blue-600 to-indigo-900',
-  'from-sky-500 to-indigo-600',
+  'bg-blue-600',
+  'bg-sky-500',
+  'bg-indigo-500',
+  'bg-blue-600',
+  'bg-cyan-500',
+  'bg-slate-600',
+  'bg-blue-600',
+  'bg-sky-500',
 ];
 
 function getGradient(name) {
@@ -39,7 +39,7 @@ const UserAvatar = ({
 }) => {
   const [imgError, setImgError] = useState(false);
   const sizeClass = sizeClasses[size] || sizeClasses.md;
-  const borderClass = border ? 'ring-2 ring-white dark:ring-gray-800' : '';
+  const borderClass = border ? 'ring-2 ring-white' : '';
   const initial = (name || '?').charAt(0).toUpperCase();
   const gradient = getGradient(name);
 
@@ -56,7 +56,7 @@ const UserAvatar = ({
 
   return (
     <div
-      className={`${sizeClass} bg-gradient-to-br ${gradient} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${className}`}
+      className={`${sizeClass} ${gradient} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${className}`}
     >
       <span className="text-white font-semibold">{initial}</span>
     </div>

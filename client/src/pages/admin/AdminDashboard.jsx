@@ -1,286 +1,173 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
-
-const timeAgo = (dateStr) => {
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-};
+import ActivityChart from '../../components/admin/ActivityChart';
+import { ErrorBanner, Panel, PanelHeader, StatTile, timeAgo } from '../../components/admin/AdminUI';
+import { Button, Reveal, Shimmer } from '../../components/ui/motion';
+import { ActivityIcon, CheckIcon, ClockIcon, LayersIcon, ShieldIcon, UsersIcon } from '../../components/ui/Icons';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
-  const [activity, setActivity] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchStats = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get('/admin/stats');
-      if (res.data.success) {
-        setStats(res.data.stats);
-        setActivity(res.data.activity || []);
+      const [statsRes, activityRes] = await Promise.all([
+        axios.get('/admin/stats'),
+        axios.get('/admin/activity').catch(() => null),
+      ]);
+      if (statsRes.data.success) {
+        setStats(statsRes.data.stats);
+        setRecent(statsRes.data.activity || []);
       }
+      setActivities(activityRes?.data?.success ? activityRes.data.activities || [] : []);
     } catch (err) {
-      setError((err.response && err.response.data && err.response.data.message) || 'Failed to load dashboard data');
+      setError(err.response?.data?.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const statCards = [
-    {
-      title: 'Total Users',
-      value: stats ? stats.totalUsers : null,
-      icon: (
-        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        </svg>
-      ),
-      color: 'from-blue-500 to-blue-700',
-      link: '/admin/users',
-    },
-    {
-      title: 'Study Groups',
-      value: stats ? stats.totalGroups : null,
-      icon: (
-        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-      ),
-      color: 'from-sky-400 to-blue-600',
-      link: '/admin/groups',
-    },
-    {
-      title: 'Pending Requests',
-      value: stats ? stats.pendingRequests : null,
-      icon: (
-        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-      color: 'from-blue-600 to-blue-900',
-      link: '/admin/requests',
-    },
-    {
-      title: 'Admin / Owner Count',
-      value: stats ? stats.adminCount : null,
-      icon: (
-        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      color: 'from-blue-500 to-blue-700',
-      link: '/admin/users',
-    },
-  ];
+  const pending = stats?.pendingRequests || 0;
+  const totalUsers = stats?.totalUsers || 0;
+  const admins = stats?.adminCount || 0;
+  const adminShare = totalUsers ? Math.round((admins / totalUsers) * 100) : 0;
+  const twoWeeks = activities.filter((a) => Date.now() - new Date(a.date) < 14 * 86400000).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 md:py-8 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-4 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Welcome back, {user && user.name}! Here's what's happening with Campus Link.
-          </p>
-        </div>
+    <div className="space-y-4 lg:space-y-5">
+      {error && <ErrorBanner message={error} onRetry={fetchData} />}
 
-        {/* Error banner */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center justify-between">
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
-            <button
-              onClick={fetchStats}
-              className="text-sm text-red-600 dark:text-red-400 underline ml-4"
-            >
-              Retry
-            </button>
-          </div>
-        )}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+        <StatTile index={0} label="Members" value={totalUsers} Icon={UsersIcon} tone="blue" loading={loading}
+          note={`${admins} with admin access`} onClick={() => navigate('/admin/users')} />
+        <StatTile index={1} label="Study groups" value={stats?.totalGroups} Icon={LayersIcon} tone="indigo" loading={loading}
+          note="Across all subjects" onClick={() => navigate('/admin/groups')} />
+        <StatTile index={2} label="Pending requests" value={pending} Icon={ClockIcon} tone="orange" loading={loading}
+          note={pending > 0 ? 'Waiting for review' : 'All clear'} onClick={() => navigate('/admin/requests')} />
+        <StatTile index={3} label="Activity" value={twoWeeks} Icon={ActivityIcon} tone="teal" loading={loading}
+          note="Events in the last 14 days" onClick={() => navigate('/admin/activity')} />
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
-          {statCards.map((stat, index) => (
-            <Link
-              key={index}
-              to={stat.link}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-lg flex items-center justify-center text-white shadow-lg`}>
-                  {stat.icon}
-                </div>
-              </div>
-              <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">
-                {stat.title}
-              </h3>
-              {loading ? (
-                <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-              ) : (
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {stat.value !== null ? stat.value : '—'}
-                </p>
-              )}
-            </Link>
-          ))}
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card border border-gray-100 dark:border-gray-700/60 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Recent Activity
-            </h2>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={fetchStats}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium"
-              >
-                Refresh
-              </button>
-              <Link
-                to="/admin/activity"
-                className="text-sm text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-              >
-                See All →
-              </Link>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+        <Reveal index={4} className="lg:col-span-8">
+          <Panel className="h-full">
+            <PanelHeader title="Last 14 days" actions={<Link to="/admin/activity" className="text-[13px] font-medium text-blue-600 hover:text-blue-700">All activity</Link>} />
+            <div className="px-5 pb-5 pt-2 sm:px-6 sm:pb-6">
+              <ActivityChart activities={activities} loading={loading} />
             </div>
-          </div>
+          </Panel>
+        </Reveal>
 
-          <div className="space-y-4">
+        <Reveal index={5} className="flex flex-col gap-4 lg:col-span-4 lg:gap-5">
+          {/* What needs a decision */}
+          <Panel className="flex-1 p-5 sm:p-6">
             {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-start space-x-4 p-4">
-                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
-                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/4" />
-                  </div>
-                </div>
-              ))
-            ) : activity.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-4">No recent activity.</p>
+              <div className="space-y-3">
+                <Shimmer className="h-4 w-1/3" />
+                <Shimmer className="h-7 w-2/3" />
+                <Shimmer className="h-9 w-32 !rounded-full" />
+              </div>
+            ) : pending > 0 ? (
+              <>
+                <p className="flex items-center gap-1.5 text-[13px] font-semibold text-orange-500">
+                  <ClockIcon className="h-4 w-4" strokeWidth={2.2} />
+                  Needs your review
+                </p>
+                <p className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.02em] text-gray-900">
+                  {pending} join request{pending === 1 ? '' : 's'} waiting
+                </p>
+                <p className="mt-1 text-[15px] text-gray-500">Students are waiting to get into their groups.</p>
+                <Button variant="primary" className="mt-4" onClick={() => navigate('/admin/requests')}>
+                  Review requests
+                </Button>
+              </>
             ) : (
-              activity.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-semibold text-sm">
-                      {item.name ? item.name.charAt(0).toUpperCase() : '?'}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      <span className="font-semibold">{item.name}</span>{' '}
-                      <span className="text-gray-600 dark:text-gray-400">
-                        {item.action}
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {timeAgo(item.date)}
-                    </p>
-                  </div>
+              <>
+                <p className="flex items-center gap-1.5 text-[13px] font-semibold text-green-600">
+                  <CheckIcon className="h-4 w-4" strokeWidth={2.4} />
+                  All caught up
+                </p>
+                <p className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.02em] text-gray-900">No requests waiting</p>
+                <p className="mt-1 text-[15px] text-gray-500">New join requests will show up here.</p>
+              </>
+            )}
+          </Panel>
+
+          {/* Who can manage */}
+          <Panel className="p-5 sm:p-6">
+            <p className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-500">
+              <ShieldIcon className="h-4 w-4" strokeWidth={2.2} />
+              Access
+            </p>
+            {loading ? (
+              <Shimmer className="mt-3 h-2 w-full !rounded-full" />
+            ) : (
+              <>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
                   <div
-                    className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
-                      item.type === 'group' ? 'bg-green-500' : 'bg-blue-500'
-                    }`}
+                    className="h-full origin-left rounded-full bg-blue-600 transition-transform duration-700 ease-out"
+                    style={{ width: `${Math.max(adminShare, admins ? 4 : 0)}%` }}
                   />
                 </div>
-              ))
+                <p className="mt-2 text-[13px] text-gray-500">
+                  <span className="font-semibold text-gray-900 tabular-nums">{admins}</span> admin{admins === 1 ? '' : 's'} ·{' '}
+                  <span className="font-semibold text-gray-900 tabular-nums">{Math.max(totalUsers - admins, 0)}</span> students
+                </p>
+              </>
             )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link
-            to="/admin/users"
-            className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Manage Users</h3>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
-            </div>
-            <p className="text-blue-100">View and manage all platform users</p>
-          </Link>
-
-          <Link
-            to="/admin/groups"
-            className="bg-gradient-to-br from-sky-400 to-blue-600 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Manage Groups</h3>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </div>
-            <p className="text-blue-100">Create and manage study groups</p>
-          </Link>
-
-          <Link
-            to="/admin/requests"
-            className="bg-gradient-to-br from-blue-600 to-blue-900 rounded-lg shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Review Requests</h3>
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-            </div>
-            <p className="text-blue-100">Review pending join requests</p>
-          </Link>
-        </div>
+          </Panel>
+        </Reveal>
       </div>
+
+      <Reveal index={6}>
+        <Panel>
+          <PanelHeader title="Recent activity" actions={<Button variant="ghost" className="!h-8 !px-3" onClick={fetchData}>Refresh</Button>} />
+          {loading ? (
+            <div className="space-y-4 px-5 pb-6 pt-2 sm:px-6">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Shimmer className="h-9 w-9 !rounded-full" />
+                  <Shimmer className="h-3.5 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : recent.length === 0 ? (
+            <p className="px-6 pb-8 pt-4 text-center text-[15px] text-gray-500">No recent activity.</p>
+          ) : (
+            <ol className="px-5 pb-4 sm:px-6">
+              {recent.map((item, i) => (
+                <Reveal as="li" index={i} key={item._id || i} className="relative flex gap-3 pb-4 last:pb-2">
+                  {i < recent.length - 1 && <span className="absolute left-[17px] top-10 h-[calc(100%-36px)] w-px bg-gray-100" aria-hidden />}
+                  <span
+                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white ${
+                      item.type === 'group' ? 'bg-indigo-400' : 'bg-blue-600'
+                    }`}
+                  >
+                    {item.type === 'group' ? <LayersIcon className="h-4 w-4" /> : <UsersIcon className="h-4 w-4" />}
+                  </span>
+                  <div className="min-w-0 pt-1.5">
+                    <p className="text-[15px] text-gray-900">
+                      <span className="font-semibold">{item.name}</span> <span className="text-gray-600">{item.action}</span>
+                    </p>
+                    <p className="mt-0.5 text-[13px] text-gray-400">{timeAgo(item.date)}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </ol>
+          )}
+        </Panel>
+      </Reveal>
     </div>
   );
 };

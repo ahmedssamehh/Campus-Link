@@ -105,7 +105,7 @@ const MessageToast = () => {
         <div
           key={toast.id}
           onClick={() => handleToastClick(toast)}
-          className="pointer-events-auto w-full max-w-full sm:w-80 min-w-0 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 cursor-pointer transform transition-all duration-300 ease-out animate-slide-in-right hover:scale-[1.02] hover:shadow-3xl"
+          className="pointer-events-auto w-full max-w-full sm:w-80 min-w-0 bg-white rounded-xl shadow-2xl border border-gray-200 p-4 cursor-pointer transform transition-all duration-300 ease-out animate-slide-in-right hover:scale-[1.02] hover:shadow-3xl"
         >
           <div className="flex items-start space-x-3">
             {/* Avatar */}
@@ -114,8 +114,8 @@ const MessageToast = () => {
             ) : (
               <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                 toast.isGroup
-                  ? 'bg-gradient-to-br from-green-500 to-teal-500'
-                  : 'bg-gradient-to-br from-blue-500 to-blue-500'
+                  ? 'bg-green-500'
+                  : 'bg-blue-600'
               }`}>
                 {toast.isGroup ? (
                   <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,14 +133,14 @@ const MessageToast = () => {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-semibold text-gray-900 truncate">
                   {toast.title}
                 </p>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2">
+                <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">
                   now
                 </span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">
+              <p className="text-sm text-gray-600 truncate mt-0.5">
                 {toast.body}
               </p>
             </div>
@@ -151,7 +151,7 @@ const MessageToast = () => {
                 e.stopPropagation();
                 removeToast(toast.id);
               }}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -160,7 +160,7 @@ const MessageToast = () => {
           </div>
 
           {/* Tap to view hint */}
-          <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-2 text-right">
+          <p className="text-[10px] text-blue-500 mt-2 text-right">
             Tap to view
           </p>
         </div>

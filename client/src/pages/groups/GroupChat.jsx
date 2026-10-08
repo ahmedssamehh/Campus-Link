@@ -9,17 +9,17 @@ import { getMediaUrl } from '../../utils/media';
 import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const colorClasses = {
-  blue: 'from-blue-500 via-blue-600 to-blue-800',
-  navy: 'from-blue-700 via-blue-800 to-slate-900',
-  sky: 'from-sky-500 via-blue-600 to-blue-700',
-  indigo: 'from-blue-600 via-indigo-600 to-indigo-800',
+  blue: 'bg-blue-600',
+  navy: 'bg-blue-600',
+  sky: 'bg-sky-500',
+  indigo: 'bg-blue-600',
 };
 const colorKeys = Object.keys(colorClasses);
 
 const roleMeta = {
-  owner: { label: 'Owner', cls: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' },
-  admin: { label: 'Admin', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-  user:  { label: 'Member', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' },
+  owner: { label: 'Owner', cls: 'bg-indigo-100 text-indigo-700' },
+  admin: { label: 'Admin', cls: 'bg-blue-100 text-blue-700' },
+  user:  { label: 'Member', cls: 'bg-gray-100 text-gray-600' },
 };
 
 const RoleBadge = ({ role }) => {
@@ -385,7 +385,7 @@ const GroupChat = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -393,7 +393,7 @@ const GroupChat = () => {
 
   if (forbidden) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center max-w-sm px-6">
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <svg className="h-8 w-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,8 +401,8 @@ const GroupChat = () => {
                 d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-6V7m0 0a4 4 0 10-8 0v4h2V7a2 2 0 014 0v4h2V7z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500 text-sm mb-6">
             You are not a member of this group. Join the group first to access its content.
           </p>
           <button
@@ -418,7 +418,7 @@ const GroupChat = () => {
 
   if (error || !group) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <p className="text-red-600 font-medium mb-4">{error || 'Group not found'}</p>
           <button
@@ -437,7 +437,7 @@ const GroupChat = () => {
   return (
     <div className="h-[100dvh] fixed inset-0 z-50 md:relative md:z-auto md:h-screen flex flex-col">
       {/* Group Header */}
-      <div className={`relative overflow-hidden bg-gradient-to-br ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4 shadow-glow`}>
+      <div className={`relative overflow-hidden ${gradientClass} text-white px-4 md:px-6 py-3 md:py-4 shadow-glow`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
@@ -449,7 +449,7 @@ const GroupChat = () => {
               </svg>
             </button>
             <div>
-              <h1 className="text-lg md:text-2xl font-bold truncate max-w-[180px] md:max-w-none">{group.name}</h1>
+              <h1 className="text-lg md:text-2xl font-semibold truncate max-w-[180px] md:max-w-none">{group.name}</h1>
               <p className="text-sm text-white text-opacity-90">
                 {memberCount} member{memberCount !== 1 ? 's' : ''} • {group.subject}
                 {connected && <span className="ml-2 inline-block w-2 h-2 bg-green-400 rounded-full"></span>}
@@ -475,29 +475,29 @@ const GroupChat = () => {
                   className="fixed inset-0 z-10"
                   onClick={() => setShowActionsMenu(false)}
                 ></div>
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/60 overflow-hidden z-20">
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
                   <button
                     onClick={() => {
                       setShowMembers(!showMembers);
                       setShowActionsMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition duration-150"
                   >
-                    <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                       />
                     </svg>
                     <span className="text-sm font-medium">{showMembers ? 'Hide' : 'Show'} Members ({memberCount})</span>
                   </button>
-                  <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                  <div className="border-t border-gray-200"></div>
                   <button
                     onClick={() => {
                       setShowActionsMenu(false);
                       handleLeaveGroup();
                     }}
                     disabled={leaving}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {leaving ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
@@ -524,7 +524,7 @@ const GroupChat = () => {
           <div
             ref={messagesContainerRef}
             onScroll={handleScroll}
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/70 dark:bg-gray-900 p-3 sm:p-6"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/70 p-3 sm:p-6"
           >
             {/* Load more indicator */}
             {loadingMore && (
@@ -539,7 +539,7 @@ const GroupChat = () => {
                     const oldest = messages[0];
                     if (oldest?.createdAt) fetchMessages(oldest.createdAt);
                   }}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-sm text-blue-600 hover:underline"
                 >
                   Load older messages
                 </button>
@@ -549,7 +549,7 @@ const GroupChat = () => {
             {messagesLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-500 dark:text-gray-400">Loading messages...</span>
+                <span className="ml-3 text-gray-500">Loading messages...</span>
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -558,8 +558,8 @@ const GroupChat = () => {
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   />
                 </svg>
-                <p className="text-gray-500 dark:text-gray-400 font-medium">No messages yet</p>
-                <p className="text-gray-400 dark:text-gray-500 text-sm">Be the first to start the conversation!</p>
+                <p className="text-gray-500 font-medium">No messages yet</p>
+                <p className="text-gray-400 text-sm">Be the first to start the conversation!</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -598,7 +598,7 @@ const GroupChat = () => {
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500">
                   {typingUsers.map((t) => t.userName).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                 </span>
               </div>
@@ -607,14 +607,14 @@ const GroupChat = () => {
 
           {/* Edit bar */}
           {editingMessage && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-t dark:border-gray-700 px-6 py-2 flex items-center justify-between">
-              <span className="text-sm text-yellow-700 dark:text-yellow-300">Editing message</span>
-              <button onClick={handleCancelEdit} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Cancel</button>
+            <div className="bg-yellow-50 border-t px-6 py-2 flex items-center justify-between">
+              <span className="text-sm text-yellow-700">Editing message</span>
+              <button onClick={handleCancelEdit} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
             </div>
           )}
 
           {/* Message Input */}
-          <div className="bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-3 md:px-6 py-3 md:py-4 pb-[env(safe-area-inset-bottom,0.75rem)]">
+          <div className="bg-white border-t px-3 md:px-6 py-3 md:py-4 pb-[env(safe-area-inset-bottom,0.75rem)]">
             <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleSaveEdit(); } : handleSendMessage} className="flex items-center space-x-3">
               {/* File upload */}
               <input
@@ -629,12 +629,12 @@ const GroupChat = () => {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading || !connected}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150 disabled:opacity-50"
+                className="p-2 hover:bg-gray-100 rounded-full transition duration-150 disabled:opacity-50"
               >
                 {uploading ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                 ) : (
-                  <svg className="h-6 w-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 )}
@@ -645,12 +645,12 @@ const GroupChat = () => {
                 onChange={editingMessage ? (e) => setEditInput(e.target.value) : handleInputChange}
                 placeholder={!connected ? "Connecting..." : editingMessage ? "Edit message..." : "Type a message..."}
                 disabled={!connected}
-                className="flex-1 h-11 px-4 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition dark:bg-gray-700/60 dark:text-white dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-11 px-4 border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
                 disabled={editingMessage ? !editInput.trim() : (!connected || sending || messageInput.trim() === '')}
-                className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-2.5 rounded-full shadow-glow hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                className="bg-blue-600 text-white p-2.5 rounded-full shadow-glow active:scale-[0.98] transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sending ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -666,8 +666,8 @@ const GroupChat = () => {
 
         {/* Members Sidebar */}
         {showMembers && (
-          <div className="w-72 bg-white border-l dark:bg-gray-800 dark:border-gray-700 p-6 overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="w-72 bg-white border-l p-6 overflow-y-auto">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Group Members ({memberCount})
             </h3>
             <div className="space-y-3">
@@ -677,18 +677,18 @@ const GroupChat = () => {
                   const currentUserId = (user?._id || user?.id)?.toString();
                   const isCurrentUser = memberId === currentUserId;
                   return (
-                    <div key={member._id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+                    <div key={member._id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
                       {member.profilePhoto ? (
-                        <img src={getMediaUrl(member.profilePhoto)} alt={member.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300 dark:border-gray-600" />
+                        <img src={getMediaUrl(member.profilePhoto)} alt={member.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-300" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-semibold text-sm">
                             {member.name?.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {member.name}{isCurrentUser ? ' (You)' : ''}
                         </p>
                         <div className="flex items-center gap-1 mt-0.5">

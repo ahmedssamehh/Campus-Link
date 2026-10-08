@@ -74,7 +74,7 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
 
   return (
     <div
-      className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-indigo-700 to-indigo-800 dark:from-indigo-900 dark:to-indigo-950 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
+      className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-indigo-700 to-indigo-800 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
         isOpen ? 'w-64' : 'w-20'
       }`}
       onMouseEnter={onMouseEnter}
@@ -82,7 +82,7 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
     >
       <div className="flex flex-col h-full">
         {/* Logo/Brand */}
-        <div className="flex items-center h-16 px-4 border-b border-indigo-600 dark:border-indigo-800">
+        <div className="flex items-center h-16 px-4 border-b border-indigo-600">
           <div className="flex items-center space-x-3">
             <img
               src="/logo.png"
@@ -125,7 +125,7 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
           {/* Back to User Area */}
           <Link
             to="/home"
-            className="flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors duration-200 text-indigo-200 hover:bg-white/10 border-t border-indigo-600 dark:border-indigo-800 mt-4 pt-4"
+            className="flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors duration-200 text-indigo-200 hover:bg-white/10 border-t border-indigo-600 mt-4 pt-4"
           >
             <svg className="h-6 w-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -142,9 +142,9 @@ const AdminSidebar = ({ isOpen, onMouseEnter, onMouseLeave }) => {
         </nav>
 
         {/* Bottom Section - User & Settings */}
-        <div className="border-t border-indigo-600 dark:border-indigo-800 p-3 space-y-2">
+        <div className="border-t border-indigo-600 p-3 space-y-2">
           {/* User Info */}
-          <div className="px-3 py-2 rounded-lg bg-indigo-800/50 dark:bg-indigo-950/50">
+          <div className="px-3 py-2 rounded-lg bg-indigo-800/50">
             <div className="flex items-center space-x-3">
               {user?.profilePhoto ? (
                 <img

@@ -58,11 +58,11 @@ const MessageBubble = ({
     }
     if (deliveredToOther) {
       return (
-        <span className="text-gray-400 dark:text-gray-500 ml-1" title="Delivered">✓✓</span>
+        <span className="text-gray-400 ml-1" title="Delivered">✓✓</span>
       );
     }
     return (
-      <span className="text-gray-400 dark:text-gray-500 ml-1" title="Sent">✓</span>
+      <span className="text-gray-400 ml-1" title="Sent">✓</span>
     );
   };
 
@@ -93,7 +93,7 @@ const MessageBubble = ({
               target="_blank"
               rel="noopener noreferrer"
               className={`flex min-w-0 max-w-full items-center gap-2 p-2 rounded-lg text-sm ${
-                isSent ? 'bg-blue-700/30 text-blue-100 hover:bg-blue-700/50' : 'bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-500'
+                isSent ? 'bg-blue-700/30 text-blue-100 hover:bg-blue-700/50' : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
               }`}
             >
               <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,8 +128,8 @@ const MessageBubble = ({
               onClick={() => iMine ? onRemoveReaction() : onReaction(emoji)}
               className={`text-xs px-1.5 py-0.5 rounded-full border transition ${
                 iMine
-                  ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500'
-                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'border-blue-400 bg-blue-50'
+                  : 'border-gray-300 bg-white hover:bg-gray-100'
               }`}
             >
               {emoji} {users.length > 1 ? users.length : ''}
@@ -155,11 +155,11 @@ const MessageBubble = ({
             )
           )}
           <div>
-            {!isSent && <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1">{senderName}</p>}
-            <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 italic">
-              <p className="text-sm text-gray-400 dark:text-gray-500">This message was deleted</p>
+            {!isSent && <p className="text-xs text-gray-500 mb-1 px-1">{senderName}</p>}
+            <div className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-200 italic">
+              <p className="text-sm text-gray-400">This message was deleted</p>
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 px-1">{messageTime}</p>
+            <p className="text-xs text-gray-400 mt-1 px-1">{messageTime}</p>
           </div>
         </div>
       </div>
@@ -171,18 +171,18 @@ const MessageBubble = ({
     return (
       <div className={`flex w-full min-w-0 max-w-full ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
         <div className="min-w-0 w-full max-w-[min(100%,20rem)] sm:max-w-xs lg:max-w-md">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3">
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3">
             <input
               type="text"
               value={editInput}
               onChange={(e) => onEditInputChange(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') onSaveEdit(); if (e.key === 'Escape') onCancelEdit(); }}
-              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500"
               autoFocus
             />
             <div className="flex justify-end space-x-2 mt-2">
-              <button onClick={onCancelEdit} className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Cancel</button>
-              <button onClick={onSaveEdit} className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">Save</button>
+              <button onClick={onCancelEdit} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
+              <button onClick={onSaveEdit} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Save</button>
             </div>
           </div>
         </div>
@@ -215,13 +215,13 @@ const MessageBubble = ({
         {/* Message Content */}
         <div className="relative min-w-0 max-w-full">
           {!isSent && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-1 break-words">{senderName}</p>
+            <p className="text-xs text-gray-500 mb-1 px-1 break-words">{senderName}</p>
           )}
           <div
             className={`max-w-full min-w-0 rounded-2xl ${
               isImageOnlyMessage
                 ? 'overflow-hidden'
-                : `px-4 py-2.5 ${isSent ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-br-md shadow-glow' : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-md border border-gray-100 dark:border-gray-600/60 shadow-sm'}`
+                : `px-4 py-2.5 ${isSent ? 'bg-blue-600 text-white rounded-br-md shadow-glow' : 'bg-white text-gray-800 rounded-bl-md border border-gray-100 shadow-sm'}`
             }`}
           >
             {!isImageOnlyMessage && messageText && (
@@ -234,11 +234,11 @@ const MessageBubble = ({
 
           {/* Time + edited + delivery status */}
           <div className="flex items-center mt-1 px-1">
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-400">
               {messageTime}
             </p>
             {message.edited && (
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-1 italic">(edited)</span>
+              <span className="text-xs text-gray-400 ml-1 italic">(edited)</span>
             )}
             {getDeliveryStatus()}
           </div>
@@ -252,7 +252,7 @@ const MessageBubble = ({
               {/* React button */}
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
+                className="p-1 rounded hover:bg-gray-200 text-gray-500"
                 title="React"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,7 +265,7 @@ const MessageBubble = ({
                   {canEditOwnMessage && (
                   <button
                     onClick={onStartEdit}
-                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
+                    className="p-1 rounded hover:bg-gray-200 text-gray-500"
                     title="Edit"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@ const MessageBubble = ({
                   )}
                   <button
                     onClick={onDelete}
-                    className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-600"
+                    className="p-1 rounded hover:bg-red-100 text-gray-500 hover:text-red-600"
                     title="Delete"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,12 +289,12 @@ const MessageBubble = ({
 
           {/* Emoji Picker Popup */}
           {showEmojiPicker && (
-            <div className={`absolute ${isSent ? 'right-0' : 'left-0'} -top-11 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full shadow-xl p-1.5 flex space-x-1 z-10`}>
+            <div className={`absolute ${isSent ? 'right-0' : 'left-0'} -top-11 bg-white border border-gray-100 rounded-full shadow-xl p-1.5 flex space-x-1 z-10`}>
               {QUICK_EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
                   onClick={() => { onReaction(emoji); setShowEmojiPicker(false); }}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded p-1 text-lg"
+                  className="hover:bg-gray-100 rounded p-1 text-lg"
                 >
                   {emoji}
                 </button>

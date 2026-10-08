@@ -93,13 +93,13 @@ const ForgotPassword = () => {
       }
     >
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm mb-4 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-300">
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm mb-4">
             {error}
           </div>
         )}
 
         {info && !error && step === 2 && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm mb-4 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm mb-4">
             {info}
           </div>
         )}
@@ -108,7 +108,7 @@ const ForgotPassword = () => {
         {step === 1 && (
           <form onSubmit={handleSendCode} className="space-y-6">
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <label htmlFor="email" className="mb-2 block text-sm font-semibold text-gray-700">
                 Email Address
               </label>
               <input
@@ -149,7 +149,7 @@ const ForgotPassword = () => {
         {step === 2 && (
           <form onSubmit={handleResetPassword} className="space-y-6">
             <div>
-              <label htmlFor="code" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <label htmlFor="code" className="mb-2 block text-sm font-semibold text-gray-700">
                 6-Digit Code
               </label>
               <input
@@ -165,7 +165,7 @@ const ForgotPassword = () => {
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <label htmlFor="newPassword" className="mb-2 block text-sm font-semibold text-gray-700">
                 New Password
               </label>
               <input
@@ -180,7 +180,7 @@ const ForgotPassword = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-semibold text-gray-700">
                 Confirm Password
               </label>
               <input
@@ -228,13 +228,13 @@ const ForgotPassword = () => {
         {step === 3 && (
           <div className="text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600">
               Your password has been reset successfully. You can now sign in with your new password.
             </p>
             <Link

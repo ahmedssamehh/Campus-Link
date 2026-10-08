@@ -3,7 +3,7 @@ import { useSocket } from '../../context/SocketContext';
 import { useNotification } from '../../context/NotificationContext';
 import axios from '../../api/axios';
 import MessageBubble from './MessageBubble';
-import { getMediaUrl } from '../../utils/media';
+import UserAvatar from '../common/UserAvatar';
 import { isWithinEditWindow, isTextMessageEditable } from '../../utils/messageEdit';
 
 const ChatWindow = ({ chat, currentUserId, onBack }) => {
@@ -28,7 +28,6 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
   const [editInput, setEditInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const [headerImgError, setHeaderImgError] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const headerMenuRef = useRef(null);
@@ -97,7 +96,6 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
     setMessageInput('');
     setEditingMessage(null);
     setHasMore(false);
-    setHeaderImgError(false);
     setHeaderMenuOpen(false);
 
     // Join the private socket room
@@ -373,10 +371,10 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
 
   if (!chat) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50/60 dark:bg-gray-900/40">
+      <div className="h-full flex items-center justify-center bg-gray-50/60">
         <div className="text-center px-6">
           <svg
-            className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-4 text-white shadow-glow"
+            className="mx-auto h-12 w-12 text-gray-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -388,8 +386,8 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
           </svg>
-          <h3 className="mt-5 text-lg font-bold text-gray-900 dark:text-white">Select a conversation</h3>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <h3 className="mt-5 text-lg font-semibold text-gray-900">Select a conversation</h3>
+          <p className="mt-2 text-sm text-gray-500">
             Choose a chat from the sidebar to start messaging
           </p>
         </div>
@@ -398,40 +396,27 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-800">
+    <div className="h-full flex flex-col bg-white">
       {/* Chat Header */}
-      <div className="bg-white/90 backdrop-blur dark:bg-gray-800/90 border-b border-gray-100 dark:border-gray-700/60 px-3 md:px-6 py-3 flex items-center justify-between">
+      <div className="bg-white/90 backdrop-blur border-b border-gray-100 px-3 md:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           {onBack && (
-            <button onClick={onBack} className="md:hidden p-1 -ml-1 mr-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-              <svg className="h-6 w-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={onBack} className="md:hidden p-1 -ml-1 mr-1 rounded-full hover:bg-gray-100">
+              <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
           )}
           <div className="relative">
-            {chat.profilePhoto && !headerImgError ? (
-              <img
-                src={getMediaUrl(chat.profilePhoto)}
-                alt={chat.name}
-                className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-                onError={() => setHeaderImgError(true)}
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
-                <span className="text-white font-semibold">
-                  {chat.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <UserAvatar key={chat.id} name={chat.name} profilePhoto={chat.profilePhoto} size="md" border={false} />
             {chat.isOnline && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-white"></div>
             )}
           </div>
           <div>
-            <h2 className="text-base font-bold text-gray-900 dark:text-white">{chat.name}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h2 className="text-base font-semibold text-gray-900">{chat.name}</h2>
+            <p className="text-sm text-gray-500">
               {chat.isOnline ? 'Active now' : 'Offline'}
             </p>
           </div>
@@ -445,13 +430,13 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             <button
               type="button"
               onClick={() => setHeaderMenuOpen((o) => !o)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150"
+              className="p-2 hover:bg-gray-100 rounded-full transition duration-150"
               aria-expanded={headerMenuOpen}
               aria-haspopup="menu"
               aria-label="Conversation options"
             >
               <svg
-                className="h-6 w-6 text-gray-600 dark:text-gray-400"
+                className="h-6 w-6 text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -466,30 +451,30 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             </button>
             {headerMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-2xl border border-gray-100 bg-white py-2 text-left shadow-xl dark:border-gray-700 dark:bg-gray-800 z-50 animate-scale-in"
+                className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-2xl bg-white py-2 text-left shadow-xl z-50 animate-scale-in"
                 role="menu"
               >
-                <div className="px-4 pb-2 border-b border-gray-100 dark:border-gray-700">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Contact</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate mt-0.5">{chat.name}</p>
+                <div className="px-4 pb-2 border-b border-gray-100">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Contact</p>
+                  <p className="text-sm font-medium text-gray-900 truncate mt-0.5">{chat.name}</p>
                   {chat.email && (
                     <div className="mt-2 flex items-start gap-2 min-w-0">
-                      <p className="text-xs text-gray-600 dark:text-gray-300 break-all flex-1">{chat.email}</p>
+                      <p className="text-xs text-gray-600 break-all flex-1">{chat.email}</p>
                       <button
                         type="button"
                         role="menuitem"
                         onClick={handleCopyPeerEmail}
-                        className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                        className="text-xs font-medium text-blue-600 hover:underline shrink-0"
                       >
                         Copy
                       </button>
                     </div>
                   )}
                   {chat.role && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 capitalize">Role: {chat.role}</p>
+                    <p className="text-xs text-gray-500 mt-1.5 capitalize">Role: {chat.role}</p>
                   )}
                 </div>
-                <div className="px-4 pt-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="px-4 pt-2 text-xs text-gray-500">
                   {chat.isOnline ? 'Active now' : 'Offline'}
                   <span className="mx-1.5">·</span>
                   {connected ? 'Live connection' : 'Reconnecting…'}
@@ -504,7 +489,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/70 dark:bg-gray-900/40 p-3 sm:p-6"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/70 p-3 sm:p-6"
       >
         {/* Load more indicator */}
         {loadingMore && (
@@ -519,7 +504,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
                 const oldest = messages[0];
                 if (oldest?.createdAt) fetchMessages(chat.id, oldest.createdAt);
               }}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-sm text-blue-600 hover:underline"
             >
               Load older messages
             </button>
@@ -538,7 +523,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
           <div className="space-y-4">
             {messages.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-400 dark:text-gray-500 text-sm">
+                <p className="text-gray-400 text-sm">
                   No messages yet. Say hello! 👋
                 </p>
               </div>
@@ -578,7 +563,7 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
             </div>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-500">
               {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
             </span>
           </div>
@@ -587,14 +572,14 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
 
       {/* Edit bar */}
       {editingMessage && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-t dark:border-gray-700 px-6 py-2 flex items-center justify-between">
-          <span className="text-sm text-yellow-700 dark:text-yellow-300">Editing message</span>
-          <button onClick={handleCancelEdit} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Cancel</button>
+        <div className="bg-yellow-50 border-t px-6 py-2 flex items-center justify-between">
+          <span className="text-sm text-yellow-700">Editing message</span>
+          <button onClick={handleCancelEdit} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
         </div>
       )}
 
       {/* Message Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700/60 px-3 md:px-5 py-3 pb-[env(safe-area-inset-bottom,0.75rem)]">
+      <div className="bg-white border-t border-gray-100 px-3 md:px-5 py-3 pb-[env(safe-area-inset-bottom,0.75rem)]">
         <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleSaveEdit(); } : handleSendMessage} className="flex items-center space-x-3">
           {/* File upload button */}
           <input
@@ -609,13 +594,13 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading || !connected}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition duration-150 disabled:opacity-50"
+            className="p-2 hover:bg-gray-100 rounded-full transition duration-150 disabled:opacity-50"
           >
             {uploading ? (
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
             ) : (
               <svg
-                className="h-6 w-6 text-gray-600 dark:text-gray-400"
+                className="h-6 w-6 text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -635,12 +620,12 @@ const ChatWindow = ({ chat, currentUserId, onBack }) => {
             onChange={editingMessage ? (e) => setEditInput(e.target.value) : handleInputChange}
             placeholder={!connected ? 'Connecting...' : editingMessage ? 'Edit message...' : 'Type a message...'}
             disabled={!connected}
-            className="flex-1 h-11 px-4 border border-gray-200 dark:border-gray-700 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition dark:bg-gray-700/60 dark:text-white dark:placeholder-gray-400 disabled:opacity-50"
+            className="flex-1 h-11 px-4 border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={editingMessage ? !editInput.trim() : (!messageInput.trim() || sending || !connected)}
-            className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-2.5 rounded-full shadow-glow hover:-translate-y-0.5 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            className="bg-blue-600 text-white p-2.5 rounded-full shadow-glow active:scale-[0.98] transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? (
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

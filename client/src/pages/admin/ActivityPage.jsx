@@ -1,21 +1,31 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from '../../api/axios';
+import { useNotification } from '../../context/NotificationContext';
+import { EmptyState, ErrorBanner, Panel, RowSkeleton, SectionHeader } from '../../components/admin/AdminUI';
+import { Button, Modal, Reveal, SegmentedControl } from '../../components/ui/motion';
+import { ActivityIcon, CheckIcon, LayersIcon, RefreshIcon, TrashIcon, UsersIcon } from '../../components/ui/Icons';
 
-const timeAgo = (dateStr) => {
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+const dayLabel = (date) => {
+  const d = new Date(date);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
 };
 
+const timeOf = (date) => new Date(date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
 const ActivityPage = () => {
+  const { showSuccess, showError } = useNotification();
   const [activities, setActivities] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [selecting, setSelecting] = useState(false);
+  const [type, setType] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [confirm, setConfirm] = useState(null); // 'selected' | 'all' | null
   const [deleting, setDeleting] = useState(false);
 
   const fetchActivities = useCallback(async () => {
@@ -28,242 +38,198 @@ const ActivityPage = () => {
         setSelected([]);
       }
     } catch (err) {
-      setError((err.response && err.response.data && err.response.data.message) || 'Failed to load activities');
+      setError(err.response?.data?.message || 'Failed to load activity');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchActivities(); }, [fetchActivities]);
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
 
-  const toggleSelectAll = () => {
-    if (selected.length === activities.length) {
-      setSelected([]);
-    } else {
-      setSelected(activities.map((a) => a._id));
-    }
+  const visible = useMemo(() => activities.filter((a) => type === 'all' || a.type === type), [activities, type]);
+
+  const grouped = useMemo(() => {
+    const map = new Map();
+    visible.forEach((a) => {
+      const key = dayLabel(a.date);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(a);
+    });
+    return [...map.entries()];
+  }, [visible]);
+
+  const toggle = (id) => setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const allVisibleSelected = visible.length > 0 && visible.every((a) => selected.includes(a._id));
+
+  const stopSelecting = () => {
+    setSelecting(false);
+    setSelected([]);
   };
 
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selected.length === 0) return;
+  const handleDelete = async () => {
     try {
       setDeleting(true);
-      await axios.delete('/admin/activity', { data: { ids: selected } });
+      if (confirm === 'all') {
+        await axios.delete('/admin/activity/all');
+        showSuccess('All activity cleared');
+      } else {
+        await axios.delete('/admin/activity', { data: { ids: selected } });
+        showSuccess(`${selected.length} entr${selected.length === 1 ? 'y' : 'ies'} deleted`);
+      }
+      setConfirm(null);
+      setSelecting(false);
       await fetchActivities();
     } catch (err) {
-      setError((err.response && err.response.data && err.response.data.message) || 'Failed to delete selected activities');
+      showError(err.response?.data?.message || 'Failed to delete activity');
     } finally {
       setDeleting(false);
     }
   };
 
-  const handleDeleteAll = async () => {
-    try {
-      setDeleting(true);
-      setConfirmDeleteAll(false);
-      await axios.delete('/admin/activity/all');
-      await fetchActivities();
-    } catch (err) {
-      setError((err.response && err.response.data && err.response.data.message) || 'Failed to delete all activities');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const allSelected = activities.length > 0 && selected.length === activities.length;
-  const someSelected = selected.length > 0 && selected.length < activities.length;
+  let rowIndex = 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 md:py-8 transition-colors duration-200">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Link
-                to="/admin"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                ← Dashboard
-              </Link>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">All Activity</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {activities.length} total {activities.length === 1 ? 'entry' : 'entries'}
-            </p>
-          </div>
-          <button
-            onClick={fetchActivities}
-            disabled={loading}
-            className="text-sm px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            {loading ? 'Loading…' : 'Refresh'}
-          </button>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        )}
-
-        {/* Auto-deletion notice */}
-        <div className="mb-4 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-          <svg className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-sm text-amber-800 dark:text-amber-300">
-            <span className="font-semibold">Auto-cleanup enabled —</span> Activity records are automatically deleted after <span className="font-semibold">15 days</span>. You can also delete them manually at any time.
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-t-xl border border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* Select All checkbox */}
-            <input
-              type="checkbox"
-              checked={allSelected}
-              ref={(el) => { if (el) el.indeterminate = someSelected; }}
-              onChange={toggleSelectAll}
-              disabled={loading || activities.length === 0}
-              className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
-            />
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {selected.length > 0 ? `${selected.length} selected` : 'Select all'}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleDeleteSelected}
-              disabled={selected.length === 0 || deleting}
-              className="text-sm px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              Delete Selected ({selected.length})
-            </button>
-            <button
-              onClick={() => setConfirmDeleteAll(true)}
-              disabled={activities.length === 0 || deleting}
-              className="text-sm px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              Delete All
-            </button>
-          </div>
-        </div>
-
-        {/* Activity List */}
-        <div className="bg-white dark:bg-gray-800 rounded-b-xl border-x border-b border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
-          {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-4">
-                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/4" />
-                </div>
-              </div>
-            ))
-          ) : activities.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-gray-400 dark:text-gray-500 text-lg mb-1">No activity records</p>
-              <p className="text-gray-400 dark:text-gray-600 text-sm">Activity will appear here as users and groups are created.</p>
-            </div>
+    <div>
+      <SectionHeader
+        title="Activity"
+        description={`${activities.length} event${activities.length === 1 ? '' : 's'} from the last 15 days.`}
+        actions={
+          selecting ? (
+            <>
+              <Button variant="ghost" onClick={stopSelecting}>Done</Button>
+              <Button variant="danger-tinted" disabled={selected.length === 0} onClick={() => setConfirm('selected')}>
+                <TrashIcon className="h-4 w-4" />
+                Delete {selected.length > 0 ? selected.length : ''}
+              </Button>
+            </>
           ) : (
-            activities.map((item) => {
-              const isChecked = selected.includes(item._id);
-              return (
-                <div
-                  key={item._id}
-                  onClick={() => toggleSelect(item._id)}
-                  className={`flex items-center gap-4 px-4 py-4 cursor-pointer transition-colors ${
-                    isChecked
-                      ? 'bg-blue-50 dark:bg-blue-900/20'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                  }`}
-                >
-                  {/* Checkbox */}
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => toggleSelect(item._id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded accent-blue-600 cursor-pointer flex-shrink-0"
-                  />
+            <>
+              <Button variant="ghost" onClick={fetchActivities} disabled={loading} aria-label="Refresh">
+                <RefreshIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button variant="secondary" onClick={() => setSelecting(true)} disabled={activities.length === 0}>Select</Button>
+              <Button variant="danger-tinted" onClick={() => setConfirm('all')} disabled={activities.length === 0}>
+                Clear all
+              </Button>
+            </>
+          )
+        }
+      />
 
-                  {/* Avatar */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm ${
-                    item.type === 'group'
-                      ? 'bg-gradient-to-br from-sky-400 to-blue-600'
-                      : 'bg-gradient-to-br from-blue-500 to-blue-700'
-                  }`}>
-                    {item.name ? item.name.charAt(0).toUpperCase() : '?'}
-                  </div>
+      {error && <ErrorBanner message={error} onRetry={fetchActivities} />}
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      <span className="font-semibold">{item.name}</span>{' '}
-                      <span className="text-gray-600 dark:text-gray-400">{item.action}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      {timeAgo(item.date)}
-                    </p>
-                  </div>
-
-                  {/* Type badge */}
-                  <span className={`flex-shrink-0 text-xs px-2 py-1 rounded-full font-medium ${
-                    item.type === 'group'
-                      ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400'
-                      : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
-                  }`}>
-                    {item.type === 'group' ? 'Group' : 'User'}
-                  </span>
-
-                  {/* Dot indicator */}
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    item.type === 'group' ? 'bg-green-500' : 'bg-blue-500'
-                  }`} />
-                </div>
-              );
-            })
-          )}
-        </div>
-
-      </div>
-
-      {/* Confirm Delete All Modal */}
-      {confirmDeleteAll && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete All Activities?</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              This will permanently delete all {activities.length} activity records. This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
+      <Reveal index={0}>
+        <Panel>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4 sm:px-6">
+            <SegmentedControl
+              ariaLabel="Filter by type"
+              value={type}
+              onChange={setType}
+              options={[
+                { value: 'all', label: 'Everything', count: activities.length },
+                { value: 'user', label: 'Members', count: activities.filter((a) => a.type === 'user').length },
+                { value: 'group', label: 'Groups', count: activities.filter((a) => a.type === 'group').length },
+              ]}
+            />
+            {selecting && visible.length > 0 && (
               <button
-                onClick={() => setConfirmDeleteAll(false)}
-                className="flex-1 py-2 px-4 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+                type="button"
+                onClick={() =>
+                  setSelected(allVisibleSelected ? selected.filter((id) => !visible.some((a) => a._id === id)) : [...new Set([...selected, ...visible.map((a) => a._id)])])
+                }
+                className="text-[13px] font-medium text-blue-600 hover:text-blue-700"
               >
-                Cancel
+                {allVisibleSelected ? 'Deselect all' : 'Select all'}
               </button>
-              <button
-                onClick={handleDeleteAll}
-                className="flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors text-sm font-medium"
-              >
-                Delete All
-              </button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+
+          {loading ? (
+            <RowSkeleton rows={6} />
+          ) : visible.length === 0 ? (
+            <EmptyState Icon={ActivityIcon} title="No activity yet">
+              New members and new groups will show up here.
+            </EmptyState>
+          ) : (
+            <div className="pb-2">
+              {grouped.map(([day, items]) => (
+                <section key={day} aria-label={day}>
+                  <h3 className="sticky top-0 z-[1] bg-white/90 px-5 pb-1 pt-4 text-[13px] font-semibold text-gray-500 backdrop-blur sm:px-6">
+                    {day}
+                  </h3>
+                  <ul>
+                    {items.map((item) => {
+                      const isChecked = selected.includes(item._id);
+                      const idx = rowIndex++;
+                      return (
+                        <Reveal as="li" index={idx} key={item._id}>
+                          <div
+                            role={selecting ? 'checkbox' : undefined}
+                            aria-checked={selecting ? isChecked : undefined}
+                            tabIndex={selecting ? 0 : undefined}
+                            onClick={selecting ? () => toggle(item._id) : undefined}
+                            onKeyDown={selecting ? (e) => (e.key === ' ' || e.key === 'Enter') && (e.preventDefault(), toggle(item._id)) : undefined}
+                            className={`flex items-center gap-3 px-5 py-2.5 transition-colors sm:px-6 ${
+                              selecting ? 'cursor-pointer hover:bg-gray-50' : ''
+                            } ${isChecked ? 'bg-blue-50/70' : ''}`}
+                          >
+                            {selecting && (
+                              <span
+                                className={`flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                                  isChecked ? 'border-blue-600 bg-blue-600 text-white' : 'border-gray-300'
+                                }`}
+                              >
+                                {isChecked && <CheckIcon className="h-3 w-3" strokeWidth={3.5} />}
+                              </span>
+                            )}
+                            <span
+                              className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white ${
+                                item.type === 'group' ? 'bg-indigo-400' : 'bg-blue-600'
+                              }`}
+                            >
+                              {item.type === 'group' ? <LayersIcon className="h-4 w-4" /> : <UsersIcon className="h-4 w-4" />}
+                            </span>
+                            <p className="min-w-0 flex-1 text-[15px] text-gray-900">
+                              <span className="font-semibold">{item.name}</span> <span className="text-gray-600">{item.action}</span>
+                            </p>
+                            <span className="flex-shrink-0 text-[13px] text-gray-400 tabular-nums">{timeOf(item.date)}</span>
+                          </div>
+                        </Reveal>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </Reveal>
+
+      <p className="mt-3 px-1 text-[13px] text-gray-400">Activity is cleared automatically after 15 days.</p>
+
+      <Modal
+        open={Boolean(confirm)}
+        onClose={() => setConfirm(null)}
+        busy={deleting}
+        size="sm"
+        title={confirm === 'all' ? 'Clear all activity?' : `Delete ${selected.length} entr${selected.length === 1 ? 'y' : 'ies'}?`}
+        description={
+          confirm === 'all'
+            ? `All ${activities.length} records will be permanently deleted. This can't be undone.`
+            : "The selected records will be permanently deleted. This can't be undone."
+        }
+        footer={
+          <>
+            <Button onClick={() => setConfirm(null)} disabled={deleting}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Deleting…' : confirm === 'all' ? 'Clear all' : 'Delete'}
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 };

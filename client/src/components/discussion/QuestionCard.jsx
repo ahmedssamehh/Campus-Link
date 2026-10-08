@@ -36,47 +36,47 @@ const QuestionCard = ({ question }) => {
         }
       }}
       onClick={handleClick}
-      className="group flex min-w-0 max-w-full cursor-pointer gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-card transition duration-300 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 dark:border-gray-700/60 dark:bg-gray-800 dark:hover:border-blue-500/30 sm:p-5"
+      className="group flex min-w-0 max-w-full cursor-pointer gap-4 rounded-2xl bg-white p-4 transition-colors press hover:border-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 sm:p-5"
     >
       {/* Vote box */}
-      <div className="flex h-14 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">
+      <div className="flex h-14 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-700">
         <ChevronUpIcon className="h-4 w-4" strokeWidth={2.5} />
-        <span className="text-base font-bold leading-none tabular-nums">{question.votes || 0}</span>
+        <span className="text-base font-semibold leading-none tabular-nums">{question.votes || 0}</span>
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="break-words text-base font-semibold text-gray-900 transition group-hover:text-blue-600 [overflow-wrap:anywhere] dark:text-white dark:group-hover:text-blue-400 sm:text-lg">
+        <h3 className="break-words text-base font-semibold text-gray-900 transition group-hover:text-blue-600 [overflow-wrap:anywhere] sm:text-lg">
           {question.title}
         </h3>
-        <p className="mt-1 line-clamp-2 break-words text-sm text-gray-500 dark:text-gray-400">{question.content}</p>
+        <p className="mt-1 line-clamp-2 break-words text-sm text-gray-500">{question.content}</p>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {(question.tags || []).map((tag, index) => (
             <span
               key={index}
-              className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+              className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
             >
               {tag}
             </span>
           ))}
           {isSolved && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">
               <CheckIcon className="h-3 w-3" strokeWidth={3} />
               Solved
             </span>
           )}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3 dark:border-gray-700/60">
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
           <div className="flex min-w-0 items-center gap-2">
             <UserAvatar name={authorName} profilePhoto={question.author?.profilePhoto} size="xs" border={false} />
-            <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-              <span className="font-semibold text-gray-700 dark:text-gray-200">{authorName}</span>
+            <p className="truncate text-xs text-gray-500">
+              <span className="font-semibold text-gray-700">{authorName}</span>
               {' · '}
               {getRelativeTime(question.createdAt)}
             </p>
           </div>
-          <span className="flex flex-shrink-0 items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+          <span className="flex flex-shrink-0 items-center gap-1.5 text-xs font-medium text-gray-500">
             <ChatIcon className="h-4 w-4" />
             {question.answersCount || 0} answer{question.answersCount === 1 ? '' : 's'}
           </span>
